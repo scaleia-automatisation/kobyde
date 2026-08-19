@@ -185,7 +185,28 @@ function EricPage() {
                   {LEAD_AGENT.emoji}
                 </span>
                 <div className="space-y-3">
-                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{plan.reponse}</p>
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed">
+                    {answerEdit ?? plan.reponse}
+                  </p>
+                  <GenerationActions
+                    title="Réponse d'Éric"
+                    text={answerEdit ?? plan.reponse}
+                    onEdit={setAnswerEdit}
+                    regenerateSlot={
+                      <CreditActionButton
+                        actionKey="eric.ask"
+                        className="inline-block"
+                        buttonClassName="gap-1.5"
+                        variant="outline"
+                        size="sm"
+                        pending={mutation.isPending}
+                        onConfirm={(key) => send(plan.demande ?? "", key)}
+                      >
+                        <RefreshCw className="h-4 w-4" /> Régénérer
+                      </CreditActionButton>
+                    }
+                  />
+
                   {plan.memoire.length > 0 && (
                     <div className="rounded-xl bg-muted/60 p-3">
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

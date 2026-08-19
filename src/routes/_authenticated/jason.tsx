@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/select";
 import { CreditActionButton } from "@/components/credit-action";
 import { useOrgId } from "@/lib/db";
-import { agentByKey } from "@/lib/agents";
 import { CHANNELS, NOT_FOUND, TOOLS, WORKFLOW_STEPS, searchActionKey } from "@/lib/prospection";
 import { findProspects, generatePersona, savePersona } from "@/lib/prospection.functions";
 
@@ -98,7 +97,6 @@ function Field({
 function JasonPage() {
   const orgId = useOrgId();
   const qc = useQueryClient();
-  const jason = agentByKey("commercial");
 
   const [params, setParams] = useState<Params>(DEFAULT_PARAMS);
   const [persona, setPersona] = useState<PersonaRow | null>(null);
@@ -160,22 +158,8 @@ function JasonPage() {
   const running = findMutation.isPending;
 
   return (
-    <AppShell>
+    <AppShell title="Jason — Rechercher des prospects" subtitle="Votre commercial IA trouve, qualifie et prépare vos futurs clients.">
       <div className="mx-auto w-full max-w-5xl space-y-8 pb-16">
-        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className={`grid size-12 shrink-0 place-items-center rounded-2xl text-2xl ring-1 ${jason?.ring}`}>
-              {jason?.emoji}
-            </div>
-            <div className="min-w-0">
-              <h1 className="truncate text-2xl font-black">Jason — Rechercher des prospects</h1>
-              <p className="text-sm text-muted-foreground">
-                Votre commercial IA trouve, qualifie et prépare vos futurs clients.
-              </p>
-            </div>
-          </div>
-        </header>
-
         <Card className="space-y-5 p-6">
           <h2 className="text-lg font-bold">Paramètres de recherche</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

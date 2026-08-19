@@ -129,7 +129,6 @@ function CataloguePage() {
       unit_price: price,
       vat_rate: Number(product.vat_rate ?? 20),
       subservices: product.subservices ?? [],
-      in_catalog: true,
     });
     if (itemErr) { toast.error(itemErr.message); return; }
 

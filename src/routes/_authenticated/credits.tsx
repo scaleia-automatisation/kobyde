@@ -4,6 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useCreditHistory, useCredits } from "@/lib/credits";
+import { usePlan } from "@/lib/plans";
+import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 import { CREDIT_ACTIONS, creditAction, creditLabel } from "@/lib/credit-catalog";
 
 export const Route = createFileRoute("/_authenticated/credits")({
@@ -39,6 +42,7 @@ const dt = (s: string) =>
 
 function CreditsPage() {
   const { balance, total } = useCredits();
+  const { plan, creditsUsed, renewsAt } = usePlan();
   const { data: history } = useCreditHistory(200);
 
   const groups = Array.from(new Set(CREDIT_ACTIONS.map((a) => a.group)));
@@ -52,12 +56,26 @@ function CreditsPage() {
               <p className="text-sm text-muted-foreground">Solde actuel</p>
               <p className="font-display text-4xl font-bold">{balance}</p>
             </div>
-            <p className="text-sm text-muted-foreground">sur {total} crédits</p>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">sur {total} crédits reçus</p>
+              <p className="text-sm text-muted-foreground">{creditsUsed} crédits consommés</p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3">
+            <p className="text-sm">
+              Formule <span className="font-semibold">{plan.name}</span> · {plan.price} €/mois ·{" "}
+              {plan.credits} crédits ajoutés chaque mois
+              {renewsAt && ` · renouvellement le ${renewsAt.toLocaleDateString("fr-FR")}`}
+            </p>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/plans">Changer de formule</Link>
+            </Button>
           </div>
           <Progress className="mt-4" value={total > 0 ? (balance / total) * 100 : 0} />
           <p className="mt-3 text-sm text-muted-foreground">
             Navigation, création et modification de fiches : 0 crédit. Les crédits sont débités uniquement
-            après la réussite réelle d'une action IA, et remboursés automatiquement en cas d'échec.
+            après la réussite réelle d'une action IA, et remboursés automatiquement en cas d'échec. Vos
+            crédits non utilisés sont reportés au mois suivant.
           </p>
         </Card>
 

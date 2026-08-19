@@ -9,6 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { AGENTS } from "@/lib/agents";
+import { PLANS } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 
 const TITLE = "Kobyde — 10 agents IA pour piloter votre entreprise, 39 €/mois";
@@ -146,29 +147,50 @@ function Landing() {
 
       </section>
 
-      <section className="mx-auto max-w-3xl px-5 pb-24">
-        <div className="surface p-8 text-center">
-          <p className="text-sm uppercase tracking-wide text-muted-foreground">Un seul prix, tout compris</p>
-          <p className="mt-2 font-display text-5xl">39 € / mois</p>
-          <ul className="mx-auto mt-6 grid max-w-md gap-2 text-left text-sm">
-            {[
-              "Les 10 agents IA inclus",
-              "Prospects, clients, devis, factures et paiements",
-              "Projets, marketing, RH, emails et analytics",
-              "Vos données restent privées et isolées",
-            ].map((l) => (
-              <li key={l} className="flex items-start gap-2">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
-                {l}
-              </li>
-            ))}
-          </ul>
-          <Button asChild size="lg" className="mt-8">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Commencer maintenant
-            </Link>
-          </Button>
+      <section id="tarifs" className="mx-auto max-w-6xl px-5 pb-24">
+        <h2 className="text-center text-3xl">Des formules simples, sans engagement</h2>
+        <p className="mt-3 text-center text-muted-foreground">
+          Abonnement mensuel renouvelé automatiquement. Vos crédits non utilisés sont reportés au mois
+          suivant.
+        </p>
+        <div className="mt-10 grid gap-4 lg:grid-cols-4">
+          {PLANS.map((p) => (
+            <article
+              key={p.key}
+              className={`surface flex flex-col p-6 ${p.highlight ? "ring-2 ring-primary" : ""}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-display text-xl font-bold">{p.name}</h3>
+                {p.highlight && (
+                  <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs text-primary-foreground">
+                    Recommandé
+                  </span>
+                )}
+              </div>
+              <p className="mt-3 font-display text-3xl">
+                {p.price} €<span className="text-base text-muted-foreground"> / mois</span>
+              </p>
+              <p className="mt-1 text-sm font-medium text-accent">{p.credits} crédits IA / mois</p>
+              <p className="mt-2 text-sm text-muted-foreground">{p.tagline}</p>
+              <ul className="mt-4 flex-1 space-y-1.5 text-left text-sm">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
+                    <span className="text-muted-foreground">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button asChild className="mt-6" variant={p.highlight ? "default" : "outline"}>
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  {p.price === 0 ? "Tester gratuitement" : `Choisir ${p.name}`}
+                </Link>
+              </Button>
+            </article>
+          ))}
         </div>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Chaque nouvelle inscription démarre avec 10 crédits offerts pour tester Kobyde.
+        </p>
       </section>
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">

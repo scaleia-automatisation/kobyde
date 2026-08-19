@@ -34,6 +34,56 @@ export const Route = createFileRoute("/_authenticated/equipe")({
 type AgentRow = { id: string; key: string; credits_used: number };
 type TaskRow = { id: string; title: string; status: string; agent_id: string | null; created_at: string };
 
+function AgentCard({
+  agent,
+  agents,
+  tasks,
+  onSelect,
+}: {
+  agent: AgentMeta;
+  agents: AgentRow[] | undefined;
+  tasks: TaskRow[] | undefined;
+  onSelect: (key: string) => void;
+}) {
+  const row = (agents ?? []).find((r) => r.key === agent.key);
+  const count = (tasks ?? []).filter((t) => t.agent_id === row?.id).length;
+  return (
+    <article
+      className={`surface flex flex-col p-5 transition-shadow hover:shadow-lift ${agent.primary ? "ring-2 ring-primary/30" : ""}`}
+    >
+      <div className="flex items-start gap-3">
+        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl text-xl ring-4 ${agent.ring}`}>
+          {agent.emoji}
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-base leading-tight">{agent.name}</h2>
+          <p className="text-xs font-medium text-muted-foreground">{agent.role}</p>
+          <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] ${agent.chip}`}>
+            {agent.mission}
+          </span>
+        </div>
+      </div>
+      <p className="mt-3 line-clamp-3 text-xs text-muted-foreground">{agent.description}</p>
+      <ul className="mt-3 flex flex-1 flex-wrap gap-1">
+        {agent.skills.slice(0, 4).map((s) => (
+          <li key={s} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+            {s}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>
+          {count} tâche{count > 1 ? "s" : ""}
+        </span>
+        <span>{row?.credits_used ?? 0} crédits utilisés</span>
+      </div>
+      <Button className="mt-3 w-full" variant="secondary" size="sm" onClick={() => onSelect(agent.key)}>
+        Lui confier une tâche
+      </Button>
+    </article>
+  );
+}
+
 function TeamPage() {
   const { data: agents } = useRows<AgentRow>("agents", { order: "created_at" });
   const { data: tasks } = useRows<TaskRow>("agent_tasks");

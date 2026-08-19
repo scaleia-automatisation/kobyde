@@ -47,6 +47,7 @@ export const NAV = [
   { to: "/automatisations", label: "Automatisations", icon: Zap },
   { to: "/documents", label: "Documents", icon: Briefcase },
   { to: "/credits", label: "Crédits IA", icon: Coins },
+  { to: "/plans", label: "Formules", icon: BadgeEuro },
   { to: "/entreprise", label: "Fiche entreprise", icon: Building2 },
   { to: "/parametres", label: "Paramètres", icon: Settings },
 ] as const;

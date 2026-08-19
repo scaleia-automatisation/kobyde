@@ -33,6 +33,7 @@ import { Route as AuthenticatedProjetsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProspectsRouteImport } from './routes/_authenticated/prospects'
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
+import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
 import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authenticated/devis.index'
 import { Route as AuthenticatedDevisIdRouteImport } from './routes/_authenticated/devis.$id'
@@ -160,6 +161,11 @@ const AuthenticatedTableauDeBordRoute =
     path: '/tableau-de-bord',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const EspaceTokenRoute = EspaceTokenRouteImport.update({
+  id: '/espace/$token',
+  path: '/espace/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PayerTokenRoute = PayerTokenRouteImport.update({
   id: '/payer/$token',
   path: '/payer/$token',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/devis/': typeof AuthenticatedDevisIndexRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/devis': typeof AuthenticatedDevisIndexRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/_authenticated/prospects': typeof AuthenticatedProspectsRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
   '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
+    | '/espace/$token'
     | '/payer/$token'
     | '/devis/$id'
     | '/devis/'
@@ -334,6 +344,7 @@ export interface FileRouteTypes {
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
+    | '/espace/$token'
     | '/payer/$token'
     | '/devis/$id'
     | '/devis'
@@ -365,6 +376,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prospects'
     | '/_authenticated/rh'
     | '/_authenticated/tableau-de-bord'
+    | '/espace/$token'
     | '/payer/$token'
     | '/_authenticated/devis/$id'
     | '/_authenticated/devis/'
@@ -376,6 +388,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  EspaceTokenRoute: typeof EspaceTokenRoute
   PayerTokenRoute: typeof PayerTokenRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTableauDeBordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/espace/$token': {
+      id: '/espace/$token'
+      path: '/espace/$token'
+      fullPath: '/espace/$token'
+      preLoaderRoute: typeof EspaceTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payer/$token': {
       id: '/payer/$token'
       path: '/payer/$token'
@@ -648,6 +668,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  EspaceTokenRoute: EspaceTokenRoute,
   PayerTokenRoute: PayerTokenRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,

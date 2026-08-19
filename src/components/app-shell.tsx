@@ -13,6 +13,7 @@ import {
   Filter,
   FolderKanban,
   Home,
+  LineChart,
   LogOut,
   Mail,
   Megaphone,

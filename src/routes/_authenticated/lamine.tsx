@@ -329,14 +329,17 @@ function BriefTab({ onUseBrief }: { onUseBrief: (text: string) => void }) {
   const [form, setForm] = useState({ siteType: "vitrine", product: "", notes: "" });
   const [brief, setBrief] = useState<Record<string, string> | null>(null);
   const [editing, setEditing] = useState(false);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (key: string) => call({ data: { orgId: orgId!, idempotencyKey: key, ...form } }),
     onSuccess: (d) => {
       setBrief(d.result as Record<string, string>);
       setEditing(false);
+      setEdited(null);
       toast.success("Briefing généré.");
     },
+
     onError: (e: any) => toast.error(e?.message ?? "Échec."),
   });
 

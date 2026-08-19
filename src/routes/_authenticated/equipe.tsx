@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
+import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
 import { useCreateRow, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +33,56 @@ export const Route = createFileRoute("/_authenticated/equipe")({
 
 type AgentRow = { id: string; key: string; credits_used: number };
 type TaskRow = { id: string; title: string; status: string; agent_id: string | null; created_at: string };
+
+function AgentCard({
+  agent,
+  agents,
+  tasks,
+  onSelect,
+}: {
+  agent: AgentMeta;
+  agents: AgentRow[] | undefined;
+  tasks: TaskRow[] | undefined;
+  onSelect: (key: string) => void;
+}) {
+  const row = (agents ?? []).find((r) => r.key === agent.key);
+  const count = (tasks ?? []).filter((t) => t.agent_id === row?.id).length;
+  return (
+    <article
+      className={`surface flex flex-col p-5 transition-shadow hover:shadow-lift ${agent.primary ? "ring-2 ring-primary/30" : ""}`}
+    >
+      <div className="flex items-start gap-3">
+        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl text-xl ring-4 ${agent.ring}`}>
+          {agent.emoji}
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-base leading-tight">{agent.name}</h2>
+          <p className="text-xs font-medium text-muted-foreground">{agent.role}</p>
+          <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] ${agent.chip}`}>
+            {agent.mission}
+          </span>
+        </div>
+      </div>
+      <p className="mt-3 line-clamp-3 text-xs text-muted-foreground">{agent.description}</p>
+      <ul className="mt-3 flex flex-1 flex-wrap gap-1">
+        {agent.skills.slice(0, 4).map((s) => (
+          <li key={s} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+            {s}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>
+          {count} tâche{count > 1 ? "s" : ""}
+        </span>
+        <span>{row?.credits_used ?? 0} crédits utilisés</span>
+      </div>
+      <Button className="mt-3 w-full" variant="secondary" size="sm" onClick={() => onSelect(agent.key)}>
+        Lui confier une tâche
+      </Button>
+    </article>
+  );
+}
 
 function TeamPage() {
   const { data: agents } = useRows<AgentRow>("agents", { order: "created_at" });
@@ -66,69 +116,62 @@ function TeamPage() {
       title="Mon équipe IA"
       subtitle="Éric pilote l'équipe. Parlez-lui en priorité, il distribue aux bons agents."
     >
-      <section className="surface mb-6 p-6">
-        <div className="flex flex-wrap items-start gap-4">
-          <span className={`grid size-16 shrink-0 place-items-center rounded-2xl text-3xl ring-4 ${LEAD_AGENT.ring}`}>
-            {LEAD_AGENT.emoji}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl leading-tight">{LEAD_AGENT.name}</h2>
-              <Badge>{LEAD_AGENT.role}</Badge>
-              <Badge variant="secondary">Point d'entrée</Badge>
+      {/* Éric — Orchestrateur au sommet */}
+      <section className="relative mb-10">
+        <div className="relative mx-auto max-w-3xl">
+          <article className="surface relative overflow-hidden p-8 text-center">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-aurora-1 via-aurora-2 to-aurora-3" />
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.06] via-transparent to-amber-500/[0.04]" />
+            <div className="relative">
+              <span
+                className={`mx-auto grid size-20 place-items-center rounded-3xl text-4xl ring-4 ${LEAD_AGENT.ring}`}
+              >
+                {LEAD_AGENT.emoji}
+              </span>
+              <h2 className="mt-5 text-2xl font-bold">{LEAD_AGENT.name}</h2>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                <Badge>{LEAD_AGENT.role}</Badge>
+                <Badge variant="secondary">Point d'entrée</Badge>
+              </div>
+              <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">{LEAD_AGENT.description}</p>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+                Exemples : « Trouve-moi des prospects pour mon offre de création de site. » ou « J'ai eu une réunion
+                avec un client, prépare la suite. »
+              </p>
+              <Button className="mt-5" onClick={() => setSelected(LEAD_AGENT.key)}>
+                Parler à {LEAD_AGENT.name}
+              </Button>
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">{LEAD_AGENT.description}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Exemples : « Trouve-moi des prospects pour mon offre de création de site. » ou « J'ai eu une réunion
-              avec un client, prépare la suite. »
-            </p>
-            <Button className="mt-4" onClick={() => setSelected(LEAD_AGENT.key)}>
-              Parler à {LEAD_AGENT.name}
-            </Button>
-          </div>
+          </article>
+        </div>
+
+        {/* Connecteur Éric → équipe */}
+        <div className="pointer-events-none absolute left-1/2 top-full hidden h-10 w-0 -translate-x-1/2 border-l-2 border-dashed border-border lg:block" />
+      </section>
+
+      {/* Rangée 1 : 4 agents */}
+      <section className="mb-10">
+        <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Première ligne — Revenus & relation client
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {AGENTS.slice(1, 5).map((a) => (
+            <AgentCard key={a.key} agent={a} agents={agents} tasks={tasks} onSelect={setSelected} />
+          ))}
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {AGENTS.map((a) => {
-          const row = (agents ?? []).find((r) => r.key === a.key);
-          const count = (tasks ?? []).filter((t) => t.agent_id === row?.id).length;
-          return (
-            <article
-              key={a.key}
-              className={`surface flex flex-col p-6 transition-shadow hover:shadow-lift ${a.primary ? "ring-2 ring-primary/30" : ""}`}
-            >
-              <div className="flex items-start gap-4">
-                <span className={`grid size-14 shrink-0 place-items-center rounded-2xl text-2xl ring-4 ${a.ring}`}>
-                  {a.emoji}
-                </span>
-                <div className="min-w-0">
-                  <h2 className="text-lg leading-tight">{a.name}</h2>
-                  <p className="text-sm font-medium text-muted-foreground">{a.role}</p>
-                  <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs ${a.chip}`}>
-                    {a.mission}
-                  </span>
-                </div>
-              </div>
-              <p className="mt-4 text-sm text-muted-foreground">{a.description}</p>
-              <ul className="mt-3 flex flex-1 flex-wrap gap-1.5">
-                {a.skills.slice(0, 6).map((s) => (
-                  <li key={s} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                    {s}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{count} tâche{count > 1 ? "s" : ""}</span>
-                <span>{row?.credits_used ?? 0} crédits utilisés</span>
-              </div>
-              <Button className="mt-4 w-full" variant="secondary" onClick={() => setSelected(a.key)}>
-                Lui confier une tâche
-              </Button>
-            </article>
-          );
-        })}
-      </div>
+      {/* Rangée 2 : 5 agents restants */}
+      <section className="mb-6">
+        <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Seconde ligne — Support & croissance
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {AGENTS.slice(5).map((a) => (
+            <AgentCard key={a.key} agent={a} agents={agents} tasks={tasks} onSelect={setSelected} />
+          ))}
+        </div>
+      </section>
 
 
       <section className="surface mt-6 p-6">

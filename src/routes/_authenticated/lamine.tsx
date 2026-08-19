@@ -378,28 +378,36 @@ function BriefTab({ onUseBrief }: { onUseBrief: (text: string) => void }) {
         )}
         {brief && (
           <Card className="space-y-4 p-5">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => setEditing((e) => !e)}>
-                <Pencil className="h-4 w-4" /> {editing ? "Terminer" : "Modifier"}
-              </Button>
-              <CreditActionButton
-                actionKey="mkt.site_brief"
-                className="inline-block"
-                buttonClassName="gap-1.5"
-                variant="outline"
-                size="sm"
-                pending={mut.isPending}
-                onConfirm={(key) => mut.mutateAsync(key)}
-              >
-                <RefreshCw className="h-4 w-4" /> Régénérer
-              </CreditActionButton>
-              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(asText)}>
-                <Copy className="h-4 w-4" /> Copier
+                <Pencil className="h-4 w-4" /> {editing ? "Terminer" : "Modifier les champs"}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => onUseBrief(asText)}>
                 Utiliser pour le contenu du site
               </Button>
             </div>
+            <GenerationActions
+              title="Briefing de site"
+              text={asText}
+              onEdit={(t) => {
+                setBrief({ ...(brief ?? {}), contexte: t });
+                toast.message("Texte modifié pour l'export et l'envoi.");
+              }}
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey="mkt.site_brief"
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={mut.isPending}
+                  onConfirm={(key) => mut.mutateAsync(key)}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
 
             <div className="grid gap-3">
               {BRIEF_SECTIONS.map(([k, label]) => (

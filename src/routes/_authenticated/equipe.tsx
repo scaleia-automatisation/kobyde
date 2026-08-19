@@ -8,6 +8,7 @@ import { AppShell } from "@/components/app-shell";
 import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";
 import { askAgent } from "@/lib/eric.functions";
+import { CreditActionButton } from "@/components/credit-action";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -138,32 +139,39 @@ function TeamPage() {
   const { data: tasks } = useRows<TaskRow>("agent_tasks");
   const [selected, setSelected] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
+  const [promptText, setPromptText] = useState("");
   const qc = useQueryClient();
   const call = useServerFn(askAgent);
 
   const meta = selected ? agentByKey(selected) : null;
 
   const talk = useMutation({
-    mutationFn: async (vars: { agentKey: string; prompt: string }) =>
-      call({ data: { orgId: orgId!, agentKey: vars.agentKey, prompt: vars.prompt } }),
+    mutationFn: async (vars: { agentKey: string; prompt: string; key: string }) =>
+      call({
+        data: {
+          orgId: orgId!,
+          agentKey: vars.agentKey,
+          prompt: vars.prompt,
+          idempotencyKey: vars.key,
+        },
+      }),
     onSuccess: (res) => {
       setAnswer(res.result);
+      toast.success(`Action terminée — ${res.credits_used ?? 0} crédit(s) consommé(s)`);
       qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message || "L'agent n'a pas pu répondre."),
   });
 
-  const submit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const prompt = String(fd.get("prompt") ?? "").trim();
+  const submit = (idempotencyKey: string) => {
+    const prompt = promptText.trim();
     if (!prompt || !selected) return;
     if (!orgId) {
       toast.error("Organisation introuvable.");
       return;
     }
     setAnswer(null);
-    talk.mutate({ agentKey: selected, prompt });
+    talk.mutate({ agentKey: selected, prompt, key: idempotencyKey });
   };
 
   const busyKey = talk.isPending ? selected : null;
@@ -275,6 +283,7 @@ function TeamPage() {
           if (!o) {
             setSelected(null);
             setAnswer(null);
+            setPromptText("");
           }
         }}
       >
@@ -287,15 +296,26 @@ function TeamPage() {
               Écrivez simplement, comme à un collègue. Il utilise la mémoire centrale de votre entreprise.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={submit} className="space-y-4">
-            <Textarea name="prompt" rows={4} placeholder="Que doit faire cet agent ?" required />
+          <div className="space-y-4">
+            <Textarea
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
+              rows={4}
+              placeholder="Que doit faire cet agent ?"
+            />
             <DialogFooter>
-              <Button type="submit" className="gap-2" disabled={talk.isPending}>
-                {talk.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              <CreditActionButton
+                actionKey="agent.direct_message"
+                pending={talk.isPending}
+                disabled={!promptText.trim()}
+                buttonClassName="gap-2"
+                onConfirm={(key) => submit(key)}
+              >
+                <Send className="size-4" />
                 Envoyer
-              </Button>
+              </CreditActionButton>
             </DialogFooter>
-          </form>
+          </div>
           {talk.isPending && (
             <p className="text-sm text-muted-foreground">{meta?.name} travaille sur votre demande...</p>
           )}

@@ -73,16 +73,11 @@ export const Route = createFileRoute("/_authenticated/emails")({
 
 function EmailsPage() {
   return (
-    <AppShell>
+    <AppShell
+      title="Emails — Clara Relances"
+      subtitle="Clara analyse, priorise et route chaque email vers le bon agent, puis prépare la réponse. Aucun email n'est envoyé sans votre validation explicite."
+    >
       <div className="space-y-6">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Emails — Clara Relances</h1>
-          <p className="text-muted-foreground">
-            Clara analyse, priorise et route chaque email vers le bon agent, puis prépare la réponse.
-            Aucun email n'est envoyé sans votre validation explicite.
-          </p>
-        </header>
-
         <div className="flex flex-wrap gap-2">
           {EMAIL_ROUTING.filter((r) => r.category !== "autre").map((r) => (
             <span
@@ -151,7 +146,10 @@ function Inboxsection() {
   }, [emails, filter]);
 
   const addEmail = async () => {
-    if (!form.subject.trim()) return toast.error("L'objet est obligatoire.");
+    if (!form.subject.trim()) {
+      toast.error("L'objet est obligatoire.");
+      return;
+    }
     await create.mutateAsync({
       direction: "entrant",
       from_name: form.from_name || null,
@@ -481,7 +479,10 @@ function SequencesSection() {
     setSteps((s) => s.map((st, idx) => (idx === i ? { ...st, ...patch } : st)));
 
   const save = async () => {
-    if (!name.trim()) return toast.error("Donnez un nom à la séquence.");
+    if (!name.trim()) {
+      toast.error("Donnez un nom à la séquence.");
+      return;
+    }
     await create.mutateAsync({ name, objective, audience, steps: steps as any, status: "brouillon" });
     setName("");
     setObjective("");

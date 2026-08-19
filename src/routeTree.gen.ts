@@ -19,7 +19,6 @@ import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCatalogueRouteImport } from './routes/_authenticated/catalogue'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
-import { Route as AuthenticatedDevisRouteImport } from './routes/_authenticated/devis'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated/emails'
 import { Route as AuthenticatedEntrepriseRouteImport } from './routes/_authenticated/entreprise'
@@ -86,11 +85,6 @@ const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
 const AuthenticatedCreditsRoute = AuthenticatedCreditsRouteImport.update({
   id: '/credits',
   path: '/credits',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDevisRoute = AuthenticatedDevisRouteImport.update({
-  id: '/devis',
-  path: '/devis',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
@@ -165,9 +159,9 @@ const AuthenticatedTableauDeBordRoute =
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedDevisIndexRoute = AuthenticatedDevisIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedDevisRoute,
+  id: '/devis/',
+  path: '/devis/',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe/webhook',
@@ -190,7 +184,6 @@ export interface FileRoutesByFullPath {
   '/catalogue': typeof AuthenticatedCatalogueRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/credits': typeof AuthenticatedCreditsRoute
-  '/devis': typeof AuthenticatedDevisRouteWithChildren
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
   '/entreprise': typeof AuthenticatedEntrepriseRoute
@@ -249,7 +242,6 @@ export interface FileRoutesById {
   '/_authenticated/catalogue': typeof AuthenticatedCatalogueRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
-  '/_authenticated/devis': typeof AuthenticatedDevisRouteWithChildren
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
   '/_authenticated/entreprise': typeof AuthenticatedEntrepriseRoute
@@ -280,7 +272,6 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/clients'
     | '/credits'
-    | '/devis'
     | '/documents'
     | '/emails'
     | '/entreprise'
@@ -338,7 +329,6 @@ export interface FileRouteTypes {
     | '/_authenticated/catalogue'
     | '/_authenticated/clients'
     | '/_authenticated/credits'
-    | '/_authenticated/devis'
     | '/_authenticated/documents'
     | '/_authenticated/emails'
     | '/_authenticated/entreprise'
@@ -436,13 +426,6 @@ declare module '@tanstack/react-router' {
       path: '/credits'
       fullPath: '/credits'
       preLoaderRoute: typeof AuthenticatedCreditsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/devis': {
-      id: '/_authenticated/devis'
-      path: '/devis'
-      fullPath: '/devis'
-      preLoaderRoute: typeof AuthenticatedDevisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/documents': {
@@ -545,10 +528,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/devis/': {
       id: '/_authenticated/devis/'
-      path: '/'
+      path: '/devis'
       fullPath: '/devis/'
       preLoaderRoute: typeof AuthenticatedDevisIndexRouteImport
-      parentRoute: typeof AuthenticatedDevisRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/stripe/webhook': {
       id: '/api/public/stripe/webhook'
@@ -567,17 +550,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedDevisRouteChildren {
-  AuthenticatedDevisIndexRoute: typeof AuthenticatedDevisIndexRoute
-}
-
-const AuthenticatedDevisRouteChildren: AuthenticatedDevisRouteChildren = {
-  AuthenticatedDevisIndexRoute: AuthenticatedDevisIndexRoute,
-}
-
-const AuthenticatedDevisRouteWithChildren =
-  AuthenticatedDevisRoute._addFileChildren(AuthenticatedDevisRouteChildren)
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAideRoute: typeof AuthenticatedAideRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
@@ -586,7 +558,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCatalogueRoute: typeof AuthenticatedCatalogueRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
-  AuthenticatedDevisRoute: typeof AuthenticatedDevisRouteWithChildren
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
   AuthenticatedEntrepriseRoute: typeof AuthenticatedEntrepriseRoute
@@ -601,6 +572,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProspectsRoute: typeof AuthenticatedProspectsRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
+  AuthenticatedDevisIndexRoute: typeof AuthenticatedDevisIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -611,7 +583,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCatalogueRoute: AuthenticatedCatalogueRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
-  AuthenticatedDevisRoute: AuthenticatedDevisRouteWithChildren,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,
   AuthenticatedEntrepriseRoute: AuthenticatedEntrepriseRoute,
@@ -626,6 +597,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProspectsRoute: AuthenticatedProspectsRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
+  AuthenticatedDevisIndexRoute: AuthenticatedDevisIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

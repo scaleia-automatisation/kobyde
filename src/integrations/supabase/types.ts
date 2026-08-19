@@ -853,6 +853,59 @@ export type Database = {
           },
         ]
       }
+      intel_assets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          kind: string
+          org_id: string
+          params: Json
+          sources: Json
+          summary: string | null
+          title: string
+          topic_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          kind: string
+          org_id: string
+          params?: Json
+          sources?: Json
+          summary?: string | null
+          title: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          kind?: string
+          org_id?: string
+          params?: Json
+          sources?: Json
+          summary?: string | null
+          title?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intel_assets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount_ht: number
@@ -2328,6 +2381,83 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          author: string | null
+          content: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          importance: string
+          org_id: string
+          page: string | null
+          published_at: string | null
+          rating: number | null
+          replied_at: string | null
+          reply_draft: string | null
+          reply_status: string
+          section: string | null
+          sentiment: string
+          source: string
+          summary: string | null
+          topic: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          author?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          importance?: string
+          org_id: string
+          page?: string | null
+          published_at?: string | null
+          rating?: number | null
+          replied_at?: string | null
+          reply_draft?: string | null
+          reply_status?: string
+          section?: string | null
+          sentiment?: string
+          source?: string
+          summary?: string | null
+          topic?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          author?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          importance?: string
+          org_id?: string
+          page?: string | null
+          published_at?: string | null
+          rating?: number | null
+          replied_at?: string | null
+          reply_draft?: string | null
+          reply_status?: string
+          section?: string | null
+          sentiment?: string
+          source?: string
+          summary?: string | null
+          topic?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -2441,6 +2571,62 @@ export type Database = {
             columns: ["step_id"]
             isOneToOne: false
             referencedRelation: "project_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_topics: {
+        Row: {
+          active: boolean
+          competitors: string | null
+          created_at: string
+          created_by: string | null
+          frequency: string
+          id: string
+          kind: string
+          last_asset_id: string | null
+          last_run_at: string | null
+          next_run_at: string | null
+          org_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          competitors?: string | null
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          id?: string
+          kind?: string
+          last_asset_id?: string | null
+          last_run_at?: string | null
+          next_run_at?: string | null
+          org_id: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          competitors?: string | null
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          id?: string
+          kind?: string
+          last_asset_id?: string | null
+          last_run_at?: string | null
+          next_run_at?: string | null
+          org_id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_topics_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

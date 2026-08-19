@@ -23,6 +23,7 @@ import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEntrepriseRouteImport } from './routes/_authenticated/entreprise'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEricRouteImport } from './routes/_authenticated/eric'
+import { Route as AuthenticatedEthanRouteImport } from './routes/_authenticated/ethan'
 import { Route as AuthenticatedFunnelRouteImport } from './routes/_authenticated/funnel'
 import { Route as AuthenticatedJasonRouteImport } from './routes/_authenticated/jason'
 import { Route as AuthenticatedLamineRouteImport } from './routes/_authenticated/lamine'
@@ -112,6 +113,11 @@ const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
 const AuthenticatedEricRoute = AuthenticatedEricRouteImport.update({
   id: '/eric',
   path: '/eric',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEthanRoute = AuthenticatedEthanRouteImport.update({
+  id: '/ethan',
+  path: '/ethan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFunnelRoute = AuthenticatedFunnelRouteImport.update({
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
+  '/ethan': typeof AuthenticatedEthanRoute
   '/funnel': typeof AuthenticatedFunnelRoute
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
+  '/ethan': typeof AuthenticatedEthanRoute
   '/funnel': typeof AuthenticatedFunnelRoute
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/_authenticated/entreprise': typeof AuthenticatedEntrepriseRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/eric': typeof AuthenticatedEricRoute
+  '/_authenticated/ethan': typeof AuthenticatedEthanRoute
   '/_authenticated/funnel': typeof AuthenticatedFunnelRoute
   '/_authenticated/jason': typeof AuthenticatedJasonRoute
   '/_authenticated/lamine': typeof AuthenticatedLamineRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/entreprise'
     | '/equipe'
     | '/eric'
+    | '/ethan'
     | '/funnel'
     | '/jason'
     | '/lamine'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/entreprise'
     | '/equipe'
     | '/eric'
+    | '/ethan'
     | '/funnel'
     | '/jason'
     | '/lamine'
@@ -412,6 +423,7 @@ export interface FileRouteTypes {
     | '/_authenticated/entreprise'
     | '/_authenticated/equipe'
     | '/_authenticated/eric'
+    | '/_authenticated/ethan'
     | '/_authenticated/funnel'
     | '/_authenticated/jason'
     | '/_authenticated/lamine'
@@ -542,6 +554,13 @@ declare module '@tanstack/react-router' {
       path: '/eric'
       fullPath: '/eric'
       preLoaderRoute: typeof AuthenticatedEricRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ethan': {
+      id: '/_authenticated/ethan'
+      path: '/ethan'
+      fullPath: '/ethan'
+      preLoaderRoute: typeof AuthenticatedEthanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/funnel': {
@@ -699,6 +718,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEntrepriseRoute: typeof AuthenticatedEntrepriseRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedEricRoute: typeof AuthenticatedEricRoute
+  AuthenticatedEthanRoute: typeof AuthenticatedEthanRoute
   AuthenticatedFunnelRoute: typeof AuthenticatedFunnelRoute
   AuthenticatedJasonRoute: typeof AuthenticatedJasonRoute
   AuthenticatedLamineRoute: typeof AuthenticatedLamineRoute
@@ -729,6 +749,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEntrepriseRoute: AuthenticatedEntrepriseRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedEricRoute: AuthenticatedEricRoute,
+  AuthenticatedEthanRoute: AuthenticatedEthanRoute,
   AuthenticatedFunnelRoute: AuthenticatedFunnelRoute,
   AuthenticatedJasonRoute: AuthenticatedJasonRoute,
   AuthenticatedLamineRoute: AuthenticatedLamineRoute,

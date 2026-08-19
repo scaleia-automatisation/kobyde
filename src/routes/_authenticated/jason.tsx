@@ -319,6 +319,26 @@ function JasonPage() {
             </div>
             <p className="text-sm text-muted-foreground">{result.rapport}</p>
 
+            <GenerationActions
+              title="Recherche de prospects"
+              text={editedReport ?? toReadableText(result)}
+              onEdit={setEditedReport}
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey="prospect.search"
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={findMutation.isPending}
+                  onConfirm={(k) => findMutation.mutateAsync(k)}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
+
             <div className="flex flex-wrap gap-2">
               {result.etapes.map((e, i) => (
                 <Badge key={`${e.step}-${i}`} variant="outline" title={e.detail}>

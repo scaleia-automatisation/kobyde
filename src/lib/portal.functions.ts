@@ -124,3 +124,48 @@ export const startStripeCheckout = createServerFn({ method: "POST" })
     const url = await createStripeCheckout(request.id, data.origin);
     return { url, alreadyPaid: false };
   });
+
+/** BLOC 17 — suivi comportement client (RGPD : anonyme, sans cookie tiers). */
+export const trackPortalEvent = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        token: z.string().min(16).max(80),
+        kind: z.enum(["portal", "payment"]).default("portal"),
+        name: z.string().trim().min(2).max(60),
+        entityType: z.string().trim().max(40).nullable().optional(),
+        entityId: z.string().uuid().nullable().optional(),
+        sessionId: z.string().trim().max(80).nullable().optional(),
+        path: z.string().trim().max(300).nullable().optional(),
+        durationMs: z.number().int().min(0).max(86_400_000).nullable().optional(),
+        payload: z.record(z.string(), z.unknown()).default({}),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { resolvePortal, admin, loadPaymentRequest } = await import("./portal.server");
+    let orgId: string;
+    let clientId: string | null;
+    if (data.kind === "payment") {
+      const { request } = await loadPaymentRequest(data.token);
+      orgId = request.org_id;
+      clientId = request.client_id ?? null;
+    } else {
+      const access = await resolvePortal(data.token);
+      orgId = access.org_id;
+      clientId = access.client_id;
+    }
+    const db = await admin();
+    await db.from("analytics_events").insert({
+      org_id: orgId,
+      client_id: clientId,
+      name: data.name,
+      entity_type: data.entityType ?? null,
+      entity_id: data.entityId ?? null,
+      session_id: data.sessionId ?? null,
+      path: data.path ?? null,
+      duration_ms: data.durationMs ?? null,
+      payload: data.payload,
+    });
+    return { ok: true };
+  });

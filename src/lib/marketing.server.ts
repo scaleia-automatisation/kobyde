@@ -75,8 +75,8 @@ Réponds uniquement en JSON :
     version_transformation: String(p?.version_transformation ?? "").slice(0, 400),
     version_performance: String(p?.version_performance ?? "").slice(0, 400),
     version_courte: String(p?.version_courte ?? "").slice(0, 160),
-    benefice: String(p?.benefice ?? "").slice(0, 600),
-    credibilite: String(p?.credibilite ?? "").slice(0, 1200),
+    benefice: toText(p?.benefice).slice(0, 600),
+    credibilite: toText(p?.credibilite).slice(0, 1200),
   };
 }
 
@@ -111,8 +111,8 @@ Réponds uniquement en JSON :
 
   return {
     proposition: String(p?.proposition ?? "").slice(0, 500),
-    benefice: String(p?.benefice ?? "").slice(0, 600),
-    differenciation: String(p?.differenciation ?? "").slice(0, 800),
+    benefice: toText(p?.benefice).slice(0, 600),
+    differenciation: toText(p?.differenciation).slice(0, 800),
     variantes: arr(p?.variantes, 3),
     accroche: String(p?.accroche ?? "").slice(0, 200),
     preuves: arr(p?.preuves, 8),
@@ -241,7 +241,7 @@ CTA principal : ${input.cta}`,
 
   const pages = (Array.isArray(p?.pages) ? p.pages : []).slice(0, 12).map((pg: any) => ({
     page: String(pg?.page ?? "").slice(0, 120),
-    objectif: String(pg?.objectif ?? "").slice(0, 400),
+    objectif: toText(pg?.objectif).slice(0, 400),
     seo: {
       title: String(pg?.seo?.title ?? "").slice(0, 120),
       description: String(pg?.seo?.description ?? "").slice(0, 300),
@@ -249,9 +249,9 @@ CTA principal : ${input.cta}`,
     },
     sections: (Array.isArray(pg?.sections) ? pg.sections : []).slice(0, 20).map((s: any) => ({
       section: String(s?.section ?? "").slice(0, 80),
-      pourquoi: String(s?.pourquoi ?? "").slice(0, 400),
+      pourquoi: toText(s?.pourquoi).slice(0, 400),
       titre: String(s?.titre ?? "").slice(0, 200),
-      texte: String(s?.texte ?? "").slice(0, 4000),
+      texte: toText(s?.texte).slice(0, 4000),
       cta: String(s?.cta ?? "").slice(0, 160),
       prompt_image: String(s?.prompt_image ?? "").slice(0, 600),
       prompt_icone: String(s?.prompt_icone ?? "").slice(0, 300),
@@ -259,7 +259,7 @@ CTA principal : ${input.cta}`,
   }));
 
   return {
-    strategie: String(p?.strategie ?? "").slice(0, 4000),
+    strategie: toText(p?.strategie).slice(0, 4000),
     architecture: arr(p?.architecture, 20),
     identite_visuelle: {
       palette: String(p?.identite_visuelle?.palette ?? "").slice(0, 600),
@@ -268,7 +268,7 @@ CTA principal : ${input.cta}`,
       principes: String(p?.identite_visuelle?.principes ?? "").slice(0, 1200),
     },
     pages,
-    geo: String(p?.geo ?? "").slice(0, 3000),
+    geo: toText(p?.geo).slice(0, 3000),
     cta_global: String(p?.cta_global ?? "").slice(0, 300),
   };
 }

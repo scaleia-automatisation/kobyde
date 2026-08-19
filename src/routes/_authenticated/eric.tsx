@@ -51,6 +51,7 @@ function EricPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const qc = useQueryClient();
   const call = useServerFn(askEric);
+  const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
 
   useEffect(() => {

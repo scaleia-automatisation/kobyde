@@ -388,11 +388,9 @@ function BriefTab({ onUseBrief }: { onUseBrief: (text: string) => void }) {
             </div>
             <GenerationActions
               title="Briefing de site"
-              text={asText}
-              onEdit={(t) => {
-                setBrief({ ...(brief ?? {}), contexte: t });
-                toast.message("Texte modifié pour l'export et l'envoi.");
-              }}
+              text={edited ?? asText}
+              onEdit={setEdited}
+
               regenerateSlot={
                 <CreditActionButton
                   actionKey="mkt.site_brief"

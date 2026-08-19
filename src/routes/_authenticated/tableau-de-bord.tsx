@@ -232,7 +232,7 @@ function Dashboard() {
 
         <section className="surface p-6">
           <h2 className="flex items-center gap-2 text-lg">
-            <Clock /> Activité récente
+            <TrendingUp className="size-5 text-accent" /> Activité récente
           </h2>
           <ul className="mt-5 space-y-3">
             {activity.length === 0 && (
@@ -252,9 +252,5 @@ function Dashboard() {
       </div>
     </AppShell>
   );
-}
-
-function Clock() {
-  return <TrendingUp className="size-5 text-accent" />;
 }
 

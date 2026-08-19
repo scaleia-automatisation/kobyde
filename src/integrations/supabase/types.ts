@@ -1552,6 +1552,7 @@ export type Database = {
           ideal_client_type: string | null
           industry: string | null
           integrations: Json
+          is_suspended: boolean
           languages: string | null
           logo_url: string | null
           name: string
@@ -1568,6 +1569,8 @@ export type Database = {
           siret: string | null
           slug: string | null
           social_links: string | null
+          suspended_at: string | null
+          suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
           terms_text: string | null
@@ -1597,6 +1600,7 @@ export type Database = {
           ideal_client_type?: string | null
           industry?: string | null
           integrations?: Json
+          is_suspended?: boolean
           languages?: string | null
           logo_url?: string | null
           name: string
@@ -1613,6 +1617,8 @@ export type Database = {
           siret?: string | null
           slug?: string | null
           social_links?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           target_audience?: string | null
           team_text?: string | null
           terms_text?: string | null
@@ -1642,6 +1648,7 @@ export type Database = {
           ideal_client_type?: string | null
           industry?: string | null
           integrations?: Json
+          is_suspended?: boolean
           languages?: string | null
           logo_url?: string | null
           name?: string
@@ -1658,6 +1665,8 @@ export type Database = {
           siret?: string | null
           slug?: string | null
           social_links?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           target_audience?: string | null
           team_text?: string | null
           terms_text?: string | null
@@ -1893,6 +1902,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_admins: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       products: {
         Row: {
@@ -2825,6 +2855,41 @@ export type Database = {
           },
         ]
       }
+      user_events: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          org_id: string | null
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          org_id?: string | null
+          payload?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string | null
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watch_topics: {
         Row: {
           active: boolean
@@ -2908,6 +2973,7 @@ export type Database = {
           ideal_client_type: string | null
           industry: string | null
           integrations: Json
+          is_suspended: boolean
           languages: string | null
           logo_url: string | null
           name: string
@@ -2924,6 +2990,8 @@ export type Database = {
           siret: string | null
           slug: string | null
           social_links: string | null
+          suspended_at: string | null
+          suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
           terms_text: string | null
@@ -2962,6 +3030,7 @@ export type Database = {
           ideal_client_type: string | null
           industry: string | null
           integrations: Json
+          is_suspended: boolean
           languages: string | null
           logo_url: string | null
           name: string
@@ -2978,6 +3047,8 @@ export type Database = {
           siret: string | null
           slug: string | null
           social_links: string | null
+          suspended_at: string | null
+          suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
           terms_text: string | null
@@ -3026,6 +3097,7 @@ export type Database = {
         Returns: boolean
       }
       is_org_member: { Args: { _org: string }; Returns: boolean }
+      is_platform_admin: { Args: never; Returns: boolean }
       refund_credits: {
         Args: { _error?: string; _tx: string }
         Returns: {

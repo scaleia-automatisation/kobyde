@@ -131,7 +131,6 @@ function DevisPage() {
           unit_price: Number(b.prix_ht ?? 0),
           vat_rate: Number(b.vat_rate ?? 20),
           detection: b.detection ?? "Discuté",
-          in_catalog: !!b.product_id,
         })),
       );
       if (e2) toast.error(e2.message);

@@ -147,7 +147,6 @@ function QuoteDetail() {
       vat_rate: Number(p?.vat_rate ?? 20),
       subservices: p?.subservices ?? [],
       position: (items?.length ?? 0) + 1,
-      in_catalog: !!p,
     });
     if (error) { toast.error(error.message); return; }
     await refetchItems();
@@ -397,7 +396,7 @@ function QuoteDetail() {
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {it.detection && <Badge variant="outline">{it.detection}</Badge>}
-                    {it.in_catalog ? (
+                    {it.product_id ? (
                       <Badge variant="secondary">Au catalogue</Badge>
                     ) : (
                       <Badge variant="outline">Hors catalogue</Badge>

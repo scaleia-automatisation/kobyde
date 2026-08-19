@@ -34,6 +34,7 @@ import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authen
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
+import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients.$id'
 import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authenticated/devis.index'
 import { Route as AuthenticatedDevisIdRouteImport } from './routes/_authenticated/devis.$id'
 import { Route as AuthenticatedProjetsIndexRouteImport } from './routes/_authenticated/projets.index'
@@ -167,6 +168,11 @@ const AuthenticatedClientsIndexRoute =
     path: '/clients/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedClientsIdRoute = AuthenticatedClientsIdRouteImport.update({
+  id: '/clients/$id',
+  path: '/clients/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDevisIndexRoute = AuthenticatedDevisIndexRouteImport.update({
   id: '/devis/',
   path: '/devis/',
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/devis/': typeof AuthenticatedDevisIndexRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/devis': typeof AuthenticatedDevisIndexRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/_authenticated/clients/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
@@ -315,6 +324,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord'
     | '/espace/$token'
     | '/payer/$token'
+    | '/clients/$id'
     | '/devis/$id'
     | '/clients/'
     | '/devis/'
@@ -346,6 +356,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord'
     | '/espace/$token'
     | '/payer/$token'
+    | '/clients/$id'
     | '/devis/$id'
     | '/clients'
     | '/devis'
@@ -378,6 +389,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tableau-de-bord'
     | '/espace/$token'
     | '/payer/$token'
+    | '/_authenticated/clients/$id'
     | '/_authenticated/devis/$id'
     | '/_authenticated/clients/'
     | '/_authenticated/devis/'
@@ -573,6 +585,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/clients/$id': {
+      id: '/_authenticated/clients/$id'
+      path: '/clients/$id'
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof AuthenticatedClientsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/devis/': {
       id: '/_authenticated/devis/'
       path: '/devis'
@@ -631,6 +650,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProspectsRoute: typeof AuthenticatedProspectsRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
+  AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedDevisIdRoute: typeof AuthenticatedDevisIdRoute
   AuthenticatedClientsIndexRoute: typeof AuthenticatedClientsIndexRoute
   AuthenticatedDevisIndexRoute: typeof AuthenticatedDevisIndexRoute
@@ -657,6 +677,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProspectsRoute: AuthenticatedProspectsRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
+  AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedDevisIdRoute: AuthenticatedDevisIdRoute,
   AuthenticatedClientsIndexRoute: AuthenticatedClientsIndexRoute,
   AuthenticatedDevisIndexRoute: AuthenticatedDevisIndexRoute,

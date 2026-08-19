@@ -71,7 +71,10 @@ function EricPage() {
   const send = (text: string) => {
     const value = text.trim();
     if (!value) return;
-    if (!orgId) return toast.error("Organisation introuvable.");
+    if (!orgId) {
+      toast.error("Organisation introuvable.");
+      return;
+    }
     mutation.mutate(value);
   };
 

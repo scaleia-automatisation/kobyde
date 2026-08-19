@@ -175,12 +175,26 @@ function PromiseTab() {
         )}
         {result && (
           <Card className="space-y-4 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-lg font-bold leading-snug">{result.promesse}</p>
-              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(all)}>
-                <Copy className="h-4 w-4" /> Copier
-              </Button>
-            </div>
+            <p className="text-lg font-bold leading-snug">{result.promesse}</p>
+            <GenerationActions
+              title="Promesse marketing"
+              text={edited ?? all}
+              onEdit={setEdited}
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey="mkt.promise"
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={mut.isPending}
+                  onConfirm={(key) => mut.mutateAsync(key)}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
             <div className="flex flex-wrap gap-2">
               {(result.variantes ?? []).map((v: string, i: number) => (
                 <Badge key={i} variant="secondary" className="whitespace-normal text-left">

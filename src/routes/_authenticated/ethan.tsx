@@ -431,7 +431,9 @@ function WatchTab({ kind }: { kind: "concurrentielle" | "generale" }) {
       }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       assets.refetch();
+
       topics.refetch();
       toast.success("Briefing de veille prêt.");
     },

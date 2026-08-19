@@ -52,7 +52,7 @@ function Landing() {
       </header>
 
       <section className="aurora-bg">
-        <div className="mx-auto max-w-4xl px-5 pb-20 pt-14 text-center">
+        <div className="mx-auto max-w-6xl px-5 pb-20 pt-14 text-center">
           <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
             <BadgeCheck className="size-4 text-accent" />
             10 agents IA au service de votre entreprise, 24h/24 et 7j/7 — 39 €/mois

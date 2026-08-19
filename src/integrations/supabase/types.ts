@@ -132,27 +132,52 @@ export type Database = {
       }
       analytics_events: {
         Row: {
+          client_id: string | null
           created_at: string
+          duration_ms: number | null
+          entity_id: string | null
+          entity_type: string | null
           id: string
           name: string
           org_id: string
+          path: string | null
           payload: Json | null
+          session_id: string | null
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
+          duration_ms?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           name: string
           org_id: string
+          path?: string | null
           payload?: Json | null
+          session_id?: string | null
         }
         Update: {
+          client_id?: string | null
           created_at?: string
+          duration_ms?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           name?: string
           org_id?: string
+          path?: string | null
           payload?: Json | null
+          session_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "analytics_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "analytics_events_org_id_fkey"
             columns: ["org_id"]

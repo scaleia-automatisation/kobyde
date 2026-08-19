@@ -17,7 +17,6 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAutomatisationsRouteImport } from './routes/_authenticated/automatisations'
 import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authenticated/bienvenue'
 import { Route as AuthenticatedCatalogueRouteImport } from './routes/_authenticated/catalogue'
-import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated/emails'
@@ -29,14 +28,15 @@ import { Route as AuthenticatedMarketingRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPaiementsRouteImport } from './routes/_authenticated/paiements'
 import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
-import { Route as AuthenticatedProjetsRouteImport } from './routes/_authenticated/projets'
 import { Route as AuthenticatedProspectsRouteImport } from './routes/_authenticated/prospects'
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
+import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authenticated/devis.index'
 import { Route as AuthenticatedDevisIdRouteImport } from './routes/_authenticated/devis.$id'
+import { Route as AuthenticatedProjetsIndexRouteImport } from './routes/_authenticated/projets.index'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 
@@ -78,11 +78,6 @@ const AuthenticatedBienvenueRoute = AuthenticatedBienvenueRouteImport.update({
 const AuthenticatedCatalogueRoute = AuthenticatedCatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCreditsRoute = AuthenticatedCreditsRouteImport.update({
@@ -140,11 +135,6 @@ const AuthenticatedPlansRoute = AuthenticatedPlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedProjetsRoute = AuthenticatedProjetsRouteImport.update({
-  id: '/projets',
-  path: '/projets',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedProspectsRoute = AuthenticatedProspectsRouteImport.update({
   id: '/prospects',
   path: '/prospects',
@@ -171,6 +161,12 @@ const PayerTokenRoute = PayerTokenRouteImport.update({
   path: '/payer/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedClientsIndexRoute =
+  AuthenticatedClientsIndexRouteImport.update({
+    id: '/clients/',
+    path: '/clients/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDevisIndexRoute = AuthenticatedDevisIndexRouteImport.update({
   id: '/devis/',
   path: '/devis/',
@@ -181,6 +177,12 @@ const AuthenticatedDevisIdRoute = AuthenticatedDevisIdRouteImport.update({
   path: '/devis/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProjetsIndexRoute =
+  AuthenticatedProjetsIndexRouteImport.update({
+    id: '/projets/',
+    path: '/projets/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe/webhook',
   path: '/api/public/stripe/webhook',
@@ -200,7 +202,6 @@ export interface FileRoutesByFullPath {
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
-  '/clients': typeof AuthenticatedClientsRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -212,14 +213,15 @@ export interface FileRoutesByFullPath {
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/plans': typeof AuthenticatedPlansRoute
-  '/projets': typeof AuthenticatedProjetsRoute
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
+  '/clients/': typeof AuthenticatedClientsIndexRoute
   '/devis/': typeof AuthenticatedDevisIndexRoute
+  '/projets/': typeof AuthenticatedProjetsIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -231,7 +233,6 @@ export interface FileRoutesByTo {
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
-  '/clients': typeof AuthenticatedClientsRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -243,14 +244,15 @@ export interface FileRoutesByTo {
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/plans': typeof AuthenticatedPlansRoute
-  '/projets': typeof AuthenticatedProjetsRoute
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
+  '/clients': typeof AuthenticatedClientsIndexRoute
   '/devis': typeof AuthenticatedDevisIndexRoute
+  '/projets': typeof AuthenticatedProjetsIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -264,7 +266,6 @@ export interface FileRoutesById {
   '/_authenticated/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/_authenticated/bienvenue': typeof AuthenticatedBienvenueRoute
   '/_authenticated/catalogue': typeof AuthenticatedCatalogueRoute
-  '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
@@ -276,14 +277,15 @@ export interface FileRoutesById {
   '/_authenticated/paiements': typeof AuthenticatedPaiementsRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
-  '/_authenticated/projets': typeof AuthenticatedProjetsRoute
   '/_authenticated/prospects': typeof AuthenticatedProspectsRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
+  '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
+  '/_authenticated/projets/': typeof AuthenticatedProjetsIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -297,7 +299,6 @@ export interface FileRouteTypes {
     | '/automatisations'
     | '/bienvenue'
     | '/catalogue'
-    | '/clients'
     | '/credits'
     | '/documents'
     | '/emails'
@@ -309,14 +310,15 @@ export interface FileRouteTypes {
     | '/paiements'
     | '/parametres'
     | '/plans'
-    | '/projets'
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
     | '/espace/$token'
     | '/payer/$token'
     | '/devis/$id'
+    | '/clients/'
     | '/devis/'
+    | '/projets/'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
@@ -328,7 +330,6 @@ export interface FileRouteTypes {
     | '/automatisations'
     | '/bienvenue'
     | '/catalogue'
-    | '/clients'
     | '/credits'
     | '/documents'
     | '/emails'
@@ -340,14 +341,15 @@ export interface FileRouteTypes {
     | '/paiements'
     | '/parametres'
     | '/plans'
-    | '/projets'
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
     | '/espace/$token'
     | '/payer/$token'
     | '/devis/$id'
+    | '/clients'
     | '/devis'
+    | '/projets'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   id:
@@ -360,7 +362,6 @@ export interface FileRouteTypes {
     | '/_authenticated/automatisations'
     | '/_authenticated/bienvenue'
     | '/_authenticated/catalogue'
-    | '/_authenticated/clients'
     | '/_authenticated/credits'
     | '/_authenticated/documents'
     | '/_authenticated/emails'
@@ -372,14 +373,15 @@ export interface FileRouteTypes {
     | '/_authenticated/paiements'
     | '/_authenticated/parametres'
     | '/_authenticated/plans'
-    | '/_authenticated/projets'
     | '/_authenticated/prospects'
     | '/_authenticated/rh'
     | '/_authenticated/tableau-de-bord'
     | '/espace/$token'
     | '/payer/$token'
     | '/_authenticated/devis/$id'
+    | '/_authenticated/clients/'
     | '/_authenticated/devis/'
+    | '/_authenticated/projets/'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
@@ -450,13 +452,6 @@ declare module '@tanstack/react-router' {
       path: '/catalogue'
       fullPath: '/catalogue'
       preLoaderRoute: typeof AuthenticatedCatalogueRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/clients': {
-      id: '/_authenticated/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/credits': {
@@ -536,13 +531,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlansRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/projets': {
-      id: '/_authenticated/projets'
-      path: '/projets'
-      fullPath: '/projets'
-      preLoaderRoute: typeof AuthenticatedProjetsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/prospects': {
       id: '/_authenticated/prospects'
       path: '/prospects'
@@ -578,6 +566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayerTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/clients/': {
+      id: '/_authenticated/clients/'
+      path: '/clients'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof AuthenticatedClientsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/devis/': {
       id: '/_authenticated/devis/'
       path: '/devis'
@@ -590,6 +585,13 @@ declare module '@tanstack/react-router' {
       path: '/devis/$id'
       fullPath: '/devis/$id'
       preLoaderRoute: typeof AuthenticatedDevisIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/projets/': {
+      id: '/_authenticated/projets/'
+      path: '/projets'
+      fullPath: '/projets/'
+      preLoaderRoute: typeof AuthenticatedProjetsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/stripe/webhook': {
@@ -615,7 +617,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAutomatisationsRoute: typeof AuthenticatedAutomatisationsRoute
   AuthenticatedBienvenueRoute: typeof AuthenticatedBienvenueRoute
   AuthenticatedCatalogueRoute: typeof AuthenticatedCatalogueRoute
-  AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
@@ -627,12 +628,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPaiementsRoute: typeof AuthenticatedPaiementsRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
-  AuthenticatedProjetsRoute: typeof AuthenticatedProjetsRoute
   AuthenticatedProspectsRoute: typeof AuthenticatedProspectsRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
   AuthenticatedDevisIdRoute: typeof AuthenticatedDevisIdRoute
+  AuthenticatedClientsIndexRoute: typeof AuthenticatedClientsIndexRoute
   AuthenticatedDevisIndexRoute: typeof AuthenticatedDevisIndexRoute
+  AuthenticatedProjetsIndexRoute: typeof AuthenticatedProjetsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -641,7 +643,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAutomatisationsRoute: AuthenticatedAutomatisationsRoute,
   AuthenticatedBienvenueRoute: AuthenticatedBienvenueRoute,
   AuthenticatedCatalogueRoute: AuthenticatedCatalogueRoute,
-  AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,
@@ -653,12 +654,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPaiementsRoute: AuthenticatedPaiementsRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
-  AuthenticatedProjetsRoute: AuthenticatedProjetsRoute,
   AuthenticatedProspectsRoute: AuthenticatedProspectsRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
   AuthenticatedDevisIdRoute: AuthenticatedDevisIdRoute,
+  AuthenticatedClientsIndexRoute: AuthenticatedClientsIndexRoute,
   AuthenticatedDevisIndexRoute: AuthenticatedDevisIndexRoute,
+  AuthenticatedProjetsIndexRoute: AuthenticatedProjetsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

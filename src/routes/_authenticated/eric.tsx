@@ -205,9 +205,12 @@ function EricPage() {
 
             {plan.taches.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Tâches distribuées
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Tâches distribuées
+                  </p>
+                  <Badge variant="secondary">{spent} crédit(s) consommé(s)</Badge>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {plan.taches.map((t, i) => {
                     const meta = agentByKey(t.agent_key);

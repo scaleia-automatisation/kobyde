@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowRight, Loader2, Send } from "lucide-react";
+import { ArrowRight, Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";

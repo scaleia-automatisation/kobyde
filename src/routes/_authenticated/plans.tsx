@@ -72,7 +72,7 @@ function PlansPage() {
             return (
               <Card
                 key={p.key}
-                className={`flex flex-col p-6 ${p.highlight ? "ring-2 ring-primary" : ""}`}
+                className={`plan-card flex flex-col p-8 ${p.highlight ? "ring-2 ring-primary" : ""}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="font-display text-xl font-bold">{p.name}</h2>

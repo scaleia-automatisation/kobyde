@@ -69,7 +69,7 @@ function Landing() {
             analysent vos chiffres. Vous, vous décidez.
           </p>
 
-          <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-3">
+          <div className="mx-auto mt-8 flex flex-nowrap justify-center gap-3">
             {[
               { icon: Clock4, text: "Travaille 24h/24 et 7j/7" },
               { icon: Moon, text: "Zéro pause Zéro congés" },

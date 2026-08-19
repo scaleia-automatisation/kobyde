@@ -3098,6 +3098,63 @@ export type Database = {
       }
       is_org_member: { Args: { _org: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
+      purchase_credits: {
+        Args: { _credits: number; _org: string }
+        Returns: {
+          address: string | null
+          city: string | null
+          company_type: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          credits: number
+          credits_total: number
+          currency: string
+          description: string | null
+          email: string | null
+          id: string
+          ideal_client_location: string | null
+          ideal_client_needs: string | null
+          ideal_client_sector: string | null
+          ideal_client_size: string | null
+          ideal_client_type: string | null
+          industry: string | null
+          integrations: Json
+          is_suspended: boolean
+          languages: string | null
+          logo_url: string | null
+          name: string
+          onboarding_completed: boolean
+          phone: string | null
+          plan: string
+          plan_credits: number
+          plan_price_eur: number
+          plan_renews_at: string
+          positioning: string | null
+          pricing_text: string | null
+          products_text: string | null
+          services_text: string | null
+          siret: string | null
+          slug: string | null
+          social_links: string | null
+          suspended_at: string | null
+          suspended_reason: string | null
+          target_audience: string | null
+          team_text: string | null
+          terms_text: string | null
+          updated_at: string
+          values_text: string | null
+          vat_rate: number
+          vat_regime: string | null
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       refund_credits: {
         Args: { _error?: string; _tx: string }
         Returns: {

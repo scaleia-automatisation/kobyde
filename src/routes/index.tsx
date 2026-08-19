@@ -52,12 +52,12 @@ function Landing() {
       </header>
 
       <section className="aurora-bg">
-        <div className="mx-auto max-w-4xl px-5 pb-20 pt-14 text-center">
+        <div className="mx-auto max-w-6xl px-5 pb-20 pt-14 text-center">
           <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
             <BadgeCheck className="size-4 text-accent" />
             10 agents IA au service de votre entreprise, 24h/24 et 7j/7 — 39 €/mois
           </span>
-          <h1 className="hero-title mx-auto mt-6 max-w-4xl text-5xl leading-[1.05] font-black italic tracking-tight sm:text-7xl lg:text-8xl">
+          <h1 className="hero-title mx-auto mt-6 max-w-full text-3xl leading-[1.1] font-black italic tracking-tight whitespace-nowrap sm:text-5xl lg:text-5xl">
             <span className="block">Une équipe complète</span>
             <span className="block">d'agents IA pour votre entreprise,</span>
             <span className="block">pour moins de 1,30 € par jour.</span>
@@ -76,9 +76,9 @@ function Landing() {
             ].map((b) => (
               <div
                 key={b.text}
-                className="glow-chip flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-sm shadow-soft backdrop-blur"
+                className="aurora-chip glow-chip flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-base font-medium text-white shadow-soft backdrop-blur"
               >
-                <b.icon className="size-4 text-accent" />
+                <b.icon className="size-5 text-white" />
                 {b.text}
               </div>
             ))}

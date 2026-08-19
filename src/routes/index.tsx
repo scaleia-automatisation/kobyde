@@ -153,8 +153,8 @@ function Landing() {
           Abonnement mensuel renouvelé automatiquement. Vos crédits non utilisés sont reportés au mois
           suivant.
         </p>
-        <div className="mt-10 grid gap-4 lg:grid-cols-4">
-          {PLANS.map((p) => (
+        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {PAID_PLANS.map((p) => (
             <article
               key={p.key}
               className={`surface flex flex-col p-6 ${p.highlight ? "ring-2 ring-primary" : ""}`}

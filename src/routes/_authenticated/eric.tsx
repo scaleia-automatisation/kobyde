@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { askEric } from "@/lib/eric.functions";
+import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";
 

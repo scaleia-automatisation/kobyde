@@ -21,7 +21,7 @@ export const portalRespondQuote = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { resolvePortal, admin, maybeCreateProject } = await import("./portal.server");
+    const { resolvePortal, admin, maybeCreateProject, logEvent } = await import("./portal.server");
     const access = await resolvePortal(data.token);
     const db = await admin();
 
@@ -49,6 +49,12 @@ export const portalRespondQuote = createServerFn({ method: "POST" })
       kind: data.action === "accepte" ? "success" : "info",
     });
 
+    await logEvent(
+      access.org_id,
+      data.action === "accepte" ? "quote_accepted" : data.action === "refuse" ? "quote_rejected" : "section_clicked",
+      { clientId: access.client_id, entityType: "quote", entityId: data.quoteId },
+    );
+
     if (data.action === "accepte") await maybeCreateProject(data.quoteId);
     return { ok: true };
   });
@@ -64,9 +70,14 @@ export const portalRespondRequest = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { resolvePortal, admin } = await import("./portal.server");
+    const { resolvePortal, admin, logEvent } = await import("./portal.server");
     const access = await resolvePortal(data.token);
     const db = await admin();
+    await logEvent(access.org_id, "client_request_created", {
+      clientId: access.client_id,
+      entityType: "client_request",
+      entityId: data.requestId,
+    });
     const { error } = await db
       .from("client_requests")
       .update({ response: data.response, status: "repondu", responded_at: new Date().toISOString() })

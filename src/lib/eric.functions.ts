@@ -91,6 +91,8 @@ export const askEric = createServerFn({ method: "POST" })
 
     return {
       ...plan,
+      credits_used: tx ? Math.abs(tx.amount) : 0,
+      credits_left: tx ? tx.balance_after : null,
       taches: inserted.map(({ task, agent }, i) => ({
         ...task,
         id: ids[i] ?? null,
@@ -98,6 +100,7 @@ export const askEric = createServerFn({ method: "POST" })
         agent_role: agent!.role_title as string,
       })),
     };
+
   });
 
 /** Parler directement à un agent, sans passer par Éric. */

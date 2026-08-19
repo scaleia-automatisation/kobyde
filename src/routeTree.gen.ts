@@ -18,6 +18,7 @@ import { Route as AuthenticatedAutomatisationsRouteImport } from './routes/_auth
 import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authenticated/bienvenue'
 import { Route as AuthenticatedCatalogueRouteImport } from './routes/_authenticated/catalogue'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
+import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
 import { Route as AuthenticatedDevisRouteImport } from './routes/_authenticated/devis'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated/emails'
@@ -76,6 +77,11 @@ const AuthenticatedCatalogueRoute = AuthenticatedCatalogueRouteImport.update({
 const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCreditsRoute = AuthenticatedCreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDevisRoute = AuthenticatedDevisRouteImport.update({
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
   '/clients': typeof AuthenticatedClientsRoute
+  '/credits': typeof AuthenticatedCreditsRoute
   '/devis': typeof AuthenticatedDevisRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
   '/clients': typeof AuthenticatedClientsRoute
+  '/credits': typeof AuthenticatedCreditsRoute
   '/devis': typeof AuthenticatedDevisRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/bienvenue': typeof AuthenticatedBienvenueRoute
   '/_authenticated/catalogue': typeof AuthenticatedCatalogueRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
+  '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/devis': typeof AuthenticatedDevisRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/bienvenue'
     | '/catalogue'
     | '/clients'
+    | '/credits'
     | '/devis'
     | '/documents'
     | '/emails'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/bienvenue'
     | '/catalogue'
     | '/clients'
+    | '/credits'
     | '/devis'
     | '/documents'
     | '/emails'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bienvenue'
     | '/_authenticated/catalogue'
     | '/_authenticated/clients'
+    | '/_authenticated/credits'
     | '/_authenticated/devis'
     | '/_authenticated/documents'
     | '/_authenticated/emails'
@@ -370,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/clients'
       preLoaderRoute: typeof AuthenticatedClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/credits': {
+      id: '/_authenticated/credits'
+      path: '/credits'
+      fullPath: '/credits'
+      preLoaderRoute: typeof AuthenticatedCreditsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/devis': {
@@ -480,6 +499,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBienvenueRoute: typeof AuthenticatedBienvenueRoute
   AuthenticatedCatalogueRoute: typeof AuthenticatedCatalogueRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
+  AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
   AuthenticatedDevisRoute: typeof AuthenticatedDevisRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
@@ -502,6 +522,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBienvenueRoute: AuthenticatedBienvenueRoute,
   AuthenticatedCatalogueRoute: AuthenticatedCatalogueRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
+  AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
   AuthenticatedDevisRoute: AuthenticatedDevisRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,

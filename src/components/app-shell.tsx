@@ -6,6 +6,7 @@ import {
   Briefcase,
   Building2,
   CircleHelp,
+  Coins,
   CreditCard,
   FileText,
   FolderKanban,
@@ -45,6 +46,7 @@ export const NAV = [
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/automatisations", label: "Automatisations", icon: Zap },
   { to: "/documents", label: "Documents", icon: Briefcase },
+  { to: "/credits", label: "Crédits IA", icon: Coins },
   { to: "/entreprise", label: "Fiche entreprise", icon: Building2 },
   { to: "/parametres", label: "Paramètres", icon: Settings },
 ] as const;
@@ -100,6 +102,12 @@ function SidebarFooter() {
           Crédits IA restants
         </div>
         <p className="mt-1 font-display text-xl text-sidebar-accent-foreground">{org?.credits ?? 0}</p>
+        <Link
+          to="/credits"
+          className="mt-1 inline-block text-xs text-sidebar-foreground/70 underline-offset-2 hover:underline"
+        >
+          Voir l'historique
+        </Link>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <Link

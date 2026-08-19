@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -36,6 +37,9 @@ export type ModuleConfig = {
   addLabel: string;
   fields: FieldDef[];
   badgeField?: string;
+  /** Route de la fiche détaillée, ex. "/clients/$id". */
+  detailTo?: string;
+  detailLabel?: string;
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -146,6 +150,13 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
               <div className="flex items-center gap-2">
                 {config.badgeField && row[config.badgeField] && (
                   <Badge variant="secondary">{String(row[config.badgeField])}</Badge>
+                )}
+                {config.detailTo && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={config.detailTo} params={{ id: row.id }}>
+                      {config.detailLabel ?? "Ouvrir"}
+                    </Link>
+                  </Button>
                 )}
                 <Button
                   variant="ghost"

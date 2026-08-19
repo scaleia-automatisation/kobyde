@@ -34,6 +34,7 @@ import { Route as AuthenticatedProjetsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProspectsRouteImport } from './routes/_authenticated/prospects'
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
+import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authenticated/devis.index'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 
@@ -163,6 +164,11 @@ const AuthenticatedTableauDeBordRoute =
     path: '/tableau-de-bord',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDevisIndexRoute = AuthenticatedDevisIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedDevisRoute,
+} as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe/webhook',
   path: '/api/public/stripe/webhook',
@@ -184,7 +190,7 @@ export interface FileRoutesByFullPath {
   '/catalogue': typeof AuthenticatedCatalogueRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/credits': typeof AuthenticatedCreditsRoute
-  '/devis': typeof AuthenticatedDevisRoute
+  '/devis': typeof AuthenticatedDevisRouteWithChildren
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
   '/entreprise': typeof AuthenticatedEntrepriseRoute
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/devis/': typeof AuthenticatedDevisIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -212,7 +219,6 @@ export interface FileRoutesByTo {
   '/catalogue': typeof AuthenticatedCatalogueRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/credits': typeof AuthenticatedCreditsRoute
-  '/devis': typeof AuthenticatedDevisRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
   '/entreprise': typeof AuthenticatedEntrepriseRoute
@@ -227,6 +233,7 @@ export interface FileRoutesByTo {
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/devis': typeof AuthenticatedDevisIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -242,7 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/catalogue': typeof AuthenticatedCatalogueRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
-  '/_authenticated/devis': typeof AuthenticatedDevisRoute
+  '/_authenticated/devis': typeof AuthenticatedDevisRouteWithChildren
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
   '/_authenticated/entreprise': typeof AuthenticatedEntrepriseRoute
@@ -257,6 +264,7 @@ export interface FileRoutesById {
   '/_authenticated/prospects': typeof AuthenticatedProspectsRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -287,6 +295,7 @@ export interface FileRouteTypes {
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
+    | '/devis/'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
@@ -300,7 +309,6 @@ export interface FileRouteTypes {
     | '/catalogue'
     | '/clients'
     | '/credits'
-    | '/devis'
     | '/documents'
     | '/emails'
     | '/entreprise'
@@ -315,6 +323,7 @@ export interface FileRouteTypes {
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
+    | '/devis'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   id:
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prospects'
     | '/_authenticated/rh'
     | '/_authenticated/tableau-de-bord'
+    | '/_authenticated/devis/'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
@@ -533,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTableauDeBordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/devis/': {
+      id: '/_authenticated/devis/'
+      path: '/'
+      fullPath: '/devis/'
+      preLoaderRoute: typeof AuthenticatedDevisIndexRouteImport
+      parentRoute: typeof AuthenticatedDevisRoute
+    }
     '/api/public/stripe/webhook': {
       id: '/api/public/stripe/webhook'
       path: '/api/public/stripe/webhook'
@@ -550,6 +567,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedDevisRouteChildren {
+  AuthenticatedDevisIndexRoute: typeof AuthenticatedDevisIndexRoute
+}
+
+const AuthenticatedDevisRouteChildren: AuthenticatedDevisRouteChildren = {
+  AuthenticatedDevisIndexRoute: AuthenticatedDevisIndexRoute,
+}
+
+const AuthenticatedDevisRouteWithChildren =
+  AuthenticatedDevisRoute._addFileChildren(AuthenticatedDevisRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAideRoute: typeof AuthenticatedAideRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
@@ -558,7 +586,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCatalogueRoute: typeof AuthenticatedCatalogueRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
-  AuthenticatedDevisRoute: typeof AuthenticatedDevisRoute
+  AuthenticatedDevisRoute: typeof AuthenticatedDevisRouteWithChildren
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
   AuthenticatedEntrepriseRoute: typeof AuthenticatedEntrepriseRoute
@@ -583,7 +611,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCatalogueRoute: AuthenticatedCatalogueRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
-  AuthenticatedDevisRoute: AuthenticatedDevisRoute,
+  AuthenticatedDevisRoute: AuthenticatedDevisRouteWithChildren,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,
   AuthenticatedEntrepriseRoute: AuthenticatedEntrepriseRoute,

@@ -125,7 +125,7 @@ function PlansPage() {
           })}
         </div>
 
-        <section className="space-y-4">
+        <section id="packs" className="scroll-mt-24 space-y-4">
           <div>
             <h2 className="font-display text-2xl font-bold">Plus de crédits ? Achetez à la carte</h2>
             <p className="mt-1 text-sm text-muted-foreground">

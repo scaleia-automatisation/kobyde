@@ -23,7 +23,9 @@ import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEntrepriseRouteImport } from './routes/_authenticated/entreprise'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEricRouteImport } from './routes/_authenticated/eric'
+import { Route as AuthenticatedFunnelRouteImport } from './routes/_authenticated/funnel'
 import { Route as AuthenticatedJasonRouteImport } from './routes/_authenticated/jason'
+import { Route as AuthenticatedLamineRouteImport } from './routes/_authenticated/lamine'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedPaiementsRouteImport } from './routes/_authenticated/paiements'
 import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
@@ -112,9 +114,19 @@ const AuthenticatedEricRoute = AuthenticatedEricRouteImport.update({
   path: '/eric',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFunnelRoute = AuthenticatedFunnelRouteImport.update({
+  id: '/funnel',
+  path: '/funnel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedJasonRoute = AuthenticatedJasonRouteImport.update({
   id: '/jason',
   path: '/jason',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLamineRoute = AuthenticatedLamineRouteImport.update({
+  id: '/lamine',
+  path: '/lamine',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
@@ -220,7 +232,9 @@ export interface FileRoutesByFullPath {
   '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
+  '/funnel': typeof AuthenticatedFunnelRoute
   '/jason': typeof AuthenticatedJasonRoute
+  '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -253,7 +267,9 @@ export interface FileRoutesByTo {
   '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
+  '/funnel': typeof AuthenticatedFunnelRoute
   '/jason': typeof AuthenticatedJasonRoute
+  '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -288,7 +304,9 @@ export interface FileRoutesById {
   '/_authenticated/entreprise': typeof AuthenticatedEntrepriseRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/eric': typeof AuthenticatedEricRoute
+  '/_authenticated/funnel': typeof AuthenticatedFunnelRoute
   '/_authenticated/jason': typeof AuthenticatedJasonRoute
+  '/_authenticated/lamine': typeof AuthenticatedLamineRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/paiements': typeof AuthenticatedPaiementsRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
@@ -323,7 +341,9 @@ export interface FileRouteTypes {
     | '/entreprise'
     | '/equipe'
     | '/eric'
+    | '/funnel'
     | '/jason'
+    | '/lamine'
     | '/marketing'
     | '/paiements'
     | '/parametres'
@@ -356,7 +376,9 @@ export interface FileRouteTypes {
     | '/entreprise'
     | '/equipe'
     | '/eric'
+    | '/funnel'
     | '/jason'
+    | '/lamine'
     | '/marketing'
     | '/paiements'
     | '/parametres'
@@ -390,7 +412,9 @@ export interface FileRouteTypes {
     | '/_authenticated/entreprise'
     | '/_authenticated/equipe'
     | '/_authenticated/eric'
+    | '/_authenticated/funnel'
     | '/_authenticated/jason'
+    | '/_authenticated/lamine'
     | '/_authenticated/marketing'
     | '/_authenticated/paiements'
     | '/_authenticated/parametres'
@@ -520,11 +544,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEricRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/funnel': {
+      id: '/_authenticated/funnel'
+      path: '/funnel'
+      fullPath: '/funnel'
+      preLoaderRoute: typeof AuthenticatedFunnelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/jason': {
       id: '/_authenticated/jason'
       path: '/jason'
       fullPath: '/jason'
       preLoaderRoute: typeof AuthenticatedJasonRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lamine': {
+      id: '/_authenticated/lamine'
+      path: '/lamine'
+      fullPath: '/lamine'
+      preLoaderRoute: typeof AuthenticatedLamineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing': {
@@ -661,7 +699,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEntrepriseRoute: typeof AuthenticatedEntrepriseRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedEricRoute: typeof AuthenticatedEricRoute
+  AuthenticatedFunnelRoute: typeof AuthenticatedFunnelRoute
   AuthenticatedJasonRoute: typeof AuthenticatedJasonRoute
+  AuthenticatedLamineRoute: typeof AuthenticatedLamineRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedPaiementsRoute: typeof AuthenticatedPaiementsRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
@@ -689,7 +729,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEntrepriseRoute: AuthenticatedEntrepriseRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedEricRoute: AuthenticatedEricRoute,
+  AuthenticatedFunnelRoute: AuthenticatedFunnelRoute,
   AuthenticatedJasonRoute: AuthenticatedJasonRoute,
+  AuthenticatedLamineRoute: AuthenticatedLamineRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedPaiementsRoute: AuthenticatedPaiementsRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,

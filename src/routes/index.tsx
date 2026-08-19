@@ -97,8 +97,8 @@ function Landing() {
 
       <section className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="text-center text-3xl">Voici votre équipe</h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-          Chaque agent a un prénom, un métier et une mission claire. Vous lui parlez comme à un collègue.
+        <p className="mx-auto mt-4 max-w-2xl text-center font-display text-xl font-medium italic leading-relaxed md:text-2xl bg-gradient-to-r from-aurora-1 via-aurora-2 to-aurora-3 bg-clip-text text-transparent">
+          Une équipe d'employés IA interconnectés qui travaille 24h/24 et 7j/7 en parfaite collaboration.
         </p>
         {(() => {
           const lead = AGENTS.find((a) => a.key === "directeur") ?? AGENTS[0]!;

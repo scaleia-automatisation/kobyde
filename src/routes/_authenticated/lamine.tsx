@@ -55,7 +55,9 @@ export const Route = createFileRoute("/_authenticated/lamine")({
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function copy(text: string) {
+
   navigator.clipboard
     .writeText(text)
     .then(() => toast.success("Copié."))

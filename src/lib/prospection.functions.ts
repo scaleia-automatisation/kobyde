@@ -1,0 +1,248 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { findProspectsAI, generatePersonaAI, loadMemory, NOT_FOUND } from "./prospection.server";
+import { searchActionKey } from "./prospection";
+import { completeCredits, refundCredits, reserveCredits } from "./credits.server";
+
+const paramsSchema = z.object({
+  target: z.string().max(200).default(""),
+  continent: z.string().max(80).default(""),
+  country: z.string().max(80).default(""),
+  region: z.string().max(80).default(""),
+  department: z.string().max(80).default(""),
+  city: z.string().max(80).default(""),
+  district: z.string().max(80).default(""),
+  count: z.number().int().min(0).max(100).default(20),
+  offer: z.string().max(300).default(""),
+  channel: z.string().max(40).default("Google Search"),
+  tool: z.string().max(40).default("Automatique"),
+});
+
+export const generatePersona = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        orgId: z.string().uuid(),
+        idempotencyKey: z.string().min(8).max(64),
+        params: paramsSchema,
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const supabase = context.supabase;
+
+    const { data: membership } = await supabase
+      .from("memberships")
+      .select("id")
+      .eq("org_id", data.orgId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!membership) throw new Error("Accès refusé à cette organisation.");
+
+    const tx = await reserveCredits(supabase, {
+      orgId: data.orgId,
+      actionKey: "prospect.persona",
+      idempotencyKey: data.idempotencyKey,
+    });
+
+    try {
+      const memory = await loadMemory(supabase, data.orgId);
+      const persona = await generatePersonaAI(data.params, memory);
+      const content = [
+        persona.resume,
+        persona.profil.length ? `Profil : ${persona.profil.join(" · ")}` : "",
+        persona.problemes.length ? `Problèmes : ${persona.problemes.join(" · ")}` : "",
+        persona.objectifs.length ? `Objectifs : ${persona.objectifs.join(" · ")}` : "",
+        persona.objections.length ? `Objections : ${persona.objections.join(" · ")}` : "",
+        persona.ou_les_trouver.length ? `Où les trouver : ${persona.ou_les_trouver.join(" · ")}` : "",
+        persona.messages_cles.length ? `Messages clés : ${persona.messages_cles.join(" · ")}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
+      const { data: row, error } = await supabase
+        .from("personas")
+        .insert({
+          org_id: data.orgId,
+          title: persona.titre,
+          content,
+          data: persona,
+          params: data.params,
+          status: "brouillon",
+          created_by: context.userId,
+        })
+        .select("id,title,content,status")
+        .single();
+      if (error) throw new Error(error.message);
+
+      await completeCredits(supabase, tx, persona.titre);
+      return {
+        persona: row as { id: string; title: string; content: string; status: string },
+        credits_used: tx ? Math.abs(tx.amount) : 0,
+        credits_left: tx ? tx.balance_after : null,
+      };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Échec de la génération du persona";
+      await refundCredits(supabase, tx, message);
+      throw new Error(message);
+    }
+  });
+
+export const savePersona = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        orgId: z.string().uuid(),
+        personaId: z.string().uuid(),
+        title: z.string().max(160).optional(),
+        content: z.string().max(8000).optional(),
+        status: z.enum(["brouillon", "valide"]).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (data.title !== undefined) patch["title"] = data.title;
+    if (data.content !== undefined) patch["content"] = data.content;
+    if (data.status !== undefined) patch["status"] = data.status;
+
+    const { error } = await context.supabase
+      .from("personas")
+      .update(patch)
+      .eq("id", data.personaId)
+      .eq("org_id", data.orgId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const findProspects = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        orgId: z.string().uuid(),
+        idempotencyKey: z.string().min(8).max(64),
+        params: paramsSchema,
+        personaId: z.string().uuid().nullable().optional(),
+        personaText: z.string().max(8000).default(""),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const supabase = context.supabase;
+
+    const { data: membership } = await supabase
+      .from("memberships")
+      .select("id")
+      .eq("org_id", data.orgId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!membership) throw new Error("Accès refusé à cette organisation.");
+
+    const tx = await reserveCredits(supabase, {
+      orgId: data.orgId,
+      actionKey: searchActionKey(data.params.count),
+      idempotencyKey: data.idempotencyKey,
+    });
+
+    const { data: search, error: searchError } = await supabase
+      .from("prospect_searches")
+      .insert({
+        org_id: data.orgId,
+        persona_id: data.personaId ?? null,
+        params: data.params,
+        status: "en_cours",
+        created_by: context.userId,
+      })
+      .select("id")
+      .single();
+    if (searchError) {
+      await refundCredits(supabase, tx, searchError.message);
+      throw new Error(searchError.message);
+    }
+
+    try {
+      const memory = await loadMemory(supabase, data.orgId);
+      const result = await findProspectsAI(data.params, data.personaText, memory);
+
+      // Déduplication avec les prospects déjà en base.
+      const { data: existing } = await supabase
+        .from("prospects")
+        .select("company_name,email,website")
+        .eq("org_id", data.orgId)
+        .limit(1000);
+      const seen = new Set(
+        (existing ?? []).map((p) =>
+          `${String(p.company_name ?? "").toLowerCase()}|${String(p.email ?? "").toLowerCase()}`,
+        ),
+      );
+
+      const fresh = result.prospects.filter(
+        (p) => !seen.has(`${p.company_name.toLowerCase()}|${p.email.toLowerCase()}`),
+      );
+
+      let inserted: { id: string }[] = [];
+      if (fresh.length) {
+        const clean = (v: string) => (v === NOT_FOUND ? null : v);
+        const { data: rows, error } = await supabase
+          .from("prospects")
+          .insert(
+            fresh.map((p) => ({
+              org_id: data.orgId,
+              search_id: search.id,
+              company_name: clean(p.company_name),
+              full_name: p.full_name === NOT_FOUND ? p.company_name : p.full_name,
+              email: clean(p.email),
+              phone: clean(p.phone),
+              website: clean(p.website),
+              city: clean(p.city),
+              channel: p.channel,
+              source: data.params.tool,
+              source_url: clean(p.source_url),
+              sources: p.sources,
+              qualification: clean(p.qualification),
+              angle: clean(p.angle),
+              personalized_message: clean(p.personalized_message),
+              followup_step: "À contacter",
+              score: p.score,
+              status: "nouveau",
+              notes: clean(p.notes),
+            })),
+          )
+          .select("id");
+        if (error) throw new Error(error.message);
+        inserted = (rows ?? []) as { id: string }[];
+      }
+
+      await supabase
+        .from("prospect_searches")
+        .update({
+          status: "termine",
+          steps: result.etapes,
+          results_count: inserted.length,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", search.id);
+
+      await completeCredits(supabase, tx, result.rapport);
+
+      return {
+        searchId: search.id as string,
+        rapport: result.rapport,
+        etapes: result.etapes,
+        prospects: result.prospects,
+        inserted: inserted.length,
+        doublons: result.prospects.length - fresh.length,
+        credits_used: tx ? Math.abs(tx.amount) : 0,
+        credits_left: tx ? tx.balance_after : null,
+      };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Échec de la recherche de prospects";
+      await refundCredits(supabase, tx, message);
+      await supabase.from("prospect_searches").update({ status: "echec" }).eq("id", search.id);
+      throw new Error(message);
+    }
+  });

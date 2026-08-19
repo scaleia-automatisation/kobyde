@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation } from "@tanstack/react-query";
 import { useId, useState } from "react";
-import { Copy, Loader2, Pencil, RefreshCw } from "lucide-react";
+import { Loader2, Pencil, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
+import { toReadableText } from "@/lib/generation-text";
 import { useOrgId } from "@/lib/db";
 import { BRIEF_SECTIONS, SITE_STYLES, SITE_TONES, SITE_TYPES } from "@/lib/marketing";
 import {
@@ -28,6 +30,7 @@ import {
   generateSiteContent,
   generateValueProp,
 } from "@/lib/marketing.functions";
+
 
 export const Route = createFileRoute("/_authenticated/lamine")({
   component: LaminePage,
@@ -52,12 +55,8 @@ export const Route = createFileRoute("/_authenticated/lamine")({
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-function copy(text: string) {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => toast.success("Copié."))
-    .catch(() => toast.error("Copie impossible."));
-}
+
+
 
 function Field({
   label,
@@ -121,13 +120,16 @@ function PromiseTab() {
   const call = useServerFn(generatePromise);
   const [form, setForm] = useState({ offer: "", audience: "", notes: "" });
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (key: string) => call({ data: { orgId: orgId!, idempotencyKey: key, ...form } }),
     onSuccess: (d) => {
       setResult(d.result);
+      setEdited(null);
       toast.success("Promesse générée par Lamine.");
     },
+
     onError: (e: any) => toast.error(e?.message ?? "Échec."),
   });
 
@@ -172,12 +174,26 @@ function PromiseTab() {
         )}
         {result && (
           <Card className="space-y-4 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-lg font-bold leading-snug">{result.promesse}</p>
-              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(all)}>
-                <Copy className="h-4 w-4" /> Copier
-              </Button>
-            </div>
+            <p className="text-lg font-bold leading-snug">{result.promesse}</p>
+            <GenerationActions
+              title="Promesse marketing"
+              text={edited ?? all}
+              onEdit={setEdited}
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey="mkt.promise"
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={mut.isPending}
+                  onConfirm={(key) => mut.mutateAsync(key)}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
             <div className="flex flex-wrap gap-2">
               {(result.variantes ?? []).map((v: string, i: number) => (
                 <Badge key={i} variant="secondary" className="whitespace-normal text-left">
@@ -207,12 +223,15 @@ function ValuePropTab() {
   const call = useServerFn(generateValueProp);
   const [form, setForm] = useState({ offer: "", audience: "", notes: "", current: "", competitors: "" });
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (v: { key: string; mode: "generer" | "optimiser" | "concurrents" }) =>
       call({ data: { orgId: orgId!, idempotencyKey: v.key, mode: v.mode, ...form } }),
     onSuccess: (d) => {
       setResult(d.result);
+      setEdited(null);
+
       toast.success("Proposition de valeur prête.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec."),
@@ -247,12 +266,26 @@ function ValuePropTab() {
         )}
         {result && (
           <Card className="space-y-4 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-lg font-bold leading-snug">{result.proposition}</p>
-              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(JSON.stringify(result, null, 2))}>
-                <Copy className="h-4 w-4" /> Copier
-              </Button>
-            </div>
+            <p className="text-lg font-bold leading-snug">{result.proposition}</p>
+            <GenerationActions
+              title="Proposition de valeur"
+              text={edited ?? toReadableText(result)}
+              onEdit={setEdited}
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey="mkt.value_prop"
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={mut.isPending}
+                  onConfirm={(key) => mut.mutateAsync({ key, mode: "generer" })}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
             <Block title="Accroche">{result.accroche}</Block>
             <div className="grid gap-3 sm:grid-cols-2">
               <Block title="Bénéfice">{result.benefice}</Block>
@@ -292,14 +325,17 @@ function BriefTab({ onUseBrief }: { onUseBrief: (text: string) => void }) {
   const [form, setForm] = useState({ siteType: "vitrine", product: "", notes: "" });
   const [brief, setBrief] = useState<Record<string, string> | null>(null);
   const [editing, setEditing] = useState(false);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (key: string) => call({ data: { orgId: orgId!, idempotencyKey: key, ...form } }),
     onSuccess: (d) => {
       setBrief(d.result as Record<string, string>);
       setEditing(false);
+      setEdited(null);
       toast.success("Briefing généré.");
     },
+
     onError: (e: any) => toast.error(e?.message ?? "Échec."),
   });
 
@@ -341,28 +377,34 @@ function BriefTab({ onUseBrief }: { onUseBrief: (text: string) => void }) {
         )}
         {brief && (
           <Card className="space-y-4 p-5">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="secondary" size="sm" className="gap-1.5" onClick={() => setEditing((e) => !e)}>
-                <Pencil className="h-4 w-4" /> {editing ? "Terminer" : "Modifier"}
-              </Button>
-              <CreditActionButton
-                actionKey="mkt.site_brief"
-                className="inline-block"
-                buttonClassName="gap-1.5"
-                variant="outline"
-                size="sm"
-                pending={mut.isPending}
-                onConfirm={(key) => mut.mutateAsync(key)}
-              >
-                <RefreshCw className="h-4 w-4" /> Régénérer
-              </CreditActionButton>
-              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(asText)}>
-                <Copy className="h-4 w-4" /> Copier
+                <Pencil className="h-4 w-4" /> {editing ? "Terminer" : "Modifier les champs"}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => onUseBrief(asText)}>
                 Utiliser pour le contenu du site
               </Button>
             </div>
+            <GenerationActions
+              title="Briefing de site"
+              text={edited ?? asText}
+              onEdit={setEdited}
+
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey="mkt.site_brief"
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={mut.isPending}
+                  onConfirm={(key) => mut.mutateAsync(key)}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
 
             <div className="grid gap-3">
               {BRIEF_SECTIONS.map(([k, label]) => (
@@ -410,11 +452,14 @@ function ContentTab({ brief, setBrief }: { brief: string; setBrief: (v: string) 
     cta: "Demander un devis",
   });
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (key: string) => call({ data: { orgId: orgId!, idempotencyKey: key, brief, ...form } }),
     onSuccess: (d) => {
       setResult(d.result);
+      setEdited(null);
+
       toast.success("Contenu du site généré.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec."),
@@ -498,12 +543,26 @@ function ContentTab({ brief, setBrief }: { brief: string; setBrief: (v: string) 
         {result && (
           <>
             <Card className="space-y-4 p-5">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-lg font-bold">Stratégie</p>
-                <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(JSON.stringify(result, null, 2))}>
-                  <Copy className="h-4 w-4" /> Copier
-                </Button>
-              </div>
+              <p className="text-lg font-bold">Stratégie</p>
+              <GenerationActions
+                title="Contenu du site"
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey="mkt.site_content"
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={mut.isPending}
+                    onConfirm={(key) => mut.mutateAsync(key)}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+
               <p className="whitespace-pre-wrap text-sm leading-relaxed">{result.strategie}</p>
               <Block title="Architecture">
                 {(result.architecture ?? []).map((a: string, i: number) => (

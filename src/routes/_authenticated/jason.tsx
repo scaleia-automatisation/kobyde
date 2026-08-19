@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
-import { CheckCircle2, ExternalLink, Loader2, Search, Sparkles, UserRound } from "lucide-react";
+import { CheckCircle2, ExternalLink, Loader2, RefreshCw, Search, Sparkles, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
+import { toReadableText } from "@/lib/generation-text";
 import { useOrgId } from "@/lib/db";
 import { CHANNELS, NOT_FOUND, TOOLS, WORKFLOW_STEPS, searchActionKey } from "@/lib/prospection";
 import { findProspects, generatePersona, savePersona } from "@/lib/prospection.functions";
@@ -104,6 +106,7 @@ function JasonPage() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [result, setResult] = useState<SearchResult | null>(null);
+  const [editedReport, setEditedReport] = useState<string | null>(null);
 
   const set = <K extends keyof Params>(k: K, v: Params[K]) => setParams((p) => ({ ...p, [k]: v }));
 
@@ -150,6 +153,7 @@ function JasonPage() {
       }),
     onSuccess: (d) => {
       setResult(d);
+      setEditedReport(null);
       qc.invalidateQueries();
       toast.success(`${d.inserted} prospect(s) ajouté(s) à votre CRM.`);
     },
@@ -318,6 +322,26 @@ function JasonPage() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">{result.rapport}</p>
+
+            <GenerationActions
+              title="Recherche de prospects"
+              text={editedReport ?? toReadableText(result)}
+              onEdit={setEditedReport}
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey={searchActionKey(params.count)}
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={findMutation.isPending}
+                  onConfirm={(k) => findMutation.mutateAsync(k)}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
 
             <div className="flex flex-wrap gap-2">
               {result.etapes.map((e, i) => (

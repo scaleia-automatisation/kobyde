@@ -21,6 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
+import { toReadableText } from "@/lib/generation-text";
+
 import { frDate, useOrgId, useRows } from "@/lib/db";
 import { importanceTone, sentimentTone, WATCH_AXES, type Source } from "@/lib/intel";
 import {
@@ -181,6 +184,7 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
   const [scope, setScope] = useState("");
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
   const fn = useServerFn(generateAnalysis);
 
   const run = useMutation({
@@ -188,7 +192,9 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
       fn({ data: { orgId: orgId!, idempotencyKey, kind, scope, notes } }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       toast.success(`${label} généré${label.startsWith("Analyse") || label.startsWith("Étude") ? "e" : ""}.`);
+
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec de la génération."),
   });
@@ -215,6 +221,26 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
         ) : null}
         {result ? (
           <>
+            <Card className="p-4">
+              <GenerationActions
+                title={label}
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey={action}
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={run.isPending}
+                    onConfirm={(k) => run.mutateAsync(k)}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+            </Card>
             {result.synthese ? <Block title="Synthèse">{result.synthese}</Block> : null}
             {Object.entries(result.sections as Record<string, string>).map(([k, v]) => (
               <Block key={k} title={LABELS[k] ?? k.replace(/_/g, " ")}>
@@ -224,6 +250,7 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
             <Sources items={result.sources} />
           </>
         ) : run.isPending ? null : (
+
           <Card className="p-6 text-sm text-muted-foreground">Aucun résultat pour l'instant.</Card>
         )}
       </div>
@@ -238,14 +265,18 @@ function CompetitiveTab() {
   const [competitors, setCompetitors] = useState("");
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
   const fn = useServerFn(generateCompetitive);
 
   const run = useMutation({
     mutationFn: (idempotencyKey: string) => fn({ data: { orgId: orgId!, idempotencyKey, competitors, notes } }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       toast.success("Analyse concurrentielle terminée.");
     },
+
+
     onError: (e: any) => toast.error(e?.message ?? "Échec de l'analyse."),
   });
 
@@ -283,7 +314,28 @@ function CompetitiveTab() {
         ) : null}
         {result ? (
           <>
+            <Card className="p-4">
+              <GenerationActions
+                title="Analyse concurrentielle"
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey="analysis.competitive"
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={run.isPending}
+                    onConfirm={(k) => run.mutateAsync(k)}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+            </Card>
             {result.concurrents.map((c: any, i: number) => (
+
               <Card key={i} className="space-y-3 p-5">
                 <h3 className="text-lg font-semibold">{c.nom}</h3>
                 <div className="grid gap-3 md:grid-cols-2">
@@ -357,6 +409,8 @@ function WatchTab({ kind }: { kind: "concurrentielle" | "generale" }) {
   const [frequency, setFrequency] = useState("hebdomadaire");
   const [active, setActive] = useState(true);
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
+
 
   const runFn = useServerFn(runWatch);
   const saveFn = useServerFn(saveWatchTopic);
@@ -380,7 +434,9 @@ function WatchTab({ kind }: { kind: "concurrentielle" | "generale" }) {
       }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       assets.refetch();
+
       topics.refetch();
       toast.success("Briefing de veille prêt.");
     },
@@ -513,7 +569,32 @@ function WatchTab({ kind }: { kind: "concurrentielle" | "generale" }) {
             <Loader2 className="size-4 animate-spin" /> Ethan collecte les informations récentes…
           </Card>
         ) : result ? (
-          <WatchResultView result={result} />
+          <>
+            <Card className="p-4">
+              <GenerationActions
+                title={kind === "concurrentielle" ? "Veille concurrentielle" : "Veille générale"}
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey="watch.refresh"
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={launch.isPending}
+                    onConfirm={(k) =>
+                      launch.mutateAsync({ idempotencyKey: k, subject, competitors, refresh: true })
+                    }
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+            </Card>
+            <WatchResultView result={result} />
+          </>
+
         ) : (
           <Card className="p-6 text-sm text-muted-foreground">Aucun briefing affiché pour l'instant.</Card>
         )}
@@ -530,6 +611,7 @@ function ReputationTab() {
   const [query, setQuery] = useState("");
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const analyzeFn = useServerFn(analyzeReputation);
@@ -540,7 +622,9 @@ function ReputationTab() {
     mutationFn: (idempotencyKey: string) => analyzeFn({ data: { orgId: orgId!, idempotencyKey, query, notes } }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       reviews.refetch();
+
       toast.success("Analyse d'e-réputation terminée.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec de l'analyse."),
@@ -596,7 +680,28 @@ function ReputationTab() {
           ) : null}
           {result ? (
             <>
+              <Card className="p-4">
+                <GenerationActions
+                  title="Analyse d'e-réputation"
+                  text={edited ?? toReadableText(result)}
+                  onEdit={setEdited}
+                  regenerateSlot={
+                    <CreditActionButton
+                      actionKey="rep.analysis"
+                      className="inline-block"
+                      buttonClassName="gap-1.5"
+                      variant="outline"
+                      size="sm"
+                      pending={analyze.isPending}
+                      onConfirm={(k) => analyze.mutateAsync(k)}
+                    >
+                      <RefreshCw className="h-4 w-4" /> Régénérer
+                    </CreditActionButton>
+                  }
+                />
+              </Card>
               {result.synthese ? <Block title="Synthèse">{result.synthese}</Block> : null}
+
               <div className="grid gap-4 md:grid-cols-2">
                 <Bullets title="Points forts" items={result.points_forts} />
                 <Bullets title="Points faibles" items={result.points_faibles} />

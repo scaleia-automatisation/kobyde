@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Loader2, Send, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, RefreshCw, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
 
 
@@ -51,6 +52,9 @@ function EricPage() {
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<Plan | null>(null);
   const [spent, setSpent] = useState(0);
+  const [lastPrompt, setLastPrompt] = useState("");
+  const [answerEdit, setAnswerEdit] = useState<string | null>(null);
+  const [taskEdits, setTaskEdits] = useState<Record<string, string>>({});
   const [results, setResults] = useState<
     Record<string, { status: "running" | "done" | "error"; result?: string }>
   >({});
@@ -70,6 +74,8 @@ function EricPage() {
     onSuccess: (data) => {
       setPlan(data);
       setResults({});
+      setAnswerEdit(null);
+      setTaskEdits({});
       setSpent(data.credits_used ?? 0);
       setPrompt("");
       inputRef.current?.focus();
@@ -103,6 +109,7 @@ function EricPage() {
       toast.error("Organisation introuvable.");
       return;
     }
+    setLastPrompt(value);
     mutation.mutate({ text: value, key });
   };
 
@@ -185,7 +192,28 @@ function EricPage() {
                   {LEAD_AGENT.emoji}
                 </span>
                 <div className="space-y-3">
-                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{plan.reponse}</p>
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed">
+                    {answerEdit ?? plan.reponse}
+                  </p>
+                  <GenerationActions
+                    title="Réponse d'Éric"
+                    text={answerEdit ?? plan.reponse}
+                    onEdit={setAnswerEdit}
+                    regenerateSlot={
+                      <CreditActionButton
+                        actionKey="eric.analyze_request"
+                        className="inline-block"
+                        buttonClassName="gap-1.5"
+                        variant="outline"
+                        size="sm"
+                        pending={mutation.isPending}
+                        onConfirm={(key) => send(lastPrompt, key)}
+                      >
+                        <RefreshCw className="h-4 w-4" /> Régénérer
+                      </CreditActionButton>
+                    }
+                  />
+
                   {plan.memoire.length > 0 && (
                     <div className="rounded-xl bg-muted/60 p-3">
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -260,10 +288,34 @@ function EricPage() {
                           </CreditActionButton>
                         )}
                         {state?.result && (
-                          <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
-                            {state.result}
-                          </div>
+                          <>
+                            <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
+                              {taskEdits[t.id ?? ""] ?? state.result}
+                            </div>
+                            {state.status === "done" && (
+                              <GenerationActions
+                                title={t.title}
+                                text={taskEdits[t.id ?? ""] ?? state.result}
+                                onEdit={(text) => setTaskEdits((e) => ({ ...e, [t.id ?? ""]: text }))}
+                                regenerateSlot={
+                                  t.id ? (
+                                    <CreditActionButton
+                                      actionKey="eric.task_run"
+                                      className="inline-block"
+                                      buttonClassName="gap-1.5"
+                                      variant="outline"
+                                      size="sm"
+                                      onConfirm={(key) => runOne(t.id!, key)}
+                                    >
+                                      <RefreshCw className="h-4 w-4" /> Régénérer
+                                    </CreditActionButton>
+                                  ) : undefined
+                                }
+                              />
+                            )}
+                          </>
                         )}
+
                       </Card>
                     );
                   })}

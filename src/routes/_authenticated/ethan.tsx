@@ -262,14 +262,16 @@ function CompetitiveTab() {
   const [competitors, setCompetitors] = useState("");
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
   const fn = useServerFn(generateCompetitive);
 
   const run = useMutation({
     mutationFn: (idempotencyKey: string) => fn({ data: { orgId: orgId!, idempotencyKey, competitors, notes } }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       toast.success("Analyse concurrentielle terminée.");
-    },
+
     onError: (e: any) => toast.error(e?.message ?? "Échec de l'analyse."),
   });
 

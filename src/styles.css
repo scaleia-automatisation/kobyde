@@ -100,6 +100,7 @@
   --aurora-solid-2: oklch(0.6 0.19 250);
   --aurora-solid-3: oklch(0.66 0.17 195);
   --aurora-solid-4: oklch(0.72 0.19 40);
+  --aurora-solid-5: oklch(0.62 0.23 350);
 }
 
 .dark {
@@ -141,6 +142,7 @@
   --aurora-solid-2: oklch(0.6 0.19 250);
   --aurora-solid-3: oklch(0.66 0.17 195);
   --aurora-solid-4: oklch(0.72 0.19 40);
+  --aurora-solid-5: oklch(0.62 0.23 350);
 }
 
 @layer base {

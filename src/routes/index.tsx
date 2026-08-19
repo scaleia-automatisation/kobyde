@@ -44,7 +44,7 @@ function Landing() {
           <Button asChild variant="ghost">
             <Link to="/auth">Se connecter</Link>
           </Button>
-          <Button asChild variant="cta">
+          <Button asChild size="cta" variant="cta">
             <Link to="/auth" search={{ mode: "signup" }}>
               Essayer
             </Link>
@@ -87,7 +87,7 @@ function Landing() {
           </div>
 
           <div className="mt-9 flex justify-center">
-            <Button asChild size="lg" variant="cta" className="gap-2 px-8 py-3 text-base">
+            <Button asChild size="cta" variant="cta" className="gap-2">
               <Link to="/auth" search={{ mode: "signup" }}>
                 Créer mon équipe IA <ArrowRight className="size-4" />
               </Link>
@@ -181,7 +181,7 @@ function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button asChild className="mt-7" variant="cta">
+                <Button asChild size="cta" variant="cta" className="mt-7">
                   <Link to="/auth" search={{ mode: "signup" }}>
                     {`Choisir ${p.name}`}
                   </Link>

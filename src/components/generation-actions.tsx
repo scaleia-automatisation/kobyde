@@ -178,11 +178,14 @@ export function GenerationActions({
         </Button>
       )}
 
-      {onRegenerate && (
+      {regenerateSlot}
+
+      {!regenerateSlot && onRegenerate && (
         <Button variant="outline" size="sm" className="gap-1.5" onClick={onRegenerate} disabled={regenerating}>
           {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Régénérer
         </Button>
       )}
+
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

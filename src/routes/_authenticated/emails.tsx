@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/emails")({
         table: "emails",
         title: "Emails",
         subtitle: "Les messages envoyés à vos prospects et clients.",
-        emptyText: "Préparez un email : Sam et Marco peuvent l'écrire pour vous.",
+        emptyText: "Préparez un email : Clara et Lamine peuvent l'écrire pour vous.",
         addLabel: "Préparer un email",
         badgeField: "status",
         fields: [

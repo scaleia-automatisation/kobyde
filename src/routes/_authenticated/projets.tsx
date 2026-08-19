@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/projets")({
         table: "projects",
         title: "Projets",
         subtitle: "Ce que vous devez livrer, étape par étape.",
-        emptyText: "Créez un projet quand un client dit oui. Tom, votre chef de projet IA, s'occupe du reste.",
+        emptyText: "Créez un projet quand un client dit oui. Chloé, votre agent Projets, s'occupe du reste.",
         addLabel: "Créer un projet",
         badgeField: "status",
         fields: [

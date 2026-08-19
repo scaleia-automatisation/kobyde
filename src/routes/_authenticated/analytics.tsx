@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
     meta: [
       { title: "Analytics — Kobyde" },
-      { name: "description", content: "Vos chiffres expliqués simplement par Zoé, votre analyste IA." },
+      { name: "description", content: "Vos chiffres expliqués simplement par Ethan, votre agent Analyse." },
       { property: "og:title", content: "Analytics — Kobyde" },
       { property: "og:description", content: "Vos chiffres, expliqués simplement." },
       { property: "og:type", content: "website" },
@@ -67,7 +67,7 @@ function Analytics() {
           </ResponsiveContainer>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
-          Conseil de Zoé : si vous avez beaucoup de prospects mais peu de clients, envoyez plus de devis.
+          Conseil d'Ethan : si vous avez beaucoup de prospects mais peu de clients, envoyez plus de devis.
         </p>
       </section>
     </AppShell>

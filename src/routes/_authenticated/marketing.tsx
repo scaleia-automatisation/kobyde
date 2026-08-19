@@ -5,7 +5,7 @@ export const Route = createFileRoute("/_authenticated/marketing")({
   head: () => ({
     meta: [
       { title: "Marketing — Kobyde" },
-      { name: "description", content: "Vos campagnes pour vous faire connaître, préparées par Sam, votre agent marketing." },
+      { name: "description", content: "Vos campagnes pour vous faire connaître, préparées par Lamine, votre agent Marketing." },
       { property: "og:title", content: "Marketing — Kobyde" },
       { property: "og:description", content: "Vos campagnes marketing." },
       { property: "og:type", content: "website" },
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/marketing")({
         table: "campaigns",
         title: "Marketing",
         subtitle: "Vos campagnes pour vous faire connaître.",
-        emptyText: "Lancez une première campagne : un nom, une cible, et Sam écrit les messages.",
+        emptyText: "Lancez une première campagne : un nom, une cible, et Lamine écrit les messages.",
         addLabel: "Créer une campagne",
         badgeField: "status",
         fields: [

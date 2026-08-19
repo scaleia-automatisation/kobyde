@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { CheckCircle2, ExternalLink, Loader2, Search, Sparkles, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -86,10 +86,11 @@ function Field({
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
+  const id = useId();
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
+      <Input id={id} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </div>
   );
 }
@@ -173,8 +174,9 @@ function JasonPage() {
             <Field label="Quartier" value={params.district} onChange={(v) => set("district", v)} placeholder="Le Marais" />
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Nombre de résultats (0 à 100)</Label>
+              <Label htmlFor="prospect-count" className="text-xs text-muted-foreground">Nombre de résultats (0 à 100)</Label>
               <Input
+                id="prospect-count"
                 type="number"
                 min={0}
                 max={100}

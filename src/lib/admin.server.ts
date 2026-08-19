@@ -85,14 +85,15 @@ export async function platformOverview() {
 
   // --- Revenus
   const mrr = orgs.reduce((s, o) => s + (PLAN_PRICE[o.plan as string] ?? 0), 0);
-  const paidPayments = payments.filter((p) => p.status === "paid" || p.status === "succeeded");
+  const PAID = new Set(["paid", "paye", "payé", "succeeded", "completed"]);
+  const paidPayments = payments.filter((p) => PAID.has(String(p.status)));
   const revenueBlock = {
     mrr,
     arr: mrr * 12,
     revenue: paidPayments.reduce((s, p) => s + Number(p.amount ?? 0), 0),
     payments: paidPayments.length,
-    pendingPayments: payments.filter((p) => p.status === "pending").length,
-    refunds: payments.filter((p) => p.status === "refunded").length,
+    pendingPayments: payments.filter((p) => ["pending", "en_attente"].includes(String(p.status))).length,
+    refunds: payments.filter((p) => ["refunded", "rembourse", "remboursé"].includes(String(p.status))).length,
     invoices: invoices.length,
     arpu: users.length > 0 ? Math.round((mrr / users.length) * 100) / 100 : 0,
   };

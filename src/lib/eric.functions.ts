@@ -32,20 +32,25 @@ export const askEric = createServerFn({ method: "POST" })
       .map((t) => ({ task: t, agent: byKey.get(t.agent_key) }))
       .filter((x) => x.agent);
 
+    let ids: string[] = [];
     if (inserted.length) {
-      const { error } = await supabase.from("agent_tasks").insert(
-        inserted.map(({ task, agent }) => ({
-          org_id: data.orgId,
-          agent_id: agent!.id,
-          title: task.title,
-          detail: task.detail,
-          status: "in_progress",
-          priority: task.priority,
-          credits_used: 1,
-          created_by: context.userId,
-        })),
-      );
+      const { data: rows, error } = await supabase
+        .from("agent_tasks")
+        .insert(
+          inserted.map(({ task, agent }) => ({
+            org_id: data.orgId,
+            agent_id: agent!.id,
+            title: task.title,
+            detail: task.detail,
+            status: "todo",
+            priority: task.priority,
+            credits_used: 1,
+            created_by: context.userId,
+          })),
+        )
+        .select("id");
       if (error) throw new Error(error.message);
+      ids = (rows ?? []).map((r: { id: string }) => r.id);
     }
 
     const lead = byKey.get("directeur");

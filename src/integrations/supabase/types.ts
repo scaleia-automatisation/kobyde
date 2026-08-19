@@ -438,28 +438,58 @@ export type Database = {
       }
       credit_transactions: {
         Row: {
+          action_key: string | null
+          action_label: string | null
           agent_id: string | null
           amount: number
+          balance_after: number | null
+          balance_before: number | null
           created_at: string
+          error: string | null
           id: string
+          idempotency_key: string | null
           org_id: string
           reason: string | null
+          result: string | null
+          status: string
+          task_id: string | null
+          user_id: string | null
         }
         Insert: {
+          action_key?: string | null
+          action_label?: string | null
           agent_id?: string | null
           amount: number
+          balance_after?: number | null
+          balance_before?: number | null
           created_at?: string
+          error?: string | null
           id?: string
+          idempotency_key?: string | null
           org_id: string
           reason?: string | null
+          result?: string | null
+          status?: string
+          task_id?: string | null
+          user_id?: string | null
         }
         Update: {
+          action_key?: string | null
+          action_label?: string | null
           agent_id?: string | null
           amount?: number
+          balance_after?: number | null
+          balance_before?: number | null
           created_at?: string
+          error?: string | null
           id?: string
+          idempotency_key?: string | null
           org_id?: string
           reason?: string | null
+          result?: string | null
+          status?: string
+          task_id?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -866,6 +896,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           credits: number
+          credits_total: number
           currency: string
           description: string | null
           email: string | null
@@ -907,6 +938,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           credits?: number
+          credits_total?: number
           currency?: string
           description?: string | null
           email?: string | null
@@ -948,6 +980,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           credits?: number
+          credits_total?: number
           currency?: string
           description?: string | null
           email?: string | null
@@ -1516,11 +1549,100 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_credits: {
+        Args: { _result?: string; _task_id?: string; _tx: string }
+        Returns: {
+          action_key: string | null
+          action_label: string | null
+          agent_id: string | null
+          amount: number
+          balance_after: number | null
+          balance_before: number | null
+          created_at: string
+          error: string | null
+          id: string
+          idempotency_key: string | null
+          org_id: string
+          reason: string | null
+          result: string | null
+          status: string
+          task_id: string | null
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_org_role: {
         Args: { _org: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
       is_org_member: { Args: { _org: string }; Returns: boolean }
+      refund_credits: {
+        Args: { _error?: string; _tx: string }
+        Returns: {
+          action_key: string | null
+          action_label: string | null
+          agent_id: string | null
+          amount: number
+          balance_after: number | null
+          balance_before: number | null
+          created_at: string
+          error: string | null
+          id: string
+          idempotency_key: string | null
+          org_id: string
+          reason: string | null
+          result: string | null
+          status: string
+          task_id: string | null
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reserve_credits: {
+        Args: {
+          _action_key: string
+          _action_label: string
+          _agent_id?: string
+          _credits: number
+          _idempotency_key: string
+          _org: string
+          _task_id?: string
+        }
+        Returns: {
+          action_key: string | null
+          action_label: string | null
+          agent_id: string | null
+          amount: number
+          balance_after: number | null
+          balance_before: number | null
+          created_at: string
+          error: string | null
+          id: string
+          idempotency_key: string | null
+          org_id: string
+          reason: string | null
+          result: string | null
+          status: string
+          task_id: string | null
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "member" | "viewer"

@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

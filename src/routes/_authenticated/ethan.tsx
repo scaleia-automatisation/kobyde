@@ -215,6 +215,26 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
         ) : null}
         {result ? (
           <>
+            <Card className="p-4">
+              <GenerationActions
+                title={label}
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey={action}
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={run.isPending}
+                    onConfirm={(k) => run.mutateAsync(k)}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+            </Card>
             {result.synthese ? <Block title="Synthèse">{result.synthese}</Block> : null}
             {Object.entries(result.sections as Record<string, string>).map(([k, v]) => (
               <Block key={k} title={LABELS[k] ?? k.replace(/_/g, " ")}>
@@ -224,6 +244,7 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
             <Sources items={result.sources} />
           </>
         ) : run.isPending ? null : (
+
           <Card className="p-6 text-sm text-muted-foreground">Aucun résultat pour l'instant.</Card>
         )}
       </div>

@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";
+import { CreditActionButton } from "@/components/credit-action";
+import { newIdempotencyKey } from "@/lib/credits";
+
 
 export const Route = createFileRoute("/_authenticated/eric")({
   component: EricPage,

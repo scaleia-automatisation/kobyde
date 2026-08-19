@@ -363,8 +363,18 @@ function EmailCard({
               <>
                 <p className="text-sm font-medium">{email.draft_subject}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{email.draft_body}</p>
+                <GenerationActions
+                  className="mt-3"
+                  title={email.draft_subject || "Réponse email"}
+                  text={`${email.draft_subject ?? ""}\n\n${email.draft_body ?? ""}`}
+                  onEdit={(t) => {
+                    const [first, ...rest] = t.split("\n\n");
+                    void onUpdate({ draft_subject: first, draft_body: rest.join("\n\n") });
+                  }}
+                />
               </>
             )}
+
           </div>
 
           {email.status === "planifie" && email.scheduled_at && (

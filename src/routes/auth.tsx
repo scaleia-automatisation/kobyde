@@ -57,7 +57,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Compte créé ! Vérifiez votre email pour confirmer.");
+        toast.success("Bienvenue ! Votre équipe de 10 agents IA est prête.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

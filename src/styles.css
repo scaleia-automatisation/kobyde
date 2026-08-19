@@ -51,6 +51,8 @@
   --color-aurora-2: var(--aurora-solid-2);
   --color-aurora-3: var(--aurora-solid-3);
   --color-aurora-4: var(--aurora-solid-4);
+  --color-aurora-5: var(--aurora-solid-5);
+  --color-aurora-6: var(--aurora-solid-6);
   --shadow-soft: 0 1px 2px oklch(0.2 0.04 250 / 0.04), 0 8px 24px oklch(0.2 0.04 250 / 0.06);
   --shadow-lift: 0 2px 6px oklch(0.2 0.04 250 / 0.06), 0 18px 40px oklch(0.2 0.04 250 / 0.1);
 }

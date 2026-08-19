@@ -535,12 +535,26 @@ function ContentTab({ brief, setBrief }: { brief: string; setBrief: (v: string) 
         {result && (
           <>
             <Card className="space-y-4 p-5">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-lg font-bold">Stratégie</p>
-                <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(JSON.stringify(result, null, 2))}>
-                  <Copy className="h-4 w-4" /> Copier
-                </Button>
-              </div>
+              <p className="text-lg font-bold">Stratégie</p>
+              <GenerationActions
+                title="Contenu du site"
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey="mkt.site_content"
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={mut.isPending}
+                    onConfirm={(key) => mut.mutateAsync(key)}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+
               <p className="whitespace-pre-wrap text-sm leading-relaxed">{result.strategie}</p>
               <Block title="Architecture">
                 {(result.architecture ?? []).map((a: string, i: number) => (

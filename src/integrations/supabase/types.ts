@@ -870,10 +870,17 @@ export type Database = {
           description: string | null
           email: string | null
           id: string
+          ideal_client_location: string | null
+          ideal_client_needs: string | null
+          ideal_client_sector: string | null
+          ideal_client_size: string | null
+          ideal_client_type: string | null
           industry: string | null
+          integrations: Json
           languages: string | null
           logo_url: string | null
           name: string
+          onboarding_completed: boolean
           phone: string | null
           plan: string
           positioning: string | null
@@ -889,6 +896,7 @@ export type Database = {
           updated_at: string
           values_text: string | null
           vat_rate: number
+          vat_regime: string | null
           website: string | null
         }
         Insert: {
@@ -903,10 +911,17 @@ export type Database = {
           description?: string | null
           email?: string | null
           id?: string
+          ideal_client_location?: string | null
+          ideal_client_needs?: string | null
+          ideal_client_sector?: string | null
+          ideal_client_size?: string | null
+          ideal_client_type?: string | null
           industry?: string | null
+          integrations?: Json
           languages?: string | null
           logo_url?: string | null
           name: string
+          onboarding_completed?: boolean
           phone?: string | null
           plan?: string
           positioning?: string | null
@@ -922,6 +937,7 @@ export type Database = {
           updated_at?: string
           values_text?: string | null
           vat_rate?: number
+          vat_regime?: string | null
           website?: string | null
         }
         Update: {
@@ -936,10 +952,17 @@ export type Database = {
           description?: string | null
           email?: string | null
           id?: string
+          ideal_client_location?: string | null
+          ideal_client_needs?: string | null
+          ideal_client_sector?: string | null
+          ideal_client_size?: string | null
+          ideal_client_type?: string | null
           industry?: string | null
+          integrations?: Json
           languages?: string | null
           logo_url?: string | null
           name?: string
+          onboarding_completed?: boolean
           phone?: string | null
           plan?: string
           positioning?: string | null
@@ -955,6 +978,7 @@ export type Database = {
           updated_at?: string
           values_text?: string | null
           vat_rate?: number
+          vat_regime?: string | null
           website?: string | null
         }
         Relationships: []

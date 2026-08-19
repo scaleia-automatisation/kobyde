@@ -34,8 +34,23 @@ function AuthPage() {
   const { session } = useSession();
 
   useEffect(() => {
-    if (session) navigate({ to: "/eric", replace: true });
+    if (!session) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("organizations:current_org_id(onboarding_completed)")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const done = (data?.organizations as { onboarding_completed?: boolean } | null)?.onboarding_completed;
+      navigate({ to: done ? "/eric" : "/bienvenue", replace: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [session, navigate]);
+
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

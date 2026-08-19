@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAideRouteImport } from './routes/_authenticated/aide'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAutomatisationsRouteImport } from './routes/_authenticated/automatisations'
+import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authenticated/bienvenue'
 import { Route as AuthenticatedCatalogueRouteImport } from './routes/_authenticated/catalogue'
 import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedDevisRouteImport } from './routes/_authenticated/devis'
@@ -62,6 +63,11 @@ const AuthenticatedAutomatisationsRoute =
     path: '/automatisations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBienvenueRoute = AuthenticatedBienvenueRouteImport.update({
+  id: '/bienvenue',
+  path: '/bienvenue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCatalogueRoute = AuthenticatedCatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
+  '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/devis': typeof AuthenticatedDevisRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
+  '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
   '/clients': typeof AuthenticatedClientsRoute
   '/devis': typeof AuthenticatedDevisRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated/aide': typeof AuthenticatedAideRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/automatisations': typeof AuthenticatedAutomatisationsRoute
+  '/_authenticated/bienvenue': typeof AuthenticatedBienvenueRoute
   '/_authenticated/catalogue': typeof AuthenticatedCatalogueRoute
   '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/devis': typeof AuthenticatedDevisRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/aide'
     | '/analytics'
     | '/automatisations'
+    | '/bienvenue'
     | '/catalogue'
     | '/clients'
     | '/devis'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/aide'
     | '/analytics'
     | '/automatisations'
+    | '/bienvenue'
     | '/catalogue'
     | '/clients'
     | '/devis'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/_authenticated/aide'
     | '/_authenticated/analytics'
     | '/_authenticated/automatisations'
+    | '/_authenticated/bienvenue'
     | '/_authenticated/catalogue'
     | '/_authenticated/clients'
     | '/_authenticated/devis'
@@ -337,6 +349,13 @@ declare module '@tanstack/react-router' {
       path: '/automatisations'
       fullPath: '/automatisations'
       preLoaderRoute: typeof AuthenticatedAutomatisationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/bienvenue': {
+      id: '/_authenticated/bienvenue'
+      path: '/bienvenue'
+      fullPath: '/bienvenue'
+      preLoaderRoute: typeof AuthenticatedBienvenueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/catalogue': {
@@ -458,6 +477,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAideRoute: typeof AuthenticatedAideRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedAutomatisationsRoute: typeof AuthenticatedAutomatisationsRoute
+  AuthenticatedBienvenueRoute: typeof AuthenticatedBienvenueRoute
   AuthenticatedCatalogueRoute: typeof AuthenticatedCatalogueRoute
   AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedDevisRoute: typeof AuthenticatedDevisRoute
@@ -479,6 +499,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAideRoute: AuthenticatedAideRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedAutomatisationsRoute: AuthenticatedAutomatisationsRoute,
+  AuthenticatedBienvenueRoute: AuthenticatedBienvenueRoute,
   AuthenticatedCatalogueRoute: AuthenticatedCatalogueRoute,
   AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedDevisRoute: AuthenticatedDevisRoute,

@@ -104,10 +104,12 @@ export const savePersona = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (data.title !== undefined) patch["title"] = data.title;
-    if (data.content !== undefined) patch["content"] = data.content;
-    if (data.status !== undefined) patch["status"] = data.status;
+    const patch = {
+      updated_at: new Date().toISOString(),
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.content !== undefined ? { content: data.content } : {}),
+      ...(data.status !== undefined ? { status: data.status } : {}),
+    };
 
     const { error } = await context.supabase
       .from("personas")

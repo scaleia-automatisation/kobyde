@@ -227,12 +227,15 @@ function ValuePropTab() {
   const call = useServerFn(generateValueProp);
   const [form, setForm] = useState({ offer: "", audience: "", notes: "", current: "", competitors: "" });
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (v: { key: string; mode: "generer" | "optimiser" | "concurrents" }) =>
       call({ data: { orgId: orgId!, idempotencyKey: v.key, mode: v.mode, ...form } }),
     onSuccess: (d) => {
       setResult(d.result);
+      setEdited(null);
+
       toast.success("Proposition de valeur prête.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec."),

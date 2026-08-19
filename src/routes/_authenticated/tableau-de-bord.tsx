@@ -1,7 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Clock4, Moon, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeEuro,
+  Briefcase,
+  CheckCircle2,
+  FileText,
+  ListTodo,
+  Sparkles,
+  TrendingUp,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { AGENTS } from "@/lib/agents";
 import { euros, useProfile, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 
@@ -9,9 +20,9 @@ export const Route = createFileRoute("/_authenticated/tableau-de-bord")({
   head: () => ({
     meta: [
       { title: "Accueil — Kobyde" },
-      { name: "description", content: "Votre tableau de bord Kobyde : ce que votre équipe IA a fait aujourd'hui." },
+      { name: "description", content: "Votre tableau de bord Kobyde : chiffre d'affaires, recommandations IA et activité récente." },
       { property: "og:title", content: "Accueil — Kobyde" },
-      { property: "og:description", content: "Votre tableau de bord Kobyde." },
+      { property: "og:description", content: "Résumé de votre activité et recommandations de votre équipe IA." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -19,120 +30,231 @@ export const Route = createFileRoute("/_authenticated/tableau-de-bord")({
   component: Dashboard,
 });
 
-function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
+type Row = { id: string; created_at?: string };
+type Quote = Row & { total_ttc: number; status: string; number?: string; title?: string };
+type Payment = Row & { amount: number; status: string; due_date?: string | null };
+type Prospect = Row & { full_name: string; score: number; status: string };
+type Client = Row & { full_name: string };
+type Project = Row & { name: string };
+type Task = Row & { title: string; status: string };
+type AgentTask = Row & { title: string; status: string };
+
+function Stat({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  to,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  icon: LucideIcon;
+  to: string;
+}) {
   return (
-    <div className="surface p-5">
-      <p className="text-sm text-muted-foreground">{label}</p>
+    <Link to={to} className="surface block p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <Icon className="size-4 text-accent" />
+      </div>
       <p className="mt-1 font-display text-3xl">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-    </div>
+    </Link>
   );
 }
 
+const dayjs = (d?: string) =>
+  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "";
+
 function Dashboard() {
   const { data: profile } = useProfile();
-  const { data: prospects } = useRows<{ id: string }>("prospects");
-  const { data: clients } = useRows<{ id: string }>("clients");
-  const { data: quotes } = useRows<{ total_ttc: number; status: string }>("quotes");
-  const { data: payments } = useRows<{ amount: number; status: string }>("payments");
-  const { data: notifications } = useRows<{ id: string; title: string; body: string }>("notifications", {
-    limit: 5,
-  });
+  const { data: prospects } = useRows<Prospect>("prospects");
+  const { data: clients } = useRows<Client>("clients");
+  const { data: quotes } = useRows<Quote>("quotes");
+  const { data: payments } = useRows<Payment>("payments");
+  const { data: projects } = useRows<Project>("projects");
+  const { data: tasks } = useRows<Task>("tasks");
+  const { data: agentTasks } = useRows<AgentTask>("agent_tasks", { limit: 10 });
 
-  const encaisse = (payments ?? [])
-    .filter((p) => p.status === "paye")
-    .reduce((s, p) => s + Number(p.amount ?? 0), 0);
-  const enAttente = (quotes ?? [])
-    .filter((q) => q.status !== "refuse")
-    .reduce((s, q) => s + Number(q.total_ttc ?? 0), 0);
+  const P = payments ?? [];
+  const Q = quotes ?? [];
+  const PR = prospects ?? [];
+  const C = clients ?? [];
+  const PJ = projects ?? [];
+  const T = tasks ?? [];
 
+  const ca = P.filter((p) => p.status === "paye").reduce((s, p) => s + Number(p.amount ?? 0), 0);
+  const devisEnAttente = Q.filter((q) => q.status === "envoye" || q.status === "brouillon");
+  const devisAcceptes = Q.filter((q) => q.status === "accepte");
+  const paiementsRetard = P.filter(
+    (p) => p.status !== "paye" && p.due_date && new Date(p.due_date) < new Date(),
+  );
+  const paiementsEnAttente = P.filter((p) => p.status !== "paye");
+  const prospectsChauds = PR.filter((p) => Number(p.score ?? 0) >= 70);
+  const tachesOuvertes = T.filter((t) => t.status !== "termine" && t.status !== "fait");
   const firstName = (profile?.full_name ?? "").split(" ")[0] || "vous";
 
+  const recos: { title: string; desc: string; cta: string; to: string }[] = [];
+  if (devisEnAttente.length > 0)
+    recos.push({
+      title: `${devisEnAttente.length} devis attendent une relance`,
+      desc: "Clara peut relancer automatiquement les devis sans réponse.",
+      cta: "Relancer",
+      to: "/devis",
+    });
+  if (prospectsChauds.length > 0)
+    recos.push({
+      title: `${prospectsChauds.length} prospects sont très intéressants`,
+      desc: "Jason a repéré des prospects avec un score élevé.",
+      cta: "Voir les prospects",
+      to: "/prospects",
+    });
+  if (paiementsRetard.length > 0)
+    recos.push({
+      title: `${paiementsRetard.length} paiements sont en retard`,
+      desc: "Audrey conseille de relancer ces factures aujourd'hui.",
+      cta: "Voir les paiements",
+      to: "/paiements",
+    });
+  if (tachesOuvertes.length > 0)
+    recos.push({
+      title: `${tachesOuvertes.length} tâches sont en cours`,
+      desc: "Chloé suit l'avancement de vos projets.",
+      cta: "Voir les projets",
+      to: "/projets",
+    });
+  if (PR.length === 0)
+    recos.push({
+      title: "Aucun prospect pour le moment",
+      desc: "Demandez à Éric de lancer une recherche de prospects.",
+      cta: "Parler à Éric",
+      to: "/eric",
+    });
+  if (C.length === 0)
+    recos.push({
+      title: "Ajoutez votre premier client",
+      desc: "Jennifer créera sa fiche 360° automatiquement.",
+      cta: "Voir les clients",
+      to: "/clients",
+    });
+  const recommendations = recos.slice(0, 5);
+
+  const activity = [
+    ...PR.slice(0, 5).map((p) => ({
+      id: `pr-${p.id}`,
+      at: p.created_at,
+      label: `Nouveau prospect : ${p.full_name}`,
+      icon: UserPlus,
+    })),
+    ...P.filter((p) => p.status === "paye")
+      .slice(0, 5)
+      .map((p) => ({
+        id: `pa-${p.id}`,
+        at: p.created_at,
+        label: `Paiement reçu : ${euros(p.amount)}`,
+        icon: BadgeEuro,
+      })),
+    ...devisAcceptes.slice(0, 5).map((q) => ({
+      id: `q-${q.id}`,
+      at: q.created_at,
+      label: `Devis accepté : ${q.title ?? q.number ?? ""}`,
+      icon: FileText,
+    })),
+    ...PJ.slice(0, 5).map((p) => ({
+      id: `pj-${p.id}`,
+      at: p.created_at,
+      label: `Projet créé : ${p.name}`,
+      icon: Briefcase,
+    })),
+    ...C.slice(0, 5).map((c) => ({
+      id: `c-${c.id}`,
+      at: c.created_at,
+      label: `Client ajouté : ${c.full_name}`,
+      icon: Users,
+    })),
+    ...(agentTasks ?? [])
+      .filter((t) => t.status === "termine" || t.status === "done")
+      .slice(0, 5)
+      .map((t) => ({
+        id: `at-${t.id}`,
+        at: t.created_at,
+        label: `Un agent a terminé : ${t.title}`,
+        icon: CheckCircle2,
+      })),
+  ]
+    .sort((a, b) => new Date(b.at ?? 0).getTime() - new Date(a.at ?? 0).getTime())
+    .slice(0, 8);
+
   return (
-    <AppShell
-      title={`Bonjour ${firstName} 👋`}
-      subtitle="Voici ce que votre équipe IA vous conseille aujourd'hui."
-    >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Prospects" value={String(prospects?.length ?? 0)} hint="Des clients potentiels" />
-        <Stat label="Clients" value={String(clients?.length ?? 0)} hint="Ils vous font confiance" />
-        <Stat label="Devis en cours" value={euros(enAttente)} hint="Argent possible" />
-        <Stat label="Encaissé" value={euros(encaisse)} hint="Argent reçu" />
+    <AppShell title={`Bonjour, ${firstName}`} subtitle="Voici le résumé de votre activité aujourd'hui.">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Chiffre d'affaires" value={euros(ca)} hint="Paiements encaissés" icon={TrendingUp} to="/paiements" />
+        <Stat label="Prospects" value={String(PR.length)} hint="Clients potentiels" icon={UserPlus} to="/prospects" />
+        <Stat label="Clients" value={String(C.length)} hint="Ils vous font confiance" icon={Users} to="/clients" />
+        <Stat label="Devis" value={String(Q.length)} hint={`${devisEnAttente.length} en attente`} icon={FileText} to="/devis" />
+        <Stat
+          label="Paiements"
+          value={String(P.length)}
+          hint={`${paiementsEnAttente.length} à encaisser`}
+          icon={BadgeEuro}
+          to="/paiements"
+        />
+        <Stat label="Projets" value={String(PJ.length)} hint="En cours et terminés" icon={Briefcase} to="/projets" />
+        <Stat label="Tâches" value={String(T.length)} hint={`${tachesOuvertes.length} à faire`} icon={ListTodo} to="/projets" />
+        <Stat label="Équipe IA" value="10" hint="Agents disponibles 24h/24" icon={Sparkles} to="/equipe" />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <section className="surface p-6 lg:col-span-2">
-          <h2 className="text-lg">Les 3 actions du jour</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Éric, votre Directeur IA, a préparé la liste. Faites-les dans l'ordre.
-          </p>
-          <ol className="mt-5 space-y-3">
-            {[
-              { t: "Ajoutez 1 prospect", d: "Une personne ou entreprise qui pourrait acheter.", to: "/prospects" },
-              { t: "Créez 1 devis", d: "Un prix écrit, envoyé vite, se transforme en vente.", to: "/devis" },
-              { t: "Relancez 1 facture", d: "Vérifiez qui n'a pas encore payé.", to: "/paiements" },
-            ].map((a, i) => (
-              <li key={a.t} className="flex items-start gap-3 rounded-xl border border-border p-4">
-                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent font-medium text-accent-foreground">
-                  {i + 1}
-                </span>
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <section className="surface p-6">
+          <h2 className="flex items-center gap-2 text-lg">
+            <Sparkles className="size-5 text-accent" /> Votre IA vous recommande
+          </h2>
+          <ul className="mt-5 space-y-3">
+            {recommendations.length === 0 && (
+              <li className="text-sm text-muted-foreground">Tout est à jour, rien à faire pour l'instant.</li>
+            )}
+            {recommendations.map((r) => (
+              <li key={r.title} className="flex items-start gap-3 rounded-xl border border-border p-4">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{a.t}</p>
-                  <p className="text-sm text-muted-foreground">{a.d}</p>
+                  <p className="font-medium">{r.title}</p>
+                  <p className="text-sm text-muted-foreground">{r.desc}</p>
                 </div>
-                <Button asChild variant="ghost" size="sm" className="gap-1">
-                  <Link to={a.to}>
-                    Y aller <ArrowRight className="size-4" />
+                <Button asChild size="sm" className="gap-1">
+                  <Link to={r.to}>
+                    {r.cta} <ArrowRight className="size-4" />
                   </Link>
                 </Button>
               </li>
             ))}
-          </ol>
+          </ul>
         </section>
 
         <section className="surface p-6">
-          <h2 className="text-lg">Votre équipe</h2>
-          <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock4 className="size-4 text-accent" /> 24h/24 · <Moon className="size-4 text-accent" /> sans pause
-          </p>
-          <ul className="mt-4 space-y-3">
-            {AGENTS.slice(0, 5).map((a) => (
-              <li key={a.key} className="flex items-center gap-3">
-                <span className={`grid size-9 place-items-center rounded-xl text-lg ring-2 ${a.ring}`}>
-                  {a.emoji}
+          <h2 className="flex items-center gap-2 text-lg">
+            <Clock /> Activité récente
+          </h2>
+          <ul className="mt-5 space-y-3">
+            {activity.length === 0 && (
+              <li className="text-sm text-muted-foreground">Aucune activité pour le moment.</li>
+            )}
+            {activity.map((a) => (
+              <li key={a.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent/10">
+                  <a.icon className="size-4 text-accent" />
                 </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{a.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{a.role}</p>
-                </div>
+                <p className="min-w-0 flex-1 truncate text-sm">{a.label}</p>
+                <span className="shrink-0 text-xs text-muted-foreground">{dayjs(a.at)}</span>
               </li>
             ))}
           </ul>
-          <Button asChild variant="secondary" className="mt-5 w-full">
-            <Link to="/equipe">Voir les 10 agents</Link>
-          </Button>
         </section>
       </div>
-
-      <section className="surface mt-6 p-6">
-        <h2 className="flex items-center gap-2 text-lg">
-          <TrendingUp className="size-5 text-accent" /> Dernières nouvelles
-        </h2>
-        <ul className="mt-4 space-y-3">
-          {(notifications ?? []).length === 0 && (
-            <li className="text-sm text-muted-foreground">Aucune nouvelle pour le moment.</li>
-          )}
-          {(notifications ?? []).map((n) => (
-            <li key={n.id} className="flex items-start gap-3 rounded-xl border border-border p-4">
-              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
-              <div>
-                <p className="font-medium">{n.title}</p>
-                <p className="text-sm text-muted-foreground">{n.body}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
     </AppShell>
   );
 }
+
+function Clock() {
+  return <TrendingUp className="size-5 text-accent" />;
+}
+

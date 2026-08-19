@@ -12,7 +12,7 @@ async function verifyStripeSignature(payload: string, header: string | null, sec
   const parts = Object.fromEntries(
     header.split(",").map((p) => {
       const [k, ...v] = p.split("=");
-      return [k.trim(), v.join("=")];
+      return [(k ?? "").trim(), v.join("=")];
     }),
   ) as { t?: string; v1?: string };
   if (!parts.t || !parts.v1) return false;

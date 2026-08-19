@@ -112,4 +112,4 @@ export const AGENTS: AgentMeta[] = [
   },
 ];
 
-export const agentByKey = (key: string) => AGENTS.find((a) => a.key === key) ?? AGENTS[0];
+export const agentByKey = (key: string): AgentMeta => AGENTS.find((a) => a.key === key) ?? (AGENTS[0] as AgentMeta);

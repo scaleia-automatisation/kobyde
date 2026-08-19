@@ -37,7 +37,10 @@ function Settings() {
       .from("profiles")
       .update({ full_name: String(fd.get("full_name") ?? "") })
       .eq("user_id", profile!.user_id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Profil enregistré");
     refetch();
   };

@@ -25,6 +25,7 @@ import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEntrepriseRouteImport } from './routes/_authenticated/entreprise'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEricRouteImport } from './routes/_authenticated/eric'
+import { Route as AuthenticatedJasonRouteImport } from './routes/_authenticated/jason'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedPaiementsRouteImport } from './routes/_authenticated/paiements'
 import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
@@ -115,6 +116,11 @@ const AuthenticatedEricRoute = AuthenticatedEricRouteImport.update({
   path: '/eric',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedJasonRoute = AuthenticatedJasonRouteImport.update({
+  id: '/jason',
+  path: '/jason',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
   id: '/marketing',
   path: '/marketing',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
+  '/jason': typeof AuthenticatedJasonRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
+  '/jason': typeof AuthenticatedJasonRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/_authenticated/entreprise': typeof AuthenticatedEntrepriseRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/eric': typeof AuthenticatedEricRoute
+  '/_authenticated/jason': typeof AuthenticatedJasonRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/paiements': typeof AuthenticatedPaiementsRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
@@ -260,6 +269,7 @@ export interface FileRouteTypes {
     | '/entreprise'
     | '/equipe'
     | '/eric'
+    | '/jason'
     | '/marketing'
     | '/paiements'
     | '/parametres'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/entreprise'
     | '/equipe'
     | '/eric'
+    | '/jason'
     | '/marketing'
     | '/paiements'
     | '/parametres'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/entreprise'
     | '/_authenticated/equipe'
     | '/_authenticated/eric'
+    | '/_authenticated/jason'
     | '/_authenticated/marketing'
     | '/_authenticated/paiements'
     | '/_authenticated/parametres'
@@ -445,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEricRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/jason': {
+      id: '/_authenticated/jason'
+      path: '/jason'
+      fullPath: '/jason'
+      preLoaderRoute: typeof AuthenticatedJasonRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing': {
       id: '/_authenticated/marketing'
       path: '/marketing'
@@ -525,6 +544,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEntrepriseRoute: typeof AuthenticatedEntrepriseRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedEricRoute: typeof AuthenticatedEricRoute
+  AuthenticatedJasonRoute: typeof AuthenticatedJasonRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedPaiementsRoute: typeof AuthenticatedPaiementsRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
@@ -549,6 +569,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEntrepriseRoute: AuthenticatedEntrepriseRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedEricRoute: AuthenticatedEricRoute,
+  AuthenticatedJasonRoute: AuthenticatedJasonRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedPaiementsRoute: AuthenticatedPaiementsRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,

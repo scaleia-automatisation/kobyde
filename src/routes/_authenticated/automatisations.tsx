@@ -20,13 +20,14 @@ export const Route = createFileRoute("/_authenticated/automatisations")({
 });
 
 const RULES = [
-  { id: "relance_devis", agent: "vente", title: "Relancer un devis sans réponse", detail: "Après 5 jours, Marco envoie un rappel poli." },
-  { id: "relance_facture", agent: "devis", title: "Relancer une facture impayée", detail: "Léa prévient le client 3 jours après l'échéance." },
-  { id: "resume_jour", agent: "chef", title: "Résumé du matin", detail: "Alex vous envoie les 3 actions du jour à 8h." },
-  { id: "veille_concurrent", agent: "veille", title: "Surveiller les concurrents", detail: "Yanis vérifie chaque semaine ce qu'ils changent." },
-  { id: "nouveau_prospect", agent: "prospection", title: "Qualifier les nouveaux prospects", detail: "Nina donne une note à chaque nouveau contact." },
-  { id: "avis_client", agent: "support", title: "Demander un avis client", detail: "Ines demande un avis après chaque projet livré." },
+  { id: "relance_devis", agent: "relances", title: "Relancer un devis sans réponse", detail: "Après 5 jours, Clara envoie un rappel poli." },
+  { id: "relance_facture", agent: "devis", title: "Relancer une facture impayée", detail: "Michael prévient le client 3 jours après l'échéance." },
+  { id: "resume_jour", agent: "directeur", title: "Résumé du matin", detail: "Éric vous envoie les 3 actions du jour à 8h." },
+  { id: "veille_concurrent", agent: "analyse", title: "Surveiller les concurrents", detail: "Ethan vérifie chaque semaine ce qu'ils changent." },
+  { id: "nouveau_prospect", agent: "commercial", title: "Qualifier les nouveaux prospects", detail: "Jason donne une note à chaque nouveau contact." },
+  { id: "avis_client", agent: "clients", title: "Demander un avis client", detail: "Jennifer demande un avis après chaque projet livré." },
 ];
+
 
 function Automations() {
   const [on, setOn] = useState<Record<string, boolean>>({ resume_jour: true, relance_facture: true });

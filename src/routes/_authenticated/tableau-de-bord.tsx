@@ -64,7 +64,7 @@ function Dashboard() {
         <section className="surface p-6 lg:col-span-2">
           <h2 className="text-lg">Les 3 actions du jour</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Alex, votre chef d'équipe IA, a préparé la liste. Faites-les dans l'ordre.
+            Éric, votre Directeur IA, a préparé la liste. Faites-les dans l'ordre.
           </p>
           <ol className="mt-5 space-y-3">
             {[

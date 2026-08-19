@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { AGENTS, agentByKey } from "@/lib/agents";
+import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useCreateRow, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,14 +64,40 @@ function TeamPage() {
   return (
     <AppShell
       title="Mon équipe IA"
-      subtitle="10 agents spécialisés. Cliquez sur un agent pour lui confier une tâche."
+      subtitle="Éric pilote l'équipe. Parlez-lui en priorité, il distribue aux bons agents."
     >
+      <section className="surface mb-6 p-6">
+        <div className="flex flex-wrap items-start gap-4">
+          <span className={`grid size-16 shrink-0 place-items-center rounded-2xl text-3xl ring-4 ${LEAD_AGENT.ring}`}>
+            {LEAD_AGENT.emoji}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl leading-tight">{LEAD_AGENT.name}</h2>
+              <Badge>{LEAD_AGENT.role}</Badge>
+              <Badge variant="secondary">Point d'entrée</Badge>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">{LEAD_AGENT.description}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Exemples : « Trouve-moi des prospects pour mon offre de création de site. » ou « J'ai eu une réunion
+              avec un client, prépare la suite. »
+            </p>
+            <Button className="mt-4" onClick={() => setSelected(LEAD_AGENT.key)}>
+              Parler à {LEAD_AGENT.name}
+            </Button>
+          </div>
+        </div>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {AGENTS.map((a) => {
           const row = (agents ?? []).find((r) => r.key === a.key);
           const count = (tasks ?? []).filter((t) => t.agent_id === row?.id).length;
           return (
-            <article key={a.key} className="surface flex flex-col p-6 transition-shadow hover:shadow-lift">
+            <article
+              key={a.key}
+              className={`surface flex flex-col p-6 transition-shadow hover:shadow-lift ${a.primary ? "ring-2 ring-primary/30" : ""}`}
+            >
               <div className="flex items-start gap-4">
                 <span className={`grid size-14 shrink-0 place-items-center rounded-2xl text-2xl ring-4 ${a.ring}`}>
                   {a.emoji}
@@ -84,7 +110,14 @@ function TeamPage() {
                   </span>
                 </div>
               </div>
-              <p className="mt-4 flex-1 text-sm text-muted-foreground">{a.description}</p>
+              <p className="mt-4 text-sm text-muted-foreground">{a.description}</p>
+              <ul className="mt-3 flex flex-1 flex-wrap gap-1.5">
+                {a.skills.slice(0, 6).map((s) => (
+                  <li key={s} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                    {s}
+                  </li>
+                ))}
+              </ul>
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                 <span>{count} tâche{count > 1 ? "s" : ""}</span>
                 <span>{row?.credits_used ?? 0} crédits utilisés</span>
@@ -96,6 +129,7 @@ function TeamPage() {
           );
         })}
       </div>
+
 
       <section className="surface mt-6 p-6">
         <h2 className="text-lg">Historique des tâches</h2>

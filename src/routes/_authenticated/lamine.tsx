@@ -267,12 +267,26 @@ function ValuePropTab() {
         )}
         {result && (
           <Card className="space-y-4 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-lg font-bold leading-snug">{result.proposition}</p>
-              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => copy(JSON.stringify(result, null, 2))}>
-                <Copy className="h-4 w-4" /> Copier
-              </Button>
-            </div>
+            <p className="text-lg font-bold leading-snug">{result.proposition}</p>
+            <GenerationActions
+              title="Proposition de valeur"
+              text={edited ?? toReadableText(result)}
+              onEdit={setEdited}
+              regenerateSlot={
+                <CreditActionButton
+                  actionKey="mkt.value_prop"
+                  className="inline-block"
+                  buttonClassName="gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  pending={mut.isPending}
+                  onConfirm={(key) => mut.mutateAsync({ key, mode: "generer" })}
+                >
+                  <RefreshCw className="h-4 w-4" /> Régénérer
+                </CreditActionButton>
+              }
+            />
+
             <Block title="Accroche">{result.accroche}</Block>
             <div className="grid gap-3 sm:grid-cols-2">
               <Block title="Bénéfice">{result.benefice}</Block>

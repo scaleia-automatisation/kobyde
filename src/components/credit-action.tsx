@@ -36,6 +36,7 @@ export function CreditActionButton({
   pending,
   disabled,
   className,
+  buttonClassName,
   variant,
   size,
 }: {
@@ -45,6 +46,7 @@ export function CreditActionButton({
   pending?: boolean;
   disabled?: boolean;
   className?: string;
+  buttonClassName?: string;
   variant?: "default" | "secondary" | "outline" | "ghost";
   size?: "default" | "sm" | "lg";
 }) {
@@ -72,7 +74,7 @@ export function CreditActionButton({
         type="button"
         variant={variant}
         size={size}
-        className="w-full gap-2"
+        className={buttonClassName ?? "w-full gap-2"}
         disabled={busy || disabled}
         onClick={() => (cost > 0 ? setOpen(true) : run())}
       >

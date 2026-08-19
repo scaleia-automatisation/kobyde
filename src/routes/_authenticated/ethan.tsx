@@ -181,6 +181,7 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
   const [scope, setScope] = useState("");
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
   const fn = useServerFn(generateAnalysis);
 
   const run = useMutation({
@@ -188,7 +189,9 @@ function AnalysisTab({ kind, label, action }: { kind: any; label: string; action
       fn({ data: { orgId: orgId!, idempotencyKey, kind, scope, notes } }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       toast.success(`${label} généré${label.startsWith("Analyse") || label.startsWith("Étude") ? "e" : ""}.`);
+
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec de la génération."),
   });

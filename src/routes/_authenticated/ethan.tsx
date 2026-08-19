@@ -21,6 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
+import { toReadableText } from "@/lib/generation-text";
+
 import { frDate, useOrgId, useRows } from "@/lib/db";
 import { importanceTone, sentimentTone, WATCH_AXES, type Source } from "@/lib/intel";
 import {

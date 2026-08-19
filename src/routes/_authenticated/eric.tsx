@@ -48,6 +48,7 @@ function EricPage() {
   const orgId = useOrgId();
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [spent, setSpent] = useState(0);
   const [results, setResults] = useState<
     Record<string, { status: "running" | "done" | "error"; result?: string }>
   >({});
@@ -62,41 +63,47 @@ function EricPage() {
   }, []);
 
   const mutation = useMutation({
-    mutationFn: async (text: string) => call({ data: { prompt: text, orgId: orgId! } }),
-    onSuccess: async (data) => {
+    mutationFn: async (vars: { text: string; key: string }) =>
+      call({ data: { prompt: vars.text, orgId: orgId!, idempotencyKey: vars.key } }),
+    onSuccess: (data) => {
       setPlan(data);
       setResults({});
+      setSpent(data.credits_used ?? 0);
       setPrompt("");
       inputRef.current?.focus();
-
-      // Éric suit la progression et récupère les résultats de chaque agent.
-      for (const t of data.taches) {
-        if (!t.id) continue;
-        setResults((r) => ({ ...r, [t.id!]: { status: "running" } }));
-        try {
-          const res = await execTask({ data: { taskId: t.id, orgId: orgId! } });
-          setResults((r) => ({ ...r, [t.id!]: { status: "done", result: res.result } }));
-        } catch (e) {
-          setResults((r) => ({
-            ...r,
-            [t.id!]: { status: "error", result: e instanceof Error ? e.message : "Échec" },
-          }));
-        }
-      }
       qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message || "Éric n'a pas pu traiter la demande."),
   });
 
-  const send = (text: string) => {
+  const runOne = async (taskId: string, key: string) => {
+    setResults((r) => ({ ...r, [taskId]: { status: "running" } }));
+    try {
+      const res = await execTask({ data: { taskId, orgId: orgId!, idempotencyKey: key } });
+      setResults((r) => ({ ...r, [taskId]: { status: "done", result: res.result } }));
+      setSpent((s) => s + (res.credits_used ?? 0));
+      toast.success(`Action terminée — ${res.credits_used ?? 0} crédit(s) consommé(s)`);
+    } catch (e) {
+      setResults((r) => ({
+        ...r,
+        [taskId]: { status: "error", result: e instanceof Error ? e.message : "Échec" },
+      }));
+      toast.error("Échec de la tâche — aucun crédit consommé (remboursé automatiquement).");
+    } finally {
+      qc.invalidateQueries();
+    }
+  };
+
+  const send = (text: string, key: string) => {
     const value = text.trim();
     if (!value) return;
     if (!orgId) {
       toast.error("Organisation introuvable.");
       return;
     }
-    mutation.mutate(value);
+    mutation.mutate({ text: value, key });
   };
+
 
   return (
     <AppShell title="Éric — Directeur IA" subtitle="L'orchestrateur central de votre équipe">

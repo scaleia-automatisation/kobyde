@@ -1,0 +1,104 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { AppShell } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile, useRows } from "@/lib/db";
+
+export const Route = createFileRoute("/_authenticated/parametres")({
+  head: () => ({
+    meta: [
+      { title: "Paramètres — Kobyde" },
+      { name: "description", content: "Votre profil, votre entreprise, vos crédits et vos notifications." },
+      { property: "og:title", content: "Paramètres — Kobyde" },
+      { property: "og:description", content: "Réglages de votre espace Kobyde." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Settings,
+});
+
+function Settings() {
+  const { data: profile, refetch } = useProfile();
+  const { data: notifications } = useRows<{ id: string; title: string; body: string; is_read: boolean }>(
+    "notifications",
+  );
+  const navigate = useNavigate();
+  const org = profile?.organizations as { name?: string; credits?: number; plan?: string } | null;
+
+  const saveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: String(fd.get("full_name") ?? "") })
+      .eq("user_id", profile!.user_id);
+    if (error) return toast.error(error.message);
+    toast.success("Profil enregistré");
+    refetch();
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/", replace: true });
+  };
+
+  return (
+    <AppShell title="Paramètres" subtitle="Votre profil, votre entreprise et vos alertes.">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="surface p-6">
+          <h2 className="text-lg">Mon profil</h2>
+          <form onSubmit={saveProfile} className="mt-4 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="full_name">Nom complet</Label>
+              <Input id="full_name" name="full_name" defaultValue={profile?.full_name ?? ""} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input value={profile?.email ?? ""} disabled />
+            </div>
+            <Button type="submit">Enregistrer</Button>
+          </form>
+        </section>
+
+        <section className="surface p-6">
+          <h2 className="text-lg">Mon entreprise</h2>
+          <p className="mt-3 text-sm text-muted-foreground">Nom</p>
+          <p className="font-medium">{org?.name ?? "—"}</p>
+          <p className="mt-4 text-sm text-muted-foreground">Formule</p>
+          <p className="font-medium">Kobyde — 39 € / mois</p>
+          <p className="mt-4 text-sm text-muted-foreground">Crédits IA restants</p>
+          <p className="font-display text-3xl">{org?.credits ?? 0}</p>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Vos données sont isolées : personne d'une autre entreprise ne peut y accéder.
+          </p>
+          <Button variant="outline" className="mt-5" onClick={signOut}>
+            Se déconnecter
+          </Button>
+        </section>
+
+        <section className="surface p-6 lg:col-span-2">
+          <h2 className="text-lg">Notifications</h2>
+          <ul className="mt-4 space-y-2">
+            {(notifications ?? []).length === 0 && (
+              <li className="text-sm text-muted-foreground">Aucune notification.</li>
+            )}
+            {(notifications ?? []).map((n) => (
+              <li key={n.id} className="flex items-start gap-3 rounded-xl border border-border p-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{n.title}</p>
+                  <p className="text-sm text-muted-foreground">{n.body}</p>
+                </div>
+                {!n.is_read && <Badge>Nouveau</Badge>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </AppShell>
+  );
+}

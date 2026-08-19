@@ -260,10 +260,34 @@ function EricPage() {
                           </CreditActionButton>
                         )}
                         {state?.result && (
-                          <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
-                            {state.result}
-                          </div>
+                          <>
+                            <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
+                              {taskEdits[t.id ?? ""] ?? state.result}
+                            </div>
+                            {state.status === "done" && (
+                              <GenerationActions
+                                title={t.title}
+                                text={taskEdits[t.id ?? ""] ?? state.result}
+                                onEdit={(text) => setTaskEdits((e) => ({ ...e, [t.id ?? ""]: text }))}
+                                regenerateSlot={
+                                  t.id ? (
+                                    <CreditActionButton
+                                      actionKey="eric.task_run"
+                                      className="inline-block"
+                                      buttonClassName="gap-1.5"
+                                      variant="outline"
+                                      size="sm"
+                                      onConfirm={(key) => runOne(t.id!, key)}
+                                    >
+                                      <RefreshCw className="h-4 w-4" /> Régénérer
+                                    </CreditActionButton>
+                                  ) : undefined
+                                }
+                              />
+                            )}
+                          </>
                         )}
+
                       </Card>
                     );
                   })}

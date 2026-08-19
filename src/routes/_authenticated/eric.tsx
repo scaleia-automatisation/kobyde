@@ -5,13 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";
+import { CreditActionButton } from "@/components/credit-action";
+import { newIdempotencyKey } from "@/lib/credits";
+
 
 export const Route = createFileRoute("/_authenticated/eric")({
   component: EricPage,
@@ -48,6 +50,7 @@ function EricPage() {
   const orgId = useOrgId();
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [spent, setSpent] = useState(0);
   const [results, setResults] = useState<
     Record<string, { status: "running" | "done" | "error"; result?: string }>
   >({});
@@ -62,41 +65,47 @@ function EricPage() {
   }, []);
 
   const mutation = useMutation({
-    mutationFn: async (text: string) => call({ data: { prompt: text, orgId: orgId! } }),
-    onSuccess: async (data) => {
+    mutationFn: async (vars: { text: string; key: string }) =>
+      call({ data: { prompt: vars.text, orgId: orgId!, idempotencyKey: vars.key } }),
+    onSuccess: (data) => {
       setPlan(data);
       setResults({});
+      setSpent(data.credits_used ?? 0);
       setPrompt("");
       inputRef.current?.focus();
-
-      // Éric suit la progression et récupère les résultats de chaque agent.
-      for (const t of data.taches) {
-        if (!t.id) continue;
-        setResults((r) => ({ ...r, [t.id!]: { status: "running" } }));
-        try {
-          const res = await execTask({ data: { taskId: t.id, orgId: orgId! } });
-          setResults((r) => ({ ...r, [t.id!]: { status: "done", result: res.result } }));
-        } catch (e) {
-          setResults((r) => ({
-            ...r,
-            [t.id!]: { status: "error", result: e instanceof Error ? e.message : "Échec" },
-          }));
-        }
-      }
       qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message || "Éric n'a pas pu traiter la demande."),
   });
 
-  const send = (text: string) => {
+  const runOne = async (taskId: string, key: string) => {
+    setResults((r) => ({ ...r, [taskId]: { status: "running" } }));
+    try {
+      const res = await execTask({ data: { taskId, orgId: orgId!, idempotencyKey: key } });
+      setResults((r) => ({ ...r, [taskId]: { status: "done", result: res.result } }));
+      setSpent((s) => s + (res.credits_used ?? 0));
+      toast.success(`Action terminée — ${res.credits_used ?? 0} crédit(s) consommé(s)`);
+    } catch (e) {
+      setResults((r) => ({
+        ...r,
+        [taskId]: { status: "error", result: e instanceof Error ? e.message : "Échec" },
+      }));
+      toast.error("Échec de la tâche — aucun crédit consommé (remboursé automatiquement).");
+    } finally {
+      qc.invalidateQueries();
+    }
+  };
+
+  const send = (text: string, key: string) => {
     const value = text.trim();
     if (!value) return;
     if (!orgId) {
       toast.error("Organisation introuvable.");
       return;
     }
-    mutation.mutate(value);
+    mutation.mutate({ text: value, key });
   };
+
 
   return (
     <AppShell title="Éric — Directeur IA" subtitle="L'orchestrateur central de votre équipe">
@@ -120,7 +129,8 @@ function EricPage() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(prompt);
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+                send(prompt, newIdempotencyKey());
             }}
             placeholder="Écrivez simplement ce dont vous avez besoin..."
             rows={3}
@@ -128,14 +138,16 @@ function EricPage() {
           />
           <div className="flex items-center justify-between gap-3 px-1 pt-2">
             <span className="text-xs text-muted-foreground">Ctrl + Entrée pour envoyer</span>
-            <Button onClick={() => send(prompt)} disabled={mutation.isPending || !prompt.trim()}>
-              {mutation.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
+            <CreditActionButton
+              actionKey="eric.analyze_request"
+              pending={mutation.isPending}
+              disabled={!prompt.trim()}
+              buttonClassName="gap-2"
+              onConfirm={(key) => send(prompt, key)}
+            >
+              <Send className="size-4" />
               Envoyer
-            </Button>
+            </CreditActionButton>
           </div>
         </Card>
 
@@ -147,7 +159,7 @@ function EricPage() {
                 key={ex}
                 onClick={() => {
                   setPrompt(ex);
-                  send(ex);
+                  inputRef.current?.focus();
                 }}
                 disabled={mutation.isPending}
                 className="rounded-full border border-border bg-card px-3.5 py-2 text-left text-sm text-foreground/80 transition hover:border-primary/40 hover:bg-accent/40 disabled:opacity-50"
@@ -192,9 +204,12 @@ function EricPage() {
 
             {plan.taches.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Tâches distribuées
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Tâches distribuées
+                  </p>
+                  <Badge variant="secondary">{spent} crédit(s) consommé(s)</Badge>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {plan.taches.map((t, i) => {
                     const meta = agentByKey(t.agent_key);
@@ -233,6 +248,17 @@ function EricPage() {
                           )}
                           {!state && <span className="text-muted-foreground">En attente</span>}
                         </div>
+                        {t.id && !state && (
+                          <CreditActionButton
+                            actionKey="eric.task_run"
+                            size="sm"
+                            variant="secondary"
+                            buttonClassName="gap-2"
+                            onConfirm={(key) => runOne(t.id!, key)}
+                          >
+                            Lancer la tâche
+                          </CreditActionButton>
+                        )}
                         {state?.result && (
                           <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
                             {state.result}
@@ -251,9 +277,15 @@ function EricPage() {
                 <div className="space-y-2">
                   <p className="text-sm font-semibold">Action suivante proposée</p>
                   <p className="text-sm text-muted-foreground">{plan.prochaine_action}</p>
-                  <Button size="sm" variant="secondary" onClick={() => send(plan.prochaine_action)}>
+                  <CreditActionButton
+                    actionKey="eric.analyze_request"
+                    size="sm"
+                    variant="secondary"
+                    buttonClassName="gap-2"
+                    onConfirm={(key) => send(plan.prochaine_action, key)}
+                  >
                     Lancer <ArrowRight className="size-4" />
-                  </Button>
+                  </CreditActionButton>
                 </div>
               </Card>
             )}
@@ -290,7 +322,11 @@ function EricPage() {
               {(conversations ?? []).map((c: { id: string; title: string }) => (
                 <button
                   key={c.id}
-                  onClick={() => send(c.title)}
+                  onClick={() => {
+                    setPrompt(c.title);
+                    inputRef.current?.focus();
+                  }}
+
                   className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-left text-sm hover:bg-accent/40"
                 >
                   {c.title}

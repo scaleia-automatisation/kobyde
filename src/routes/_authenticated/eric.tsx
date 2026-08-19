@@ -59,11 +59,27 @@ function EricPage() {
 
   const mutation = useMutation({
     mutationFn: async (text: string) => call({ data: { prompt: text, orgId: orgId! } }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setPlan(data);
+      setResults({});
       setPrompt("");
-      qc.invalidateQueries();
       inputRef.current?.focus();
+
+      // Éric suit la progression et récupère les résultats de chaque agent.
+      for (const t of data.taches) {
+        if (!t.id) continue;
+        setResults((r) => ({ ...r, [t.id!]: { status: "running" } }));
+        try {
+          const res = await execTask({ data: { taskId: t.id, orgId: orgId! } });
+          setResults((r) => ({ ...r, [t.id!]: { status: "done", result: res.result } }));
+        } catch (e) {
+          setResults((r) => ({
+            ...r,
+            [t.id!]: { status: "error", result: e instanceof Error ? e.message : "Échec" },
+          }));
+        }
+      }
+      qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message || "Éric n'a pas pu traiter la demande."),
   });

@@ -100,21 +100,50 @@ function Landing() {
         <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
           Chaque agent a un prénom, un métier et une mission claire. Vous lui parlez comme à un collègue.
         </p>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {AGENTS.map((a) => (
-            <article key={a.key} className="surface p-5 text-center transition-shadow hover:shadow-lift">
+        {(() => {
+          const lead = AGENTS.find((a) => a.key === "directeur") ?? AGENTS[0]!;
+          const rest = AGENTS.filter((a) => a.key !== lead.key);
+          const row1 = rest.slice(0, 5);
+          const row2 = rest.slice(5);
+          const Card = ({ a, big = false }: { a: (typeof AGENTS)[number]; big?: boolean }) => (
+            <article
+              className={`surface text-center transition-shadow hover:shadow-lift ${big ? "p-7" : "p-5"}`}
+            >
               <div
-                className={`mx-auto grid size-14 place-items-center rounded-2xl text-2xl ring-4 ${a.ring}`}
+                className={`mx-auto grid place-items-center rounded-2xl ring-4 ${a.ring} ${
+                  big ? "size-20 rounded-3xl text-4xl" : "size-14 text-2xl"
+                }`}
                 aria-hidden
               >
                 {a.emoji}
               </div>
-              <h3 className="mt-3 text-lg">{a.name}</h3>
+              <h3 className={`mt-3 ${big ? "text-2xl font-bold" : "text-lg"}`}>{a.name}</h3>
               <p className="text-sm font-medium text-muted-foreground">{a.role}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{a.description}</p>
+              <p className={`mt-2 text-sm text-muted-foreground ${big ? "mx-auto max-w-md" : ""}`}>
+                {a.description}
+              </p>
             </article>
-          ))}
-        </div>
+          );
+          return (
+            <div className="mt-10 space-y-6">
+              <div className="mx-auto max-w-xl">
+                <Card a={lead} big />
+              </div>
+              <div className="mx-auto h-8 w-px border-l-2 border-dashed border-border" aria-hidden />
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {row1.map((a) => (
+                  <Card key={a.key} a={a} />
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {row2.map((a) => (
+                  <Card key={a.key} a={a} />
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
       </section>
 
       <section className="mx-auto max-w-3xl px-5 pb-24">

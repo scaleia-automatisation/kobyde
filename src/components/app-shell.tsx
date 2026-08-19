@@ -47,6 +47,7 @@ export const NAV = [
   { to: "/catalogue", label: "Catalogue", icon: Package },
   { to: "/lamine", label: "Lamine — Marketing", icon: Megaphone },
   { to: "/funnel", label: "Funnel", icon: Filter },
+  { to: "/ethan", label: "Ethan — Analyse & veille", icon: LineChart },
   { to: "/marketing", label: "Campagnes", icon: Megaphone },
   { to: "/rh", label: "RH", icon: UsersRound },
   { to: "/emails", label: "Emails", icon: Mail },

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ModulePage } from "@/components/module-page";
 
-export const Route = createFileRoute("/_authenticated/projets")({
+export const Route = createFileRoute("/_authenticated/projets/")({
   head: () => ({
     meta: [
       { title: "Projets — Kobyde" },
@@ -21,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/projets")({
         emptyText: "Créez un projet quand un client dit oui. Chloé, votre agent Projets, s'occupe du reste.",
         addLabel: "Créer un projet",
         badgeField: "status",
+        detailTo: "/projets/$id",
+        detailLabel: "Ouvrir",
         fields: [
           { name: "name", label: "Nom du projet", required: true, placeholder: "Site internet Dupont" },
           { name: "budget", label: "Budget", type: "money" },

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ModulePage } from "@/components/module-page";
 
-export const Route = createFileRoute("/_authenticated/clients")({
+export const Route = createFileRoute("/_authenticated/clients/")({
   head: () => ({
     meta: [
       { title: "Clients — Kobyde" },
@@ -21,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/clients")({
         emptyText: "Ajoutez votre premier client pour suivre ses devis, factures et projets.",
         addLabel: "Ajouter un client",
         badgeField: "status",
+        detailTo: "/clients/$id",
+        detailLabel: "Fiche 360",
         fields: [
           { name: "full_name", label: "Nom du contact", required: true, placeholder: "Marie Dupont" },
           { name: "company_name", label: "Entreprise", placeholder: "Dupont & Fils" },

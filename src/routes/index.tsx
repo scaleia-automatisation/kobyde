@@ -9,7 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { AGENTS } from "@/lib/agents";
-import { PLANS } from "@/lib/plans";
+import { PAID_PLANS } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 
 const TITLE = "Kobyde — 10 agents IA pour piloter votre entreprise, dès 0 €/mois";
@@ -153,8 +153,8 @@ function Landing() {
           Abonnement mensuel renouvelé automatiquement. Vos crédits non utilisés sont reportés au mois
           suivant.
         </p>
-        <div className="mt-10 grid gap-4 lg:grid-cols-4">
-          {PLANS.map((p) => (
+        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {PAID_PLANS.map((p) => (
             <article
               key={p.key}
               className={`surface flex flex-col p-6 ${p.highlight ? "ring-2 ring-primary" : ""}`}
@@ -182,7 +182,7 @@ function Landing() {
               </ul>
               <Button asChild className="mt-6" variant={p.highlight ? "default" : "outline"}>
                 <Link to="/auth" search={{ mode: "signup" }}>
-                  {p.price === 0 ? "Tester gratuitement" : `Choisir ${p.name}`}
+                  {`Choisir ${p.name}`}
                 </Link>
               </Button>
             </article>

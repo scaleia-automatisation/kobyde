@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PLANS, useChangePlan, usePlan, type PlanKey } from "@/lib/plans";
+import { PAID_PLANS, useChangePlan, usePlan, type PlanKey } from "@/lib/plans";
 
 const TITLE = "Formules et abonnements — Kobyde";
 const DESC =
@@ -66,8 +66,8 @@ function PlansPage() {
           <Progress className="mt-4" value={creditsTotal > 0 ? (credits / creditsTotal) * 100 : 0} />
         </Card>
 
-        <div className="grid gap-4 lg:grid-cols-4">
-          {PLANS.map((p) => {
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {PAID_PLANS.map((p) => {
             const current = p.key === plan.key;
             return (
               <Card

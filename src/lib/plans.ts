@@ -100,6 +100,9 @@ export const PLANS: Plan[] = [
   },
 ];
 
+/** Formules payantes affichées à la vente (le plan Gratuit reste le plan par défaut, non affiché). */
+export const PAID_PLANS: Plan[] = PLANS.filter((p) => p.price > 0);
+
 export const planByKey = (key?: string | null): Plan =>
   PLANS.find((p) => p.key === key) ?? PLANS[0]!;
 

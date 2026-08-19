@@ -77,7 +77,7 @@ function DevisPage() {
       })
       .select("id")
       .single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setManual(false);
     navigate({ to: "/devis/$id", params: { id: data.id } });
   };
@@ -117,7 +117,7 @@ function DevisPage() {
       })
       .select("id")
       .single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
 
     if (retained.length) {
       const { error: e2 } = await supabase.from("quote_items").insert(

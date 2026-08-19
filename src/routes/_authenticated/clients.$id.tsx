@@ -61,7 +61,7 @@ function ClientDetail() {
     const { error } = await supabase
       .from("client_portal_access")
       .insert({ org_id: orgId, client_id: id, token });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await refetchPortal();
     toast.success("Espace client créé");
   };
@@ -77,7 +77,7 @@ function ClientDetail() {
       title: String(fd.get("title") ?? "").trim(),
       detail: String(fd.get("detail") ?? "").trim() || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     e.currentTarget.reset();
     await refetchRequests();
     toast.success("Demande envoyée au client");

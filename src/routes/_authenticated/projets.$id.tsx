@@ -53,7 +53,7 @@ function ProjectDetail() {
       position: (steps?.length ?? 0) + 1,
       due_date: String(fd.get("due_date") ?? "") || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     e.currentTarget.reset();
     await refetchSteps();
   };
@@ -72,7 +72,7 @@ function ProjectDetail() {
       assignee_name: String(fd.get("assignee") ?? "").trim() || null,
       due_date: String(fd.get("due_date") ?? "") || null,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     e.currentTarget.reset();
     await refetchTasks();
   };

@@ -276,7 +276,7 @@ function PortalPage() {
               const fd = new FormData(e.currentTarget);
               const name = String(fd.get("name") ?? "").trim();
               const url = String(fd.get("url") ?? "").trim();
-              if (!name) return toast.error("Donnez un nom au document");
+              if (!name) { toast.error("Donnez un nom au document"); return; }
               upload.mutate({ name, fileUrl: url || null });
               e.currentTarget.reset();
             }}

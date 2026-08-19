@@ -115,7 +115,7 @@ function QuoteDetail() {
   const locked = quote?.status === "accepte";
 
   const persistTotals = async (extra: Record<string, unknown> = {}) => {
-    await supabase
+    await (supabase as any)
       .from("quotes")
       .update({
         subtotal_ht: totals.subtotal,
@@ -137,7 +137,7 @@ function QuoteDetail() {
   const addLine = async (productId: string) => {
     if (!orgId) return;
     const p = (products ?? []).find((x: any) => x.id === productId);
-    const { error } = await supabase.from("quote_items").insert({
+    const { error } = await (supabase as any).from("quote_items").insert({
       org_id: orgId,
       quote_id: id,
       product_id: p?.id ?? null,
@@ -149,17 +149,17 @@ function QuoteDetail() {
       position: (items?.length ?? 0) + 1,
       in_catalog: !!p,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await refetchItems();
   };
 
   const updateLine = async (lineId: string, patch: Record<string, unknown>) => {
-    await supabase.from("quote_items").update(patch).eq("id", lineId);
+    await (supabase as any).from("quote_items").update(patch).eq("id", lineId);
     await refetchItems();
   };
 
   const removeLine = async (lineId: string) => {
-    await supabase.from("quote_items").delete().eq("id", lineId);
+    await (supabase as any).from("quote_items").delete().eq("id", lineId);
     await refetchItems();
   };
 
@@ -171,7 +171,7 @@ function QuoteDetail() {
 
   const saveVersion = async (change: string, reason?: string) => {
     if (!orgId || !quote) return;
-    await supabase.from("quote_versions").insert({
+    await (supabase as any).from("quote_versions").insert({
       org_id: orgId,
       quote_id: id,
       version: Number(quote.version ?? 1),
@@ -179,7 +179,7 @@ function QuoteDetail() {
       reason: reason ?? null,
       snapshot: snapshot(),
     });
-    await supabase.from("quotes").update({ version: Number(quote.version ?? 1) + 1 }).eq("id", id);
+    await (supabase as any).from("quotes").update({ version: Number(quote.version ?? 1) + 1 }).eq("id", id);
     await refetchQuote();
   };
 
@@ -190,10 +190,10 @@ function QuoteDetail() {
   };
 
   const sendToClient = async () => {
-    if (!orgId || !quote?.client_id) return toast.error("Ajoutez d'abord un client");
+    if (!orgId || !quote?.client_id) { toast.error("Ajoutez d'abord un client"); return; }
     await persistTotals({ status: "envoye", sent_at: new Date().toISOString() });
 
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from("client_portal_access")
       .select("token")
       .eq("client_id", quote.client_id)
@@ -201,10 +201,10 @@ function QuoteDetail() {
     let token = existing?.token as string | undefined;
     if (!token) {
       token = makeToken().slice(0, 48);
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("client_portal_access")
         .insert({ org_id: orgId, client_id: quote.client_id, token });
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
     }
     const url = `${window.location.origin}/espace/${token}`;
     await navigator.clipboard.writeText(url).catch(() => undefined);
@@ -212,7 +212,7 @@ function QuoteDetail() {
   };
 
   const decide = async (status: "accepte" | "refuse") => {
-    await supabase
+    await (supabase as any)
       .from("quotes")
       .update({
         status,
@@ -225,7 +225,7 @@ function QuoteDetail() {
 
   const createInstallments = async () => {
     if (!orgId) return;
-    await supabase.from("quote_installments").delete().eq("quote_id", id);
+    await (supabase as any).from("quote_installments").delete().eq("quote_id", id);
     const rows = DEFAULT_INSTALLMENTS.map((inst, i) => ({
       org_id: orgId,
       quote_id: id,
@@ -236,8 +236,8 @@ function QuoteDetail() {
       due_date: isoDate(addDays(i * 15)),
       status: "a_payer",
     }));
-    const { error } = await supabase.from("quote_installments").insert(rows);
-    if (error) return toast.error(error.message);
+    const { error } = await (supabase as any).from("quote_installments").insert(rows);
+    if (error) { toast.error(error.message); return; }
     await refetchInst();
     toast.success("Échéancier créé");
   };
@@ -251,7 +251,7 @@ function QuoteDetail() {
 
   const toProject = async () => {
     if (!orgId || !quote) return;
-    const { data: project, error } = await supabase
+    const { data: project, error } = await (supabase as any)
       .from("projects")
       .insert({
         org_id: orgId,
@@ -265,9 +265,9 @@ function QuoteDetail() {
       })
       .select("id")
       .single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     const steps = ["Analyse", "Maquette", "Développement", "Tests", "Mise en ligne"];
-    await supabase.from("project_steps").insert(
+    await (supabase as any).from("project_steps").insert(
       steps.map((name, i) => ({
         org_id: orgId,
         project_id: project.id,
@@ -497,7 +497,7 @@ function QuoteDetail() {
                     className="mt-2"
                     defaultValue={f.subject}
                     onBlur={(e) =>
-                      supabase.from("quote_followups").update({ subject: e.target.value }).eq("id", f.id)
+                      (supabase as any).from("quote_followups").update({ subject: e.target.value }).eq("id", f.id)
                     }
                   />
                   <Textarea
@@ -506,7 +506,7 @@ function QuoteDetail() {
                     rows={4}
                     defaultValue={f.body}
                     onBlur={(e) =>
-                      supabase.from("quote_followups").update({ body: e.target.value }).eq("id", f.id)
+                      (supabase as any).from("quote_followups").update({ body: e.target.value }).eq("id", f.id)
                     }
                   />
                   <div className="mt-2 flex justify-end">
@@ -515,7 +515,7 @@ function QuoteDetail() {
                       variant="secondary"
                       className="gap-2"
                       onClick={async () => {
-                        await supabase
+                        await (supabase as any)
                           .from("quote_followups")
                           .update({ status: "envoyee", sent_at: new Date().toISOString() })
                           .eq("id", f.id);

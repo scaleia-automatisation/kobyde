@@ -115,7 +115,7 @@ function CataloguePage() {
         })
         .select("id")
         .single();
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       quoteId = q.id;
     }
 
@@ -130,7 +130,7 @@ function CataloguePage() {
       vat_rate: Number(product.vat_rate ?? 20),
       subservices: product.subservices ?? [],
     });
-    if (itemErr) return toast.error(itemErr.message);
+    if (itemErr) { toast.error(itemErr.message); return; }
 
     toast.success("Ajouté au devis");
     setQuoteFor(null);
@@ -337,7 +337,7 @@ function CataloguePage() {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
               const clientId = String(fd.get("client_id") ?? "");
-              if (!clientId) return toast.error("Choisissez un client");
+              if (!clientId) { toast.error("Choisissez un client"); return; }
               void addToQuote(quoteFor, clientId, Number(fd.get("quantity") ?? 1) || 1);
             }}
           >

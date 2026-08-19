@@ -1095,6 +1095,53 @@ export type Database = {
           },
         ]
       }
+      personas: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          org_id: string
+          params: Json
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          org_id: string
+          params?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          org_id?: string
+          params?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personas_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
@@ -1291,51 +1338,132 @@ export type Database = {
           },
         ]
       }
+      prospect_searches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          params: Json
+          persona_id: string | null
+          results_count: number
+          status: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          params?: Json
+          persona_id?: string | null
+          results_count?: number
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          params?: Json
+          persona_id?: string | null
+          results_count?: number
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_searches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_searches_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prospects: {
         Row: {
+          angle: string | null
+          channel: string | null
           city: string | null
           company_name: string | null
           created_at: string
           email: string | null
+          followup_step: string | null
           full_name: string
           id: string
           notes: string | null
           org_id: string
+          personalized_message: string | null
           phone: string | null
+          qualification: string | null
           score: number
+          search_id: string | null
           source: string | null
+          source_url: string | null
+          sources: Json
           status: string
           updated_at: string
+          website: string | null
         }
         Insert: {
+          angle?: string | null
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
+          followup_step?: string | null
           full_name: string
           id?: string
           notes?: string | null
           org_id: string
+          personalized_message?: string | null
           phone?: string | null
+          qualification?: string | null
           score?: number
+          search_id?: string | null
           source?: string | null
+          source_url?: string | null
+          sources?: Json
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          angle?: string | null
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
+          followup_step?: string | null
           full_name?: string
           id?: string
           notes?: string | null
           org_id?: string
+          personalized_message?: string | null
           phone?: string | null
+          qualification?: string | null
           score?: number
+          search_id?: string | null
           source?: string | null
+          source_url?: string | null
+          sources?: Json
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -1343,6 +1471,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospects_search_id_fkey"
+            columns: ["search_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_searches"
             referencedColumns: ["id"]
           },
         ]

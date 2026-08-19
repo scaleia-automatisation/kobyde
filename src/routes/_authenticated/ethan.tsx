@@ -307,7 +307,28 @@ function CompetitiveTab() {
         ) : null}
         {result ? (
           <>
+            <Card className="p-4">
+              <GenerationActions
+                title="Analyse concurrentielle"
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey="analysis.competitive"
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={run.isPending}
+                    onConfirm={(k) => run.mutateAsync(k)}
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+            </Card>
             {result.concurrents.map((c: any, i: number) => (
+
               <Card key={i} className="space-y-3 p-5">
                 <h3 className="text-lg font-semibold">{c.nom}</h3>
                 <div className="grid gap-3 md:grid-cols-2">

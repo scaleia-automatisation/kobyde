@@ -21,6 +21,7 @@ import {
   Package,
   Search,
   Settings,
+  ShieldCheck,
   Sparkles,
   Target,
   Users,
@@ -28,6 +29,10 @@ import {
   Zap,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { amIPlatformAdmin } from "@/lib/admin.functions";
+import { useSessionTracking } from "@/lib/user-events";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRows } from "@/lib/db";
 import { useMonthlyRenewal, usePlan } from "@/lib/plans";
@@ -67,9 +72,18 @@ const MOBILE_NAV = NAV.filter((n) =>
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const checkAdmin = useServerFn(amIPlatformAdmin);
+  const { data: access } = useQuery({
+    queryKey: ["is-platform-admin"],
+    queryFn: () => checkAdmin({ data: undefined }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const links = access?.isAdmin
+    ? [...NAV, { to: "/super-admin", label: "Super Admin", icon: ShieldCheck } as const]
+    : NAV;
   return (
     <nav className="space-y-1">
-      {NAV.map((item) => {
+      {links.map((item) => {
         const active = pathname === item.to;
         return (
           <Link
@@ -169,6 +183,7 @@ export function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   useMonthlyRenewal();
+  useSessionTracking();
 
   return (
     <div className="flex min-h-screen w-full bg-background">

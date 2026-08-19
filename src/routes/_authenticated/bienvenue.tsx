@@ -1,3 +1,4 @@
+import { trackUserEvent } from "@/lib/user-events";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -150,6 +151,7 @@ function OnboardingPage() {
       }
       if (step === 6) {
         await saveOrg({ onboarding_completed: true });
+        void trackUserEvent("onboarding_completed");
         navigate({ to: "/eric", replace: true });
         return;
       }

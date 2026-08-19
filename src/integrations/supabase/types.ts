@@ -249,42 +249,97 @@ export type Database = {
       }
       candidates: {
         Row: {
+          anonymized_at: string | null
+          consent_at: string | null
           created_at: string
+          created_by: string | null
+          cv_path: string | null
+          cv_text: string | null
           email: string | null
+          extraction: Json
+          first_name: string | null
           full_name: string
           id: string
+          job_offer_id: string | null
+          last_name: string | null
+          letter_path: string | null
+          letter_text: string | null
+          location: string | null
           notes: string | null
           org_id: string
+          phone: string | null
           position: string | null
+          retention_until: string | null
           score: number
+          scoring: Json
+          stage: string
           status: string
           updated_at: string
         }
         Insert: {
+          anonymized_at?: string | null
+          consent_at?: string | null
           created_at?: string
+          created_by?: string | null
+          cv_path?: string | null
+          cv_text?: string | null
           email?: string | null
+          extraction?: Json
+          first_name?: string | null
           full_name: string
           id?: string
+          job_offer_id?: string | null
+          last_name?: string | null
+          letter_path?: string | null
+          letter_text?: string | null
+          location?: string | null
           notes?: string | null
           org_id: string
+          phone?: string | null
           position?: string | null
+          retention_until?: string | null
           score?: number
+          scoring?: Json
+          stage?: string
           status?: string
           updated_at?: string
         }
         Update: {
+          anonymized_at?: string | null
+          consent_at?: string | null
           created_at?: string
+          created_by?: string | null
+          cv_path?: string | null
+          cv_text?: string | null
           email?: string | null
+          extraction?: Json
+          first_name?: string | null
           full_name?: string
           id?: string
+          job_offer_id?: string | null
+          last_name?: string | null
+          letter_path?: string | null
+          letter_text?: string | null
+          location?: string | null
           notes?: string | null
           org_id?: string
+          phone?: string | null
           position?: string | null
+          retention_until?: string | null
           score?: number
+          scoring?: Json
+          stage?: string
           status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "candidates_job_offer_id_fkey"
+            columns: ["job_offer_id"]
+            isOneToOne: false
+            referencedRelation: "job_offers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "candidates_org_id_fkey"
             columns: ["org_id"]
@@ -853,6 +908,155 @@ export type Database = {
           },
         ]
       }
+      hr_audit_log: {
+        Row: {
+          action: string
+          actor: string | null
+          candidate_id: string | null
+          created_at: string
+          detail: string | null
+          id: string
+          org_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          candidate_id?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          org_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          candidate_id?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          org_id?: string
+        }
+        Relationships: []
+      }
+      hr_interview_invites: {
+        Row: {
+          candidate_id: string
+          chosen_slot: string | null
+          created_at: string
+          id: string
+          interview_id: string | null
+          message: string | null
+          org_id: string
+          proposal: string | null
+          responded_at: string | null
+          slots: Json
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          chosen_slot?: string | null
+          created_at?: string
+          id?: string
+          interview_id?: string | null
+          message?: string | null
+          org_id: string
+          proposal?: string | null
+          responded_at?: string | null
+          slots?: Json
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          chosen_slot?: string | null
+          created_at?: string
+          id?: string
+          interview_id?: string | null
+          message?: string | null
+          org_id?: string
+          proposal?: string | null
+          responded_at?: string | null
+          slots?: Json
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_interview_invites_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_interview_invites_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "hr_interviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_interviews: {
+        Row: {
+          analysis: Json
+          audio_path: string | null
+          candidate_id: string
+          comment: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          rating: number | null
+          round: number
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          analysis?: Json
+          audio_path?: string | null
+          candidate_id: string
+          comment?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          rating?: number | null
+          round?: number
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          analysis?: Json
+          audio_path?: string | null
+          candidate_id?: string
+          comment?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          rating?: number | null
+          round?: number
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_interviews_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intel_assets: {
         Row: {
           created_at: string
@@ -998,28 +1202,49 @@ export type Database = {
       }
       job_offers: {
         Row: {
+          analysis: Json
+          content: string | null
+          contract: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           id: string
+          location: string | null
           org_id: string
+          source_url: string | null
           status: string
           title: string
+          updated_at: string
         }
         Insert: {
+          analysis?: Json
+          content?: string | null
+          contract?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
+          location?: string | null
           org_id: string
+          source_url?: string | null
           status?: string
           title: string
+          updated_at?: string
         }
         Update: {
+          analysis?: Json
+          content?: string | null
+          contract?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
+          location?: string | null
           org_id?: string
+          source_url?: string | null
           status?: string
           title?: string
+          updated_at?: string
         }
         Relationships: [
           {

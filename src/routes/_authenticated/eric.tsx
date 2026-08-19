@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Loader2, Send, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, RefreshCw, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
 
 
@@ -51,6 +52,9 @@ function EricPage() {
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<Plan | null>(null);
   const [spent, setSpent] = useState(0);
+  const [lastPrompt, setLastPrompt] = useState("");
+  const [answerEdit, setAnswerEdit] = useState<string | null>(null);
+  const [taskEdits, setTaskEdits] = useState<Record<string, string>>({});
   const [results, setResults] = useState<
     Record<string, { status: "running" | "done" | "error"; result?: string }>
   >({});
@@ -70,6 +74,8 @@ function EricPage() {
     onSuccess: (data) => {
       setPlan(data);
       setResults({});
+      setAnswerEdit(null);
+      setTaskEdits({});
       setSpent(data.credits_used ?? 0);
       setPrompt("");
       inputRef.current?.focus();
@@ -103,6 +109,7 @@ function EricPage() {
       toast.error("Organisation introuvable.");
       return;
     }
+    setLastPrompt(value);
     mutation.mutate({ text: value, key });
   };
 
@@ -194,13 +201,13 @@ function EricPage() {
                     onEdit={setAnswerEdit}
                     regenerateSlot={
                       <CreditActionButton
-                        actionKey="eric.ask"
+                        actionKey="eric.analyze_request"
                         className="inline-block"
                         buttonClassName="gap-1.5"
                         variant="outline"
                         size="sm"
                         pending={mutation.isPending}
-                        onConfirm={(key) => send(plan.demande ?? "", key)}
+                        onConfirm={(key) => send(lastPrompt, key)}
                       >
                         <RefreshCw className="h-4 w-4" /> Régénérer
                       </CreditActionButton>

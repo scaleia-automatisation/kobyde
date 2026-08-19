@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
+import { toReadableText } from "@/lib/generation-text";
 import { useOrgId } from "@/lib/db";
 import { BRIEF_SECTIONS, SITE_STYLES, SITE_TONES, SITE_TYPES } from "@/lib/marketing";
 import {
@@ -28,6 +30,7 @@ import {
   generateSiteContent,
   generateValueProp,
 } from "@/lib/marketing.functions";
+
 
 export const Route = createFileRoute("/_authenticated/lamine")({
   component: LaminePage,

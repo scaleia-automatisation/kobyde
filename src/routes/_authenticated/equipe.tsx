@@ -1,10 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { ArrowRight, Loader2, Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
-import { useCreateRow, useRows } from "@/lib/db";
+import { useOrgId, useRows } from "@/lib/db";
+import { askAgent } from "@/lib/eric.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,9 +24,12 @@ export const Route = createFileRoute("/_authenticated/equipe")({
   head: () => ({
     meta: [
       { title: "Mon équipe IA — Kobyde" },
-      { name: "description", content: "Vos 10 agents IA : leur métier, leurs tâches et leur historique." },
+      {
+        name: "description",
+        content: "Vos 10 agents IA : statut, tâches en cours, crédits consommés et discussion directe.",
+      },
       { property: "og:title", content: "Mon équipe IA — Kobyde" },
-      { property: "og:description", content: "Vos 10 agents IA spécialisés." },
+      { property: "og:description", content: "Vos 10 agents IA spécialisés, coordonnés par Éric." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -32,21 +38,63 @@ export const Route = createFileRoute("/_authenticated/equipe")({
 });
 
 type AgentRow = { id: string; key: string; credits_used: number };
-type TaskRow = { id: string; title: string; status: string; agent_id: string | null; created_at: string };
+type TaskRow = {
+  id: string;
+  title: string;
+  status: string;
+  agent_id: string | null;
+  created_at: string;
+  result?: string | null;
+};
+
+type Status = "Disponible" | "En train de travailler" | "En attente" | "Terminé";
+
+const STATUS_STYLE: Record<Status, string> = {
+  Disponible: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  "En train de travailler": "bg-sky-50 text-sky-700 ring-sky-200",
+  "En attente": "bg-amber-50 text-amber-800 ring-amber-200",
+  Terminé: "bg-muted text-muted-foreground ring-border",
+};
+
+function computeStatus(tasks: TaskRow[], busy: boolean): Status {
+  if (busy || tasks.some((t) => t.status === "in_progress" || t.status === "en_cours"))
+    return "En train de travailler";
+  if (tasks.some((t) => t.status === "todo" || t.status === "en_attente")) return "En attente";
+  if (tasks.some((t) => t.status === "done")) return "Terminé";
+  return "Disponible";
+}
+
+function StatusPill({ status }: { status: Status }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ${STATUS_STYLE[status]}`}
+    >
+      <span className="size-1.5 rounded-full bg-current" />
+      {status}
+    </span>
+  );
+}
 
 function AgentCard({
   agent,
   agents,
   tasks,
+  busy,
   onSelect,
 }: {
   agent: AgentMeta;
   agents: AgentRow[] | undefined;
   tasks: TaskRow[] | undefined;
+  busy: boolean;
   onSelect: (key: string) => void;
 }) {
   const row = (agents ?? []).find((r) => r.key === agent.key);
-  const count = (tasks ?? []).filter((t) => t.agent_id === row?.id).length;
+  const mine = (tasks ?? []).filter((t) => t.agent_id === row?.id);
+  const running = mine.filter(
+    (t) => t.status === "in_progress" || t.status === "en_cours" || t.status === "todo",
+  ).length;
+  const status = computeStatus(mine, busy);
+
   return (
     <article
       className={`surface flex flex-col p-5 transition-shadow hover:shadow-lift ${agent.primary ? "ring-2 ring-primary/30" : ""}`}
@@ -56,69 +104,81 @@ function AgentCard({
           {agent.emoji}
         </span>
         <div className="min-w-0">
-          <h2 className="text-base leading-tight">{agent.name}</h2>
+          <h3 className="text-base font-semibold leading-tight">{agent.name}</h3>
           <p className="text-xs font-medium text-muted-foreground">{agent.role}</p>
-          <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] ${agent.chip}`}>
-            {agent.mission}
-          </span>
+          <div className="mt-1.5">
+            <StatusPill status={status} />
+          </div>
         </div>
       </div>
-      <p className="mt-3 line-clamp-3 text-xs text-muted-foreground">{agent.description}</p>
+      <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">{agent.description}</p>
       <ul className="mt-3 flex flex-1 flex-wrap gap-1">
-        {agent.skills.slice(0, 4).map((s) => (
+        {agent.skills.slice(0, 3).map((s) => (
           <li key={s} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
             {s}
           </li>
         ))}
       </ul>
-      <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>
-          {count} tâche{count > 1 ? "s" : ""}
+          {running} tâche{running > 1 ? "s" : ""} en cours
         </span>
-        <span>{row?.credits_used ?? 0} crédits utilisés</span>
+        <span>{row?.credits_used ?? 0} crédits</span>
       </div>
       <Button className="mt-3 w-full" variant="secondary" size="sm" onClick={() => onSelect(agent.key)}>
-        Lui confier une tâche
+        Parler à l'agent
       </Button>
     </article>
   );
 }
 
 function TeamPage() {
+  const orgId = useOrgId();
   const { data: agents } = useRows<AgentRow>("agents", { order: "created_at" });
   const { data: tasks } = useRows<TaskRow>("agent_tasks");
-  const createTask = useCreateRow("agent_tasks");
   const [selected, setSelected] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const call = useServerFn(askAgent);
 
   const meta = selected ? agentByKey(selected) : null;
-  const agentRow = (agents ?? []).find((a) => a.key === selected);
-  const agentTasks = (tasks ?? []).filter((t) => t.agent_id === agentRow?.id);
 
-  const askAgent = (e: React.FormEvent<HTMLFormElement>) => {
+  const talk = useMutation({
+    mutationFn: async (vars: { agentKey: string; prompt: string }) =>
+      call({ data: { orgId: orgId!, agentKey: vars.agentKey, prompt: vars.prompt } }),
+    onSuccess: (res) => {
+      setAnswer(res.result);
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message || "L'agent n'a pas pu répondre."),
+  });
+
+  const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const title = String(fd.get("title") ?? "").trim();
-    if (!title) return;
-    createTask.mutate(
-      { title, agent_id: agentRow?.id ?? null, status: "en_cours", priority: "normal" },
-      {
-        onSuccess: () => {
-          toast.success(`${meta?.name} s'en occupe`);
-          setSelected(null);
-        },
-        onError: (err) => toast.error(err.message),
-      },
-    );
+    const prompt = String(fd.get("prompt") ?? "").trim();
+    if (!prompt || !selected) return;
+    if (!orgId) {
+      toast.error("Organisation introuvable.");
+      return;
+    }
+    setAnswer(null);
+    talk.mutate({ agentKey: selected, prompt });
   };
+
+  const busyKey = talk.isPending ? selected : null;
 
   return (
     <AppShell
       title="Mon équipe IA"
-      subtitle="Éric pilote l'équipe. Parlez-lui en priorité, il distribue aux bons agents."
+      subtitle="Niveau 1 : parlez à Éric. Niveau 2 : parlez directement à un agent si vous savez ce que vous voulez."
     >
-      {/* Éric — Orchestrateur au sommet */}
+      {/* Niveau 1 — Éric */}
       <section className="relative mb-10">
         <div className="relative mx-auto max-w-3xl">
+          <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Niveau 1 — Prioritaire
+          </p>
           <article className="surface relative overflow-hidden p-8 text-center">
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-aurora-1 via-aurora-2 to-aurora-3" />
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.06] via-transparent to-amber-500/[0.04]" />
@@ -131,48 +191,61 @@ function TeamPage() {
               <h2 className="mt-5 text-2xl font-bold">{LEAD_AGENT.name}</h2>
               <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
                 <Badge>{LEAD_AGENT.role}</Badge>
-                <Badge variant="secondary">Point d'entrée</Badge>
+                <StatusPill
+                  status={computeStatus(
+                    (tasks ?? []).filter(
+                      (t) => t.agent_id === (agents ?? []).find((a) => a.key === "directeur")?.id,
+                    ),
+                    false,
+                  )}
+                />
               </div>
               <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">{LEAD_AGENT.description}</p>
-              <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-                Exemples : « Trouve-moi des prospects pour mon offre de création de site. » ou « J'ai eu une réunion
-                avec un client, prépare la suite. »
-              </p>
-              <Button className="mt-5" onClick={() => setSelected(LEAD_AGENT.key)}>
-                Parler à {LEAD_AGENT.name}
+              <Button className="mt-5 gap-2" asChild>
+                <Link to="/eric">
+                  Parler à {LEAD_AGENT.name} <ArrowRight className="size-4" />
+                </Link>
               </Button>
             </div>
           </article>
         </div>
-
-        {/* Connecteur Éric → équipe */}
         <div className="pointer-events-none absolute left-1/2 top-full hidden h-10 w-0 -translate-x-1/2 border-l-2 border-dashed border-border lg:block" />
       </section>
 
-      {/* Rangée 1 : 5 agents */}
-      <section className="mb-10">
-        <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Première ligne — Support & croissance
-        </h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {/* Niveau 2 — les 9 agents */}
+      <section className="mb-6">
+        <p className="mb-1 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Niveau 2 — Parler directement à un agent
+        </p>
+        <p className="mb-5 text-center text-sm text-muted-foreground">
+          Vous pouvez contourner Éric quand vous savez exactement ce que vous voulez.
+        </p>
+
+        <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {AGENTS.slice(5).map((a) => (
-            <AgentCard key={a.key} agent={a} agents={agents} tasks={tasks} onSelect={setSelected} />
+            <AgentCard
+              key={a.key}
+              agent={a}
+              agents={agents}
+              tasks={tasks}
+              busy={busyKey === a.key}
+              onSelect={setSelected}
+            />
           ))}
         </div>
-      </section>
-
-      {/* Rangée 2 : 4 agents restants */}
-      <section className="mb-6">
-        <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Seconde ligne — Revenus & relation client
-        </h3>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {AGENTS.slice(1, 5).map((a) => (
-            <AgentCard key={a.key} agent={a} agents={agents} tasks={tasks} onSelect={setSelected} />
+            <AgentCard
+              key={a.key}
+              agent={a}
+              agents={agents}
+              tasks={tasks}
+              busy={busyKey === a.key}
+              onSelect={setSelected}
+            />
           ))}
         </div>
       </section>
-
 
       <section className="surface mt-6 p-6">
         <h2 className="text-lg">Historique des tâches</h2>
@@ -196,24 +269,41 @@ function TeamPage() {
         </ul>
       </section>
 
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+      <Dialog
+        open={!!selected}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelected(null);
+            setAnswer(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {meta?.emoji} Confier une tâche à {meta?.name}
+              {meta?.emoji} Parler à {meta?.name} — {meta?.role}
             </DialogTitle>
             <DialogDescription>
-              Écrivez simplement, comme à un collègue. Exemple : « Trouve 10 restaurants à Lyon à contacter ».
+              Écrivez simplement, comme à un collègue. Il utilise la mémoire centrale de votre entreprise.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={askAgent} className="space-y-4">
-            <Textarea name="title" rows={4} placeholder="Que doit faire cet agent ?" required />
+          <form onSubmit={submit} className="space-y-4">
+            <Textarea name="prompt" rows={4} placeholder="Que doit faire cet agent ?" required />
             <DialogFooter>
-              <Button type="submit" className="gap-2" disabled={createTask.isPending}>
-                <Send className="size-4" /> Envoyer la tâche
+              <Button type="submit" className="gap-2" disabled={talk.isPending}>
+                {talk.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                Envoyer
               </Button>
             </DialogFooter>
           </form>
+          {talk.isPending && (
+            <p className="text-sm text-muted-foreground">{meta?.name} travaille sur votre demande...</p>
+          )}
+          {answer && (
+            <div className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl bg-muted/60 p-3 text-sm leading-relaxed">
+              {answer}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AppShell>

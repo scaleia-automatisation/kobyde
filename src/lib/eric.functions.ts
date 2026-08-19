@@ -77,7 +77,76 @@ export const askEric = createServerFn({ method: "POST" })
     };
   });
 
+/** Parler directement à un agent, sans passer par Éric. */
+export const askAgent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        orgId: z.string().uuid(),
+        agentKey: z.string().min(2).max(40),
+        prompt: z.string().min(3).max(2000),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const supabase = context.supabase;
+
+    const { data: membership } = await supabase
+      .from("memberships")
+      .select("id")
+      .eq("org_id", data.orgId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!membership) throw new Error("Accès refusé à cette organisation.");
+
+    const { data: agent } = await supabase
+      .from("agents")
+      .select("id,key,name,role_title,credits_used")
+      .eq("org_id", data.orgId)
+      .eq("key", data.agentKey)
+      .maybeSingle();
+    if (!agent) throw new Error("Agent introuvable.");
+
+    const { data: task, error: taskError } = await supabase
+      .from("agent_tasks")
+      .insert({
+        org_id: data.orgId,
+        agent_id: agent.id,
+        title: data.prompt.slice(0, 120),
+        detail: data.prompt,
+        status: "in_progress",
+        priority: "normale",
+        credits_used: 1,
+        created_by: context.userId,
+      })
+      .select("id")
+      .single();
+    if (taskError) throw new Error(taskError.message);
+
+    const memory = await loadCompanyMemory(supabase, data.orgId);
+
+    try {
+      const result = await runAgent(
+        { key: agent.key as string, name: agent.name as string, role: agent.role_title as string },
+        { title: data.prompt.slice(0, 120), detail: data.prompt },
+        memory,
+      );
+      await supabase.from("agent_tasks").update({ status: "done", result }).eq("id", task.id);
+      await supabase
+        .from("agents")
+        .update({ credits_used: Number(agent.credits_used ?? 0) + 1 })
+        .eq("id", agent.id);
+      return { taskId: task.id as string, agentName: agent.name as string, result };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Échec de la tâche";
+      await supabase.from("agent_tasks").update({ status: "blocked", result: message }).eq("id", task.id);
+      throw new Error(message);
+    }
+  });
+
 /** Un agent exécute sa tâche : Éric suit la progression et récupère le résultat. */
+
 export const runTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>

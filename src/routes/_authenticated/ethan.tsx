@@ -723,15 +723,11 @@ function ReputationTab() {
 
 function EthanPage() {
   return (
-    <AppShell>
+    <AppShell
+      title="Ethan — Analyse, veille et e-réputation"
+      subtitle="Analyses stratégiques, veille sourcée par recherche Google et gestion des avis en ligne."
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Ethan — Analyse, veille et e-réputation</h1>
-          <p className="text-muted-foreground">
-            Analyses stratégiques, veille sourcée par recherche Google et gestion des avis en ligne.
-          </p>
-        </div>
-
         <Tabs defaultValue="business_plan">
           <TabsList className="flex w-full flex-wrap justify-start">
             {ANALYSIS_TABS.map((t) => (

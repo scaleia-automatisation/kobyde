@@ -39,7 +39,7 @@ export const REPLY_STATUSES = {
   publie: "Publiée",
 } as const;
 
-export type Source = { titre: string; url: string; date?: string };
+export type Source = { titre: string; url: string; date?: string | undefined };
 
 export const sentimentTone = (s: string) =>
   s === "positif"

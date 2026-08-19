@@ -67,24 +67,24 @@ function OnboardingPage() {
   useEffect(() => {
     if (!org) return;
     setCompany((c) => ({
-      name: org.name ?? c.name,
-      company_type: org.company_type ?? c.company_type,
-      siret: org.siret ?? c.siret,
-      country: org.country ?? c.country,
-      industry: org.industry ?? c.industry,
+      name: org['name'] ?? c.name,
+      company_type: org['company_type'] ?? c.company_type,
+      siret: org['siret'] ?? c.siret,
+      country: org['country'] ?? c.country,
+      industry: org['industry'] ?? c.industry,
     }));
     setVat((v) => ({
-      vat_rate: org.vat_rate != null ? String(org.vat_rate) : v.vat_rate,
-      vat_regime: org.vat_regime ?? v.vat_regime,
+      vat_rate: org['vat_rate'] != null ? String(org['vat_rate']) : v.vat_rate,
+      vat_regime: org['vat_regime'] ?? v.vat_regime,
     }));
     setIdeal((i) => ({
-      ideal_client_type: org.ideal_client_type ?? i.ideal_client_type,
-      ideal_client_sector: org.ideal_client_sector ?? i.ideal_client_sector,
-      ideal_client_location: org.ideal_client_location ?? i.ideal_client_location,
-      ideal_client_size: org.ideal_client_size ?? i.ideal_client_size,
-      ideal_client_needs: org.ideal_client_needs ?? i.ideal_client_needs,
+      ideal_client_type: org['ideal_client_type'] ?? i.ideal_client_type,
+      ideal_client_sector: org['ideal_client_sector'] ?? i.ideal_client_sector,
+      ideal_client_location: org['ideal_client_location'] ?? i.ideal_client_location,
+      ideal_client_size: org['ideal_client_size'] ?? i.ideal_client_size,
+      ideal_client_needs: org['ideal_client_needs'] ?? i.ideal_client_needs,
     }));
-    setConnections((c) => ({ ...(org.integrations ?? {}), ...c }));
+    setConnections((c) => ({ ...(org['integrations'] ?? {}), ...c }));
   }, [org]);
 
   async function saveOrg(patch: Record<string, any>) {

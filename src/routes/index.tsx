@@ -12,9 +12,9 @@ import { AGENTS } from "@/lib/agents";
 import { PLANS } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 
-const TITLE = "Kobyde — 10 agents IA pour piloter votre entreprise, 39 €/mois";
+const TITLE = "Kobyde — 10 agents IA pour piloter votre entreprise, dès 0 €/mois";
 const DESC =
-  "Kobyde met 10 agents IA spécialisés au service de votre entreprise : prospection, ventes, devis, factures, projets, marketing, RH et analyse. 39 €/mois.";
+  "Kobyde met 10 agents IA spécialisés au service de votre entreprise : prospection, ventes, devis, factures, projets, marketing, RH et analyse. Gratuit pour tester, formules dès 49 €/mois.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,7 +56,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-5 pb-20 pt-14 text-center">
           <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
             <BadgeCheck className="size-4 text-accent" />
-            10 agents IA au service de votre entreprise, 24h/24 et 7j/7 — 39 €/mois
+            10 agents IA à votre service 24h/24 et 7j/7 — testez gratuitement, dès 49 €/mois
           </span>
           <h1 className="hero-title mx-auto mt-6 max-w-full text-[clamp(1.75rem,5.2vw,4.25rem)] leading-[1.08] font-black italic tracking-tight whitespace-nowrap">
             <span className="block">Une équipe complète</span>

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRows } from "@/lib/db";
+import { usePlan } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/parametres")({
   head: () => ({
@@ -28,6 +29,7 @@ function Settings() {
     "notifications",
   );
   const navigate = useNavigate();
+  const { plan } = usePlan();
   const org = profile?.organizations as { name?: string; credits?: number; plan?: string } | null;
 
   const saveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -73,7 +75,9 @@ function Settings() {
           <p className="mt-3 text-sm text-muted-foreground">Nom</p>
           <p className="font-medium">{org?.name ?? "—"}</p>
           <p className="mt-4 text-sm text-muted-foreground">Formule</p>
-          <p className="font-medium">Kobyde — 39 € / mois</p>
+          <p className="font-medium">
+            Kobyde {plan.name} — {plan.price} € / mois · {plan.credits} crédits/mois
+          </p>
           <p className="mt-4 text-sm text-muted-foreground">Crédits IA restants</p>
           <p className="font-display text-3xl">{org?.credits ?? 0}</p>
           <p className="mt-4 text-xs text-muted-foreground">
@@ -81,6 +85,9 @@ function Settings() {
           </p>
           <Button asChild className="mt-5 mr-2">
             <Link to="/entreprise">Compléter la fiche entreprise</Link>
+          </Button>
+          <Button asChild variant="secondary" className="mt-5 mr-2">
+            <Link to="/plans">Changer de formule</Link>
           </Button>
           <Button variant="outline" className="mt-5" onClick={signOut}>
             Se déconnecter

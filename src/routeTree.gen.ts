@@ -34,6 +34,7 @@ import { Route as AuthenticatedProspectsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
 import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authenticated/devis.index'
+import { Route as AuthenticatedDevisIdRouteImport } from './routes/_authenticated/devis.$id'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 
@@ -163,6 +164,11 @@ const AuthenticatedDevisIndexRoute = AuthenticatedDevisIndexRouteImport.update({
   path: '/devis/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDevisIdRoute = AuthenticatedDevisIdRouteImport.update({
+  id: '/devis/$id',
+  path: '/devis/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe/webhook',
   path: '/api/public/stripe/webhook',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/devis/': typeof AuthenticatedDevisIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/devis': typeof AuthenticatedDevisIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   '/_authenticated/prospects': typeof AuthenticatedProspectsRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
   '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
+    | '/devis/$id'
     | '/devis/'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/prospects'
     | '/rh'
     | '/tableau-de-bord'
+    | '/devis/$id'
     | '/devis'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prospects'
     | '/_authenticated/rh'
     | '/_authenticated/tableau-de-bord'
+    | '/_authenticated/devis/$id'
     | '/_authenticated/devis/'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
@@ -533,6 +545,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDevisIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/devis/$id': {
+      id: '/_authenticated/devis/$id'
+      path: '/devis/$id'
+      fullPath: '/devis/$id'
+      preLoaderRoute: typeof AuthenticatedDevisIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/stripe/webhook': {
       id: '/api/public/stripe/webhook'
       path: '/api/public/stripe/webhook'
@@ -572,6 +591,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProspectsRoute: typeof AuthenticatedProspectsRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
+  AuthenticatedDevisIdRoute: typeof AuthenticatedDevisIdRoute
   AuthenticatedDevisIndexRoute: typeof AuthenticatedDevisIndexRoute
 }
 
@@ -597,6 +617,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProspectsRoute: AuthenticatedProspectsRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
+  AuthenticatedDevisIdRoute: AuthenticatedDevisIdRoute,
   AuthenticatedDevisIndexRoute: AuthenticatedDevisIndexRoute,
 }
 

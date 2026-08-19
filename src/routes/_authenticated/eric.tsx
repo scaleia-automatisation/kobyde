@@ -322,7 +322,11 @@ function EricPage() {
               {(conversations ?? []).map((c: { id: string; title: string }) => (
                 <button
                   key={c.id}
-                  onClick={() => send(c.title)}
+                  onClick={() => {
+                    setPrompt(c.title);
+                    inputRef.current?.focus();
+                  }}
+
                   className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-left text-sm hover:bg-accent/40"
                 >
                   {c.title}

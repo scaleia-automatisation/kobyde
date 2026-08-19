@@ -456,11 +456,14 @@ function ContentTab({ brief, setBrief }: { brief: string; setBrief: (v: string) 
     cta: "Demander un devis",
   });
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (key: string) => call({ data: { orgId: orgId!, idempotencyKey: key, brief, ...form } }),
     onSuccess: (d) => {
       setResult(d.result);
+      setEdited(null);
+
       toast.success("Contenu du site généré.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec."),

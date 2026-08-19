@@ -180,7 +180,7 @@ function OnboardingPage() {
               <Sparkles className="mx-auto h-10 w-10 text-primary" />
               <h1 className="text-3xl font-black italic tracking-tight md:text-4xl">Bienvenue dans votre équipe IA.</h1>
               <p className="text-muted-foreground">
-                Quelques minutes pour配 configurer vos 10 agents. Vous pourrez tout modifier ensuite.
+                Quelques minutes pour configurer vos 10 agents. Vous pourrez tout modifier ensuite.
               </p>
               <Button size="lg" onClick={() => setStep(1)}>
                 Commencer

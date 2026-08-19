@@ -83,6 +83,17 @@ function EmailsPage() {
           </p>
         </header>
 
+        <div className="flex flex-wrap gap-2">
+          {EMAIL_ROUTING.filter((r) => r.category !== "autre").map((r) => (
+            <span
+              key={r.category}
+              className="rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground"
+            >
+              {r.label} → <span className="font-semibold text-foreground">{r.agentName}</span>
+            </span>
+          ))}
+        </div>
+
         <Tabs defaultValue="inbox">
           <TabsList>
             <TabsTrigger value="inbox" className="gap-2">
@@ -659,5 +670,3 @@ function SequencesSection() {
     </div>
   );
 }
-
-export const EMAIL_ROUTING_HELP = EMAIL_ROUTING;

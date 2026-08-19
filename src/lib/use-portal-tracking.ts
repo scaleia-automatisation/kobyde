@@ -46,10 +46,25 @@ export function usePortalTracking(token: string, kind: "portal" | "payment" = "p
 
   useEffect(() => {
     const started = startedAt.current;
+    let sent = false;
     track(kind === "payment" ? "payment_page_viewed" : "portal_viewed");
-    return () => {
+
+    const sendDuration = () => {
+      if (sent) return;
       const durationMs = Date.now() - started;
-      if (durationMs > 1500) track("time_spent", { durationMs });
+      if (durationMs < 1500) return;
+      sent = true;
+      track("time_spent", { durationMs });
+    };
+
+    window.addEventListener("pagehide", sendDuration);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") sendDuration();
+    });
+
+    return () => {
+      window.removeEventListener("pagehide", sendDuration);
+      sendDuration();
     };
   }, [track, kind]);
 

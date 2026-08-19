@@ -27,6 +27,7 @@ export const EVENT_LABELS: Record<string, string> = {
   client_request_created: "Demande / réponse client",
   section_clicked: "Clic dans l'espace",
   time_spent: "Temps de consultation",
+  payment_page_viewed: "Page de paiement ouverte",
 };
 
 export const eventLabel = (name: string) => EVENT_LABELS[name] ?? name;

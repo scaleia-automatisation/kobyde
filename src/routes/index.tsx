@@ -51,13 +51,13 @@ function Landing() {
         </div>
       </header>
 
-      <section className="hero-gradient">
+      <section className="aurora-bg">
         <div className="mx-auto max-w-4xl px-5 pb-20 pt-14 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
             <BadgeCheck className="size-4 text-accent" />
             10 agents IA au service de votre entreprise, 24h/24 et 7j/7 — 39 €/mois
           </span>
-          <h1 className="mx-auto mt-6 max-w-3xl text-4xl leading-[1.08] sm:text-6xl">
+          <h1 className="hero-title mx-auto mt-6 max-w-3xl text-4xl leading-[1.18] sm:text-6xl">
             Une équipe complète d'agents IA pour votre entreprise, pour moins de 1,30 € par jour.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
@@ -74,7 +74,7 @@ function Landing() {
             ].map((b) => (
               <div
                 key={b.text}
-                className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm shadow-soft"
+                className="glow-chip flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-sm shadow-soft backdrop-blur"
               >
                 <b.icon className="size-4 text-accent" />
                 {b.text}

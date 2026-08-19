@@ -124,13 +124,16 @@ function PromiseTab() {
   const call = useServerFn(generatePromise);
   const [form, setForm] = useState({ offer: "", audience: "", notes: "" });
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: (key: string) => call({ data: { orgId: orgId!, idempotencyKey: key, ...form } }),
     onSuccess: (d) => {
       setResult(d.result);
+      setEdited(null);
       toast.success("Promesse générée par Lamine.");
     },
+
     onError: (e: any) => toast.error(e?.message ?? "Échec."),
   });
 

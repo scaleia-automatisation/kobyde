@@ -6,7 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PAID_PLANS, useChangePlan, usePlan, type PlanKey } from "@/lib/plans";
+import {
+  CREDIT_PACKS,
+  PAID_PLANS,
+  useChangePlan,
+  usePlan,
+  usePurchaseCredits,
+  type PlanKey,
+} from "@/lib/plans";
 
 const TITLE = "Formules et abonnements — Kobyde";
 const DESC =
@@ -29,6 +36,14 @@ export const Route = createFileRoute("/_authenticated/plans")({
 function PlansPage() {
   const { plan, credits, creditsUsed, creditsTotal, renewsAt } = usePlan();
   const change = useChangePlan();
+  const buy = usePurchaseCredits();
+
+  const buyPack = (creditsCount: number) => {
+    buy.mutate(creditsCount, {
+      onSuccess: () => toast.success(`${creditsCount} crédits ajoutés à votre solde.`),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Achat impossible"),
+    });
+  };
 
   const choose = (key: PlanKey) => {
     change.mutate(key, {

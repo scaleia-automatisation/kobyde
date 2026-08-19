@@ -33,6 +33,7 @@ import { Route as AuthenticatedParametresRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedProspectsRouteImport } from './routes/_authenticated/prospects'
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
+import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
@@ -166,6 +167,11 @@ const AuthenticatedRhRoute = AuthenticatedRhRouteImport.update({
   path: '/rh',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSuperAdminRoute = AuthenticatedSuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTableauDeBordRoute =
   AuthenticatedTableauDeBordRouteImport.update({
     id: '/tableau-de-bord',
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRoute
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
+  '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -291,6 +298,7 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRoute
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
+  '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/prospects': typeof AuthenticatedProspectsRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
+  '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/prospects'
     | '/rh'
+    | '/super-admin'
     | '/tableau-de-bord'
     | '/entretien/$token'
     | '/espace/$token'
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/prospects'
     | '/rh'
+    | '/super-admin'
     | '/tableau-de-bord'
     | '/entretien/$token'
     | '/espace/$token'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/prospects'
     | '/_authenticated/rh'
+    | '/_authenticated/super-admin'
     | '/_authenticated/tableau-de-bord'
     | '/entretien/$token'
     | '/espace/$token'
@@ -639,6 +651,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRhRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/super-admin': {
+      id: '/_authenticated/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof AuthenticatedSuperAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tableau-de-bord': {
       id: '/_authenticated/tableau-de-bord'
       path: '/tableau-de-bord'
@@ -748,6 +767,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedProspectsRoute: typeof AuthenticatedProspectsRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
+  AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedDevisIdRoute: typeof AuthenticatedDevisIdRoute
@@ -779,6 +799,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedProspectsRoute: AuthenticatedProspectsRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
+  AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedDevisIdRoute: AuthenticatedDevisIdRoute,

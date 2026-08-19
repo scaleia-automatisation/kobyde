@@ -674,7 +674,28 @@ function ReputationTab() {
           ) : null}
           {result ? (
             <>
+              <Card className="p-4">
+                <GenerationActions
+                  title="Analyse d'e-réputation"
+                  text={edited ?? toReadableText(result)}
+                  onEdit={setEdited}
+                  regenerateSlot={
+                    <CreditActionButton
+                      actionKey="rep.analysis"
+                      className="inline-block"
+                      buttonClassName="gap-1.5"
+                      variant="outline"
+                      size="sm"
+                      pending={analyze.isPending}
+                      onConfirm={(k) => analyze.mutateAsync(k)}
+                    >
+                      <RefreshCw className="h-4 w-4" /> Régénérer
+                    </CreditActionButton>
+                  }
+                />
+              </Card>
               {result.synthese ? <Block title="Synthèse">{result.synthese}</Block> : null}
+
               <div className="grid gap-4 md:grid-cols-2">
                 <Bullets title="Points forts" items={result.points_forts} />
                 <Bullets title="Points faibles" items={result.points_faibles} />

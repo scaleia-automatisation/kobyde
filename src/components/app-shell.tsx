@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  BadgeEuro,
   Bell,
   BarChart3,
   Bot,
@@ -26,6 +27,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRows } from "@/lib/db";
+import { useMonthlyRenewal, usePlan } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -89,6 +91,7 @@ function SidebarFooter() {
   const { data: notifications } = useRows("notifications", { limit: 20 });
   const unread = (notifications ?? []).filter((n: { is_read: boolean }) => !n.is_read).length;
   const org = profile?.organizations as { name?: string; credits?: number } | null;
+  const { plan } = usePlan();
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -103,12 +106,15 @@ function SidebarFooter() {
           Crédits IA restants
         </div>
         <p className="mt-1 font-display text-xl text-sidebar-accent-foreground">{org?.credits ?? 0}</p>
-        <Link
-          to="/credits"
-          className="mt-1 inline-block text-xs text-sidebar-foreground/70 underline-offset-2 hover:underline"
-        >
-          Voir l'historique
-        </Link>
+        <p className="text-xs text-sidebar-foreground/60">Formule {plan.name}</p>
+        <div className="mt-1 flex gap-3 text-xs">
+          <Link to="/credits" className="text-sidebar-foreground/70 underline-offset-2 hover:underline">
+            Historique
+          </Link>
+          <Link to="/plans" className="text-sidebar-foreground/70 underline-offset-2 hover:underline">
+            Changer de formule
+          </Link>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <Link
@@ -155,6 +161,7 @@ export function AppShell({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  useMonthlyRenewal();
 
   return (
     <div className="flex min-h-screen w-full bg-background">

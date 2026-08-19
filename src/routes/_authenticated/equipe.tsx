@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { AGENTS, agentByKey } from "@/lib/agents";
+import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useCreateRow, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

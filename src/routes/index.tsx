@@ -72,7 +72,7 @@ function Landing() {
           <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-3">
             {[
               { icon: Clock4, text: "Travaille 24h/24 et 7j/7" },
-              { icon: Moon, text: "Ne prend jamais de pauses, ni de congés" },
+              { icon: Moon, text: "Zéro pause Zéro congés" },
               { icon: HeartPulse, text: "Zéro arrêt maladie" },
               { icon: Wallet, text: "Zéro charge salariale" },
             ].map((b) => (

@@ -29,6 +29,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 
 export const NAV = [
+  { to: "/eric", label: "Éric — Directeur IA", icon: Sparkles },
   { to: "/tableau-de-bord", label: "Accueil", icon: Home },
   { to: "/equipe", label: "Mon équipe IA", icon: Bot },
   { to: "/prospects", label: "Prospects", icon: Target },
@@ -47,7 +48,7 @@ export const NAV = [
 ] as const;
 
 const MOBILE_NAV = NAV.filter((n) =>
-  ["/tableau-de-bord", "/equipe", "/prospects", "/devis"].includes(n.to),
+  ["/eric", "/tableau-de-bord", "/equipe", "/prospects"].includes(n.to),
 );
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {

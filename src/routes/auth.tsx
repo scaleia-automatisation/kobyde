@@ -34,7 +34,7 @@ function AuthPage() {
   const { session } = useSession();
 
   useEffect(() => {
-    if (session) navigate({ to: "/tableau-de-bord", replace: true });
+    if (session) navigate({ to: "/eric", replace: true });
   }, [session, navigate]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

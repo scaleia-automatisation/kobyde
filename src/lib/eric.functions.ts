@@ -112,6 +112,8 @@ export const askAgent = createServerFn({ method: "POST" })
         orgId: z.string().uuid(),
         agentKey: z.string().min(2).max(40),
         prompt: z.string().min(3).max(2000),
+        idempotencyKey: z.string().min(8).max(64),
+        actionKey: z.string().min(2).max(60).optional(),
       })
       .parse(data),
   )
@@ -143,12 +145,21 @@ export const askAgent = createServerFn({ method: "POST" })
         detail: data.prompt,
         status: "in_progress",
         priority: "normale",
-        credits_used: 1,
+        credits_used: 0,
         created_by: context.userId,
       })
       .select("id")
       .single();
     if (taskError) throw new Error(taskError.message);
+
+    const tx = await reserveCredits(supabase, {
+      orgId: data.orgId,
+      actionKey: data.actionKey ?? "eric.task_run",
+      idempotencyKey: data.idempotencyKey,
+      agentId: agent.id as string,
+      taskId: task.id as string,
+    });
+    const cost = tx ? Math.abs(tx.amount) : 0;
 
     const memory = await loadCompanyMemory(supabase, data.orgId);
 
@@ -158,14 +169,25 @@ export const askAgent = createServerFn({ method: "POST" })
         { title: data.prompt.slice(0, 120), detail: data.prompt },
         memory,
       );
-      await supabase.from("agent_tasks").update({ status: "done", result }).eq("id", task.id);
+      await supabase
+        .from("agent_tasks")
+        .update({ status: "done", result, credits_used: cost })
+        .eq("id", task.id);
       await supabase
         .from("agents")
-        .update({ credits_used: Number(agent.credits_used ?? 0) + 1 })
+        .update({ credits_used: Number(agent.credits_used ?? 0) + cost })
         .eq("id", agent.id);
-      return { taskId: task.id as string, agentName: agent.name as string, result };
+      await completeCredits(supabase, tx, result, task.id as string);
+      return {
+        taskId: task.id as string,
+        agentName: agent.name as string,
+        result,
+        credits_used: cost,
+        credits_left: tx ? tx.balance_after : null,
+      };
     } catch (e) {
       const message = e instanceof Error ? e.message : "Échec de la tâche";
+      await refundCredits(supabase, tx, message);
       await supabase.from("agent_tasks").update({ status: "blocked", result: message }).eq("id", task.id);
       throw new Error(message);
     }
@@ -176,14 +198,20 @@ export const askAgent = createServerFn({ method: "POST" })
 export const runTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({ taskId: z.string().uuid(), orgId: z.string().uuid() }).parse(data),
+    z
+      .object({
+        taskId: z.string().uuid(),
+        orgId: z.string().uuid(),
+        idempotencyKey: z.string().min(8).max(64),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     const supabase = context.supabase;
 
     const { data: task } = await supabase
       .from("agent_tasks")
-      .select("id,title,detail,org_id,agents(key,name,role_title)")
+      .select("id,title,detail,org_id,agent_id,agents(key,name,role_title)")
       .eq("id", data.taskId)
       .eq("org_id", data.orgId)
       .maybeSingle();
@@ -194,6 +222,16 @@ export const runTask = createServerFn({ method: "POST" })
     const agent = (task as unknown as {
       agents: { key: string; name: string; role_title: string } | null;
     }).agents;
+
+    const tx = await reserveCredits(supabase, {
+      orgId: data.orgId,
+      actionKey: "eric.task_run",
+      idempotencyKey: data.idempotencyKey,
+      agentId: (task.agent_id as string | null) ?? null,
+      taskId: task.id as string,
+    });
+    const cost = tx ? Math.abs(tx.amount) : 0;
+
     const memory = await loadCompanyMemory(supabase, data.orgId);
 
     try {
@@ -208,12 +246,21 @@ export const runTask = createServerFn({ method: "POST" })
       );
       await supabase
         .from("agent_tasks")
-        .update({ status: "done", result })
+        .update({ status: "done", result, credits_used: cost })
         .eq("id", task.id);
-      return { id: task.id as string, status: "done" as const, result };
+      await completeCredits(supabase, tx, result, task.id as string);
+      return {
+        id: task.id as string,
+        status: "done" as const,
+        result,
+        credits_used: cost,
+        credits_left: tx ? tx.balance_after : null,
+      };
     } catch (e) {
       const message = e instanceof Error ? e.message : "Échec de la tâche";
+      await refundCredits(supabase, tx, message);
       await supabase.from("agent_tasks").update({ status: "blocked", result: message }).eq("id", task.id);
       throw new Error(message);
     }
+
   });

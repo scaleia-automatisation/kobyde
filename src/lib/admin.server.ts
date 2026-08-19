@@ -243,7 +243,7 @@ export async function searchPlatformUsers(query: string) {
 
   const profileByUser = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
   const orgById = new Map((orgs ?? []).map((o: any) => [o.id, o]));
-  const membershipByUser = new Map((memberships ?? []).map((m: any) => [m.user_id, m]));
+  const membershipByUser = new Map<string, any>((memberships ?? []).map((m: any) => [m.user_id, m]));
 
   return users
     .map((u: any) => {

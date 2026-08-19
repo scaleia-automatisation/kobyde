@@ -33,7 +33,8 @@ export async function trackUserEvent(
     const { data } = await supabase.auth.getUser();
     const user = data.user;
     if (!user) return;
-    const once = opts.once ?? name.startsWith("first_") || name === "signup" || name === "onboarding_completed";
+    const once =
+      opts.once ?? (name.startsWith("first_") || name === "signup" || name === "onboarding_completed");
 
     if (once) {
       if (typeof window !== "undefined" && window.localStorage.getItem(localKey(user.id, name))) return;

@@ -2,14 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Loader2, Send, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { askEric } from "@/lib/eric.functions";
+import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useOrgId, useRows } from "@/lib/db";
 
@@ -48,9 +48,13 @@ function EricPage() {
   const orgId = useOrgId();
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [results, setResults] = useState<
+    Record<string, { status: "running" | "done" | "error"; result?: string }>
+  >({});
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const qc = useQueryClient();
   const call = useServerFn(askEric);
+  const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
 
   useEffect(() => {
@@ -59,11 +63,27 @@ function EricPage() {
 
   const mutation = useMutation({
     mutationFn: async (text: string) => call({ data: { prompt: text, orgId: orgId! } }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setPlan(data);
+      setResults({});
       setPrompt("");
-      qc.invalidateQueries();
       inputRef.current?.focus();
+
+      // Éric suit la progression et récupère les résultats de chaque agent.
+      for (const t of data.taches) {
+        if (!t.id) continue;
+        setResults((r) => ({ ...r, [t.id!]: { status: "running" } }));
+        try {
+          const res = await execTask({ data: { taskId: t.id, orgId: orgId! } });
+          setResults((r) => ({ ...r, [t.id!]: { status: "done", result: res.result } }));
+        } catch (e) {
+          setResults((r) => ({
+            ...r,
+            [t.id!]: { status: "error", result: e instanceof Error ? e.message : "Échec" },
+          }));
+        }
+      }
+      qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message || "Éric n'a pas pu traiter la demande."),
   });
@@ -178,6 +198,7 @@ function EricPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {plan.taches.map((t, i) => {
                     const meta = agentByKey(t.agent_key);
+                    const state = t.id ? results[t.id] : undefined;
                     return (
                       <Card key={i} className="space-y-2 p-4">
                         <div className="flex items-center gap-2">
@@ -194,6 +215,29 @@ function EricPage() {
                         </div>
                         <p className="text-sm font-medium">{t.title}</p>
                         <p className="text-sm text-muted-foreground">{t.detail}</p>
+                        <div className="flex items-center gap-2 pt-1 text-xs">
+                          {state?.status === "running" && (
+                            <>
+                              <Loader2 className="size-3.5 animate-spin text-primary" />
+                              <span className="text-muted-foreground">En cours...</span>
+                            </>
+                          )}
+                          {state?.status === "done" && (
+                            <>
+                              <CheckCircle2 className="size-3.5 text-emerald-600" />
+                              <span className="text-muted-foreground">Terminé</span>
+                            </>
+                          )}
+                          {state?.status === "error" && (
+                            <span className="text-destructive">Bloqué</span>
+                          )}
+                          {!state && <span className="text-muted-foreground">En attente</span>}
+                        </div>
+                        {state?.result && (
+                          <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
+                            {state.result}
+                          </div>
+                        )}
                       </Card>
                     );
                   })}

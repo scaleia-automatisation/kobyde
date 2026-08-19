@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CheckCircle2, FileText, FolderKanban, MessageSquare, Upload, XCircle } from "lucide-react";
@@ -14,6 +14,8 @@ import {
   portalRespondRequest,
   portalUploadDocument,
 } from "@/lib/portal.functions";
+import { usePortalTracking } from "@/lib/use-portal-tracking";
+import { RGPD_PORTAL_NOTICE } from "@/lib/analytics";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -47,6 +49,17 @@ function PortalPage() {
     queryFn: () => getPortal({ data: { token } }),
     retry: false,
   });
+
+  const { track, trackOnce } = usePortalTracking(token, "portal");
+
+  useEffect(() => {
+    const d = data as any;
+    if (!d) return;
+    for (const q of d.quotes ?? [])
+      trackOnce("quote_viewed", { entityType: "quote", entityId: q.id, payload: { status: q.status } });
+    for (const p of d.projects ?? [])
+      trackOnce("project_viewed", { entityType: "project", entityId: p.id });
+  }, [data, trackOnce]);
 
   const respond = useMutation({
     mutationFn: (vars: { quoteId: string; action: "accepte" | "refuse" | "commente" }) =>
@@ -190,7 +203,18 @@ function PortalPage() {
                   <Badge>Payé</Badge>
                 ) : (
                   <Button size="sm" asChild>
-                    <a href={`/payer/${p.token}`}>Payer</a>
+                    <a
+                      href={`/payer/${p.token}`}
+                      onClick={() =>
+                        track("payment_started", {
+                          entityType: "payment_request",
+                          entityId: p.id,
+                          payload: { amount_ttc: Number(p.amount_ttc ?? 0) },
+                        })
+                      }
+                    >
+                      Payer
+                    </a>
                   </Button>
                 )}
               </div>
@@ -295,10 +319,28 @@ function PortalPage() {
           </form>
           {d.documents.map((doc: any) => (
             <div key={doc.id} className="surface flex items-center justify-between gap-3 p-3 text-sm">
-              <span>{doc.name}</span>
+              {doc.file_url ? (
+                <a
+                  className="font-medium underline underline-offset-4"
+                  href={doc.file_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() =>
+                    track("document_downloaded", { entityType: "document", entityId: doc.id, payload: { name: doc.name } })
+                  }
+                >
+                  {doc.name}
+                </a>
+              ) : (
+                <span>{doc.name}</span>
+              )}
               <span className="text-muted-foreground">{fr(doc.created_at)}</span>
             </div>
           ))}
+        </section>
+
+        <section>
+          <p className="text-xs text-muted-foreground">{RGPD_PORTAL_NOTICE}</p>
         </section>
       </div>
     </main>

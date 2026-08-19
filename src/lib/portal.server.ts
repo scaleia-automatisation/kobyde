@@ -6,6 +6,28 @@ export async function admin() {
   return supabaseAdmin as any;
 }
 
+/** Journalise un évènement de comportement client. */
+export async function logEvent(
+  orgId: string,
+  name: string,
+  opts: {
+    clientId?: string | null;
+    entityType?: string | null;
+    entityId?: string | null;
+    payload?: Record<string, unknown>;
+  } = {},
+) {
+  const db = await admin();
+  await db.from("analytics_events").insert({
+    org_id: orgId,
+    client_id: opts.clientId ?? null,
+    name,
+    entity_type: opts.entityType ?? null,
+    entity_id: opts.entityId ?? null,
+    payload: opts.payload ?? {},
+  });
+}
+
 /** Résout un accès espace client à partir de son lien secret. */
 export async function resolvePortal(token: string) {
   const db = await admin();
@@ -105,6 +127,12 @@ export async function confirmPayment(
 
   const paidAt = new Date().toISOString();
   const method = opts.method ?? pr.method ?? "stripe";
+  await logEvent(pr.org_id, "payment_completed", {
+    clientId: pr.client_id,
+    entityType: "payment_request",
+    entityId: pr.id,
+    payload: { amount_ttc: Number(pr.amount_ttc ?? 0), method },
+  });
 
   const { data: payment } = await db
     .from("payments")

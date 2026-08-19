@@ -57,7 +57,7 @@ function Landing() {
             <BadgeCheck className="size-4 text-accent" />
             10 agents IA au service de votre entreprise, 24h/24 et 7j/7 — 39 €/mois
           </span>
-          <h1 className="hero-title mx-auto mt-6 max-w-4xl text-5xl leading-[1.05] font-black italic tracking-tight sm:text-7xl lg:text-8xl">
+          <h1 className="hero-title mx-auto mt-6 max-w-6xl text-4xl leading-[1.08] font-black italic tracking-tight sm:text-6xl lg:text-7xl">
             <span className="block">Une équipe complète</span>
             <span className="block">d'agents IA pour votre entreprise,</span>
             <span className="block">pour moins de 1,30 € par jour.</span>
@@ -76,9 +76,9 @@ function Landing() {
             ].map((b) => (
               <div
                 key={b.text}
-                className="glow-chip flex items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-sm shadow-soft backdrop-blur"
+                className="aurora-chip glow-chip flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-base font-medium text-white shadow-soft backdrop-blur"
               >
-                <b.icon className="size-4 text-accent" />
+                <b.icon className="size-5 text-white" />
                 {b.text}
               </div>
             ))}

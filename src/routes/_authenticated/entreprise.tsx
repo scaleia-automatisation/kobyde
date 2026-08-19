@@ -56,7 +56,7 @@ function CompanyPage() {
     for (const f of COMPANY_FIELDS) {
       const raw = (values[f.key] ?? "").trim();
       if (f.type === "number") payload[f.key] = raw === "" ? 0 : Number(raw);
-      else if (f.key === "name") payload[f.key] = raw || (org?.name ?? "Mon entreprise");
+      else if (f.key === "name") payload[f.key] = raw || (org?.["name"] ?? "Mon entreprise");
       else payload[f.key] = raw === "" ? null : raw;
     }
     const { error } = await supabase.from("organizations").update(payload as any).eq("id", orgId);
@@ -91,7 +91,7 @@ function CompanyPage() {
               </span>
             )}
             <div>
-              <p className="font-display text-xl">{values["name"] || org?.name || "Mon entreprise"}</p>
+              <p className="font-display text-xl">{values["name"] || org?.["name"] || "Mon entreprise"}</p>
               <p className="text-sm text-muted-foreground">Mémoire centrale complétée à {completion} %</p>
               <div className="mt-2 h-2 w-56 max-w-full overflow-hidden rounded-full bg-secondary">
                 <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${completion}%` }} />

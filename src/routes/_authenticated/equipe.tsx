@@ -149,25 +149,25 @@ function TeamPage() {
         <div className="pointer-events-none absolute left-1/2 top-full hidden h-10 w-0 -translate-x-1/2 border-l-2 border-dashed border-border lg:block" />
       </section>
 
-      {/* Rangée 1 : 4 agents */}
+      {/* Rangée 1 : 5 agents */}
       <section className="mb-10">
         <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Première ligne — Revenus & relation client
+          Première ligne — Support & croissance
         </h3>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {AGENTS.slice(1, 5).map((a) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {AGENTS.slice(5).map((a) => (
             <AgentCard key={a.key} agent={a} agents={agents} tasks={tasks} onSelect={setSelected} />
           ))}
         </div>
       </section>
 
-      {/* Rangée 2 : 5 agents restants */}
+      {/* Rangée 2 : 4 agents restants */}
       <section className="mb-6">
         <h3 className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Seconde ligne — Support & croissance
+          Seconde ligne — Revenus & relation client
         </h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {AGENTS.slice(5).map((a) => (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {AGENTS.slice(1, 5).map((a) => (
             <AgentCard key={a.key} agent={a} agents={agents} tasks={tasks} onSelect={setSelected} />
           ))}
         </div>

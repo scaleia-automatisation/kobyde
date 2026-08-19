@@ -608,6 +608,7 @@ function ReputationTab() {
   const [query, setQuery] = useState("");
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const analyzeFn = useServerFn(analyzeReputation);
@@ -618,7 +619,9 @@ function ReputationTab() {
     mutationFn: (idempotencyKey: string) => analyzeFn({ data: { orgId: orgId!, idempotencyKey, query, notes } }),
     onSuccess: (r: any) => {
       setResult(r.result);
+      setEdited(null);
       reviews.refetch();
+
       toast.success("Analyse d'e-réputation terminée.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec de l'analyse."),

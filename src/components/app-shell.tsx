@@ -4,6 +4,7 @@ import {
   BarChart3,
   Bot,
   Briefcase,
+  Building2,
   CircleHelp,
   CreditCard,
   FileText,

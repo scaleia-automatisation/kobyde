@@ -271,6 +271,8 @@ function CompetitiveTab() {
       setResult(r.result);
       setEdited(null);
       toast.success("Analyse concurrentielle terminée.");
+    },
+
 
     onError: (e: any) => toast.error(e?.message ?? "Échec de l'analyse."),
   });

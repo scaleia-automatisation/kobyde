@@ -122,6 +122,18 @@ Réponds uniquement en JSON :
 
 export type SiteBrief = Record<string, string>;
 
+/** Aplatit une valeur IA (texte, liste ou objet) en texte lisible avec des puces. */
+function toText(v: any, depth = 0): string {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  const pad = "  ".repeat(depth);
+  if (Array.isArray(v)) return v.map((x) => `${pad}- ${toText(x, depth + 1).trim()}`).join("\n");
+  return Object.entries(v)
+    .map(([k, val]) => `${pad}${k.replace(/_/g, " ")} : ${toText(val, depth + 1).trim()}`)
+    .join("\n");
+}
+
 export async function generateSiteBriefAI(
   supabase: SupabaseClient<any>,
   orgId: string,
@@ -153,7 +165,7 @@ Réponds uniquement en JSON avec exactement ces clés :
     "conversion",
     "contenus_necessaires",
   ]) {
-    out[k] = String(p?.[k] ?? "").slice(0, 4000);
+    out[k] = toText(p?.[k]).slice(0, 4000);
   }
   return out;
 }

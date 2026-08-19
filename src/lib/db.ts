@@ -107,3 +107,46 @@ export const euros = (n: number | null | undefined) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(
     Number(n ?? 0),
   );
+
+/** Lignes filtrées par colonne (ex. les lignes d'un devis). */
+export function useChildRows<T = any>(
+  table: string,
+  column: string,
+  value: string | undefined,
+  opts?: { order?: string; ascending?: boolean; select?: string },
+) {
+  return useQuery<T[]>({
+    queryKey: ["child-rows", table, column, value],
+    enabled: !!value,
+    queryFn: async () => {
+      const { data, error } = await (supabase.from(table as any) as any)
+        .select(opts?.select ?? "*")
+        .eq(column, value)
+        .order(opts?.order ?? "created_at", { ascending: opts?.ascending ?? false });
+      if (error) throw error;
+      return (data ?? []) as T[];
+    },
+  });
+}
+
+/** Une ligne par id. */
+export function useRow<T = any>(table: string, id: string | undefined, select = "*") {
+  return useQuery<T | null>({
+    queryKey: ["row", table, id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await (supabase.from(table as any) as any)
+        .select(select)
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as T | null;
+    },
+  });
+}
+
+export const eur2 = (n: number | null | undefined) =>
+  new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(n ?? 0));
+
+export const frDate = (d: string | null | undefined) =>
+  d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "—";

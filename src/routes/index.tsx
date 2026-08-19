@@ -52,16 +52,17 @@ function Landing() {
       </header>
 
       <section className="aurora-bg">
-        <div className="mx-auto max-w-6xl px-5 pb-20 pt-14 text-center">
+        <div className="mx-auto max-w-7xl px-5 pb-20 pt-14 text-center">
           <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
             <BadgeCheck className="size-4 text-accent" />
             10 agents IA au service de votre entreprise, 24h/24 et 7j/7 — 39 €/mois
           </span>
-          <h1 className="hero-title mx-auto mt-6 max-w-full text-3xl leading-[1.1] font-black italic tracking-tight whitespace-nowrap sm:text-5xl lg:text-5xl">
+          <h1 className="hero-title mx-auto mt-6 max-w-full text-[clamp(1.75rem,5.2vw,4.25rem)] leading-[1.08] font-black italic tracking-tight whitespace-nowrap">
             <span className="block">Une équipe complète</span>
             <span className="block">d'agents IA pour votre entreprise,</span>
             <span className="block">pour moins de 1,30 € par jour.</span>
           </h1>
+
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
             Ils trouvent des clients, écrivent vos devis, relancent vos factures, suivent vos projets et
             analysent vos chiffres. Vous, vous décidez.

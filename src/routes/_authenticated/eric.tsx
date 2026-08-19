@@ -198,6 +198,7 @@ function EricPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {plan.taches.map((t, i) => {
                     const meta = agentByKey(t.agent_key);
+                    const state = t.id ? results[t.id] : undefined;
                     return (
                       <Card key={i} className="space-y-2 p-4">
                         <div className="flex items-center gap-2">
@@ -214,6 +215,29 @@ function EricPage() {
                         </div>
                         <p className="text-sm font-medium">{t.title}</p>
                         <p className="text-sm text-muted-foreground">{t.detail}</p>
+                        <div className="flex items-center gap-2 pt-1 text-xs">
+                          {state?.status === "running" && (
+                            <>
+                              <Loader2 className="size-3.5 animate-spin text-primary" />
+                              <span className="text-muted-foreground">En cours...</span>
+                            </>
+                          )}
+                          {state?.status === "done" && (
+                            <>
+                              <CheckCircle2 className="size-3.5 text-emerald-600" />
+                              <span className="text-muted-foreground">Terminé</span>
+                            </>
+                          )}
+                          {state?.status === "error" && (
+                            <span className="text-destructive">Bloqué</span>
+                          )}
+                          {!state && <span className="text-muted-foreground">En attente</span>}
+                        </div>
+                        {state?.result && (
+                          <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
+                            {state.result}
+                          </div>
+                        )}
                       </Card>
                     );
                   })}

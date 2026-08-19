@@ -76,6 +76,53 @@ Réponds UNIQUEMENT par un objet JSON valide, sans texte autour :
 {"reponse":"3 à 6 phrases max, ton clair et humain","memoire":["info existante utilisée"],"taches":[{"agent_key":"commercial","title":"...","detail":"...","priority":"normale"}],"prochaine_action":"une seule proposition d'action concrète"}
 Entre 1 et 4 tâches. agent_key doit appartenir à la liste ci-dessus.`;
 
+async function chat(messages: { role: string; content: string }[], jsonMode: boolean) {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new Error("AI indisponible : clé manquante.");
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages,
+      ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+    }),
+  });
+
+  if (res.status === 429) throw new Error("Trop de demandes d'un coup, réessayez dans un instant.");
+  if (res.status === 402) throw new Error("Crédits IA épuisés.");
+  if (!res.ok) throw new Error(`Erreur IA (${res.status})`);
+  const json = (await res.json()) as any;
+  return String(json?.choices?.[0]?.message?.content ?? "");
+}
+
+/** Un agent spécialisé exécute la tâche confiée par Éric, avec la mémoire centrale. */
+export async function runAgent(
+  agent: { key: string; name: string; role: string },
+  task: { title: string; detail: string },
+  memory: unknown,
+): Promise<string> {
+  const meta = AGENTS.find((a) => a.key === agent.key);
+  const content = await chat(
+    [
+      {
+        role: "system",
+        content: `Tu es ${agent.name}, ${agent.role} chez Kobyde. ${meta?.description ?? ""}
+Tu exécutes la tâche confiée par Éric, le Directeur IA. Tu partages la mémoire centrale de l'entreprise.
+Réponds en français, 4 à 10 lignes maximum, format concret et actionnable (listes courtes, chiffres, noms réels de la mémoire).
+Si une information manque, dis précisément ce qu'il faut fournir. Pas de blabla, pas de markdown lourd.`,
+      },
+      {
+        role: "user",
+        content: `Mémoire centrale (JSON) :\n${JSON.stringify(memory).slice(0, 10000)}\n\nTâche : ${task.title}\nDétail : ${task.detail}`,
+      },
+    ],
+    false,
+  );
+  return content.trim() || "Aucun résultat produit.";
+}
+
 export async function runEric(prompt: string, memory: unknown): Promise<EricPlan> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI indisponible : clé manquante.");

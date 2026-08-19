@@ -16,17 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CreditActionButton } from "@/components/credit-action-button";
+import { CreditActionButton } from "@/components/credit-action";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrgId, useRows, eur2, frDate } from "@/lib/db";
-import {
-  MEETING_SOURCES,
-  QUOTE_STATUS_LABEL,
-  addDays,
-  detectionAction,
-  isoDate,
-  nextNumber,
-} from "@/lib/sales";
+import { MEETING_SOURCES, QUOTE_STATUS_LABEL, addDays, isoDate, nextNumber } from "@/lib/sales";
 import { analyzeMeeting } from "@/lib/sales.functions";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -59,6 +52,7 @@ function DevisPage() {
   const [analysis, setAnalysis] = useState<any | null>(null);
   const [meetingClient, setMeetingClient] = useState("");
   const [transcript, setTranscript] = useState("");
+  const [meetingTitle, setMeetingTitle] = useState("");
 
   const clientName = (id: string | null) => {
     const c = (clients ?? []).find((x: any) => x.id === id);
@@ -88,30 +82,38 @@ function DevisPage() {
     navigate({ to: "/devis/$id", params: { id: data.id } });
   };
 
-  const runAnalysis = async () => {
+  const runAnalysis = async (idempotencyKey: string) => {
+    if (!orgId) return;
     const res = await analyzeMeeting({
-      data: { clientId: meetingClient || null, transcript, source: "Transcription" },
+      data: {
+        orgId,
+        idempotencyKey,
+        title: meetingTitle.trim() || "Réunion client",
+        clientId: meetingClient || null,
+        transcript,
+        source: "Transcription",
+      },
     });
     setAnalysis(res);
-    return res;
   };
 
   const createFromAnalysis = async () => {
     if (!orgId || !analysis) return;
-    const retained = (analysis.lignes ?? []).filter((l: any) => detectionAction(l.detection) !== "exclure");
+    const retained = (analysis.besoins ?? []).filter((b: any) => b.retenu);
     const { data: quote, error } = await supabase
       .from("quotes")
       .insert({
         org_id: orgId,
         client_id: meetingClient || null,
         number: nextNumber("DEV"),
-        title: analysis.titre ?? "Devis issu de la réunion",
+        title: meetingTitle.trim() || "Devis issu de la réunion",
         status: "brouillon",
         validity_days: 30,
         valid_until: isoDate(addDays(30)),
         source: "reunion",
-        analysis: analysis,
-        notes: analysis.synthese ?? null,
+        meeting_id: analysis.meetingId ?? null,
+        analysis: analysis.besoins ?? [],
+        notes: analysis.compte_rendu ?? null,
       })
       .select("id")
       .single();
@@ -119,17 +121,17 @@ function DevisPage() {
 
     if (retained.length) {
       const { error: e2 } = await supabase.from("quote_items").insert(
-        retained.map((l: any) => ({
+        retained.map((b: any) => ({
           org_id: orgId,
           quote_id: quote.id,
-          label: l.libelle,
-          description: l.detail ?? null,
-          quantity: Number(l.quantite ?? 1),
-          unit_price: Number(l.prix_ht ?? 0),
-          vat_rate: 20,
-          detection: l.detection ?? "Discuté",
-          source_quote: l.citation ?? null,
-          in_catalog: !!l.au_catalogue,
+          product_id: b.product_id ?? null,
+          label: b.service,
+          description: b.justification ?? null,
+          quantity: Number(b.quantite ?? 1),
+          unit_price: Number(b.prix_ht ?? 0),
+          vat_rate: Number(b.vat_rate ?? 20),
+          detection: b.detection ?? "Discuté",
+          in_catalog: !!b.product_id,
         })),
       );
       if (e2) toast.error(e2.message);
@@ -250,6 +252,15 @@ function DevisPage() {
 
           <div className="space-y-4">
             <div className="space-y-1.5">
+              <Label htmlFor="m_title">Titre de la réunion</Label>
+              <Input
+                id="m_title"
+                value={meetingTitle}
+                onChange={(e) => setMeetingTitle(e.target.value)}
+                placeholder="Point besoin — refonte du site"
+              />
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="m_client">Client</Label>
               <select
                 id="m_client"
@@ -278,29 +289,24 @@ function DevisPage() {
 
             {analysis && (
               <div className="surface space-y-3 p-4">
-                <p className="font-display text-lg">{analysis.titre}</p>
-                {analysis.synthese && <p className="text-sm text-muted-foreground">{analysis.synthese}</p>}
+                <p className="font-display text-lg">Ce que Michael a compris</p>
+                {analysis.resume && <p className="text-sm text-muted-foreground">{analysis.resume}</p>}
                 <ul className="grid gap-2">
-                  {(analysis.lignes ?? []).map((l: any, i: number) => (
+                  {(analysis.besoins ?? []).map((b: any, i: number) => (
                     <li key={i} className="rounded-xl bg-muted/50 p-3 text-sm">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">{l.libelle}</span>
+                        <span className="font-medium">{b.service}</span>
                         <span className="flex items-center gap-2">
-                          <Badge variant="outline">{l.detection}</Badge>
-                          <span>{l.prix_ht ? eur2(l.prix_ht) : "Non trouvé"}</span>
+                          <Badge variant="outline">{b.detection}</Badge>
+                          <span>{b.prix_ht > 0 ? eur2(b.prix_ht) : "Non trouvé"}</span>
                         </span>
                       </div>
-                      {l.citation && (
-                        <p className="mt-1 text-xs italic text-muted-foreground">« {l.citation} »</p>
+                      {b.justification && (
+                        <p className="mt-1 text-xs italic text-muted-foreground">« {b.justification} »</p>
                       )}
                     </li>
                   ))}
                 </ul>
-                {Array.isArray(analysis.manquants) && analysis.manquants.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    À préciser : {analysis.manquants.join(", ")}
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -311,10 +317,11 @@ function DevisPage() {
             ) : (
               <CreditActionButton
                 actionKey="quote.from_meeting"
-                label="Analyser la réunion"
                 disabled={transcript.trim().length < 20}
                 onConfirm={runAnalysis}
-              />
+              >
+                Analyser la réunion
+              </CreditActionButton>
             )}
           </DialogFooter>
         </DialogContent>

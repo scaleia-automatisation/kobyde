@@ -2,11 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { loadCompanyMemory, runAgent, runEric } from "./eric.server";
+import { completeCredits, refundCredits, reserveCredits } from "./credits.server";
 
 export const askEric = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({ prompt: z.string().min(3).max(2000), orgId: z.string().uuid() }).parse(data),
+    z
+      .object({
+        prompt: z.string().min(3).max(2000),
+        orgId: z.string().uuid(),
+        idempotencyKey: z.string().min(8).max(64),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     const supabase = context.supabase;
@@ -19,8 +26,24 @@ export const askEric = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!membership) throw new Error("Accès refusé à cette organisation.");
 
-    const memory = await loadCompanyMemory(supabase, data.orgId);
-    const plan = await runEric(data.prompt, memory);
+    // Éric ne facture que l'analyse IA de la demande, jamais l'orchestration.
+    const tx = await reserveCredits(supabase, {
+      orgId: data.orgId,
+      actionKey: "eric.analyze_request",
+      idempotencyKey: data.idempotencyKey,
+    });
+
+    let plan;
+    try {
+      const memory = await loadCompanyMemory(supabase, data.orgId);
+      plan = await runEric(data.prompt, memory);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Échec de l'analyse";
+      await refundCredits(supabase, tx, message);
+      throw new Error(message);
+    }
+    await completeCredits(supabase, tx, plan.reponse);
+
 
     const { data: agentRows } = await supabase
       .from("agents")

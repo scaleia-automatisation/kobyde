@@ -48,6 +48,9 @@ function EricPage() {
   const orgId = useOrgId();
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [results, setResults] = useState<
+    Record<string, { status: "running" | "done" | "error"; result?: string }>
+  >({});
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const qc = useQueryClient();
   const call = useServerFn(askEric);

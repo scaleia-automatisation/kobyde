@@ -562,7 +562,32 @@ function WatchTab({ kind }: { kind: "concurrentielle" | "generale" }) {
             <Loader2 className="size-4 animate-spin" /> Ethan collecte les informations récentes…
           </Card>
         ) : result ? (
-          <WatchResultView result={result} />
+          <>
+            <Card className="p-4">
+              <GenerationActions
+                title={kind === "concurrentielle" ? "Veille concurrentielle" : "Veille générale"}
+                text={edited ?? toReadableText(result)}
+                onEdit={setEdited}
+                regenerateSlot={
+                  <CreditActionButton
+                    actionKey="watch.refresh"
+                    className="inline-block"
+                    buttonClassName="gap-1.5"
+                    variant="outline"
+                    size="sm"
+                    pending={launch.isPending}
+                    onConfirm={(k) =>
+                      launch.mutateAsync({ idempotencyKey: k, subject, competitors, refresh: true })
+                    }
+                  >
+                    <RefreshCw className="h-4 w-4" /> Régénérer
+                  </CreditActionButton>
+                }
+              />
+            </Card>
+            <WatchResultView result={result} />
+          </>
+
         ) : (
           <Card className="p-6 text-sm text-muted-foreground">Aucun briefing affiché pour l'instant.</Card>
         )}

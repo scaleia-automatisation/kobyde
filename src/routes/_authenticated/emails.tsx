@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CreditActionButton } from "@/components/credit-action";
+import { GenerationActions } from "@/components/generation-actions";
 import { useCreateRow, useDeleteRow, useOrgId, useRows, useUpdateRow } from "@/lib/db";
 import {
   DEFAULT_SEQUENCE_STEPS,

@@ -57,7 +57,7 @@ function Landing() {
             <BadgeCheck className="size-4 text-accent" />
             10 agents IA au service de votre entreprise, 24h/24 et 7j/7 — 39 €/mois
           </span>
-          <h1 className="hero-title mx-auto mt-6 max-w-full px-2 text-3xl leading-[1.1] font-black italic tracking-tight whitespace-nowrap sm:text-5xl lg:text-6xl">
+          <h1 className="hero-title mx-auto mt-6 max-w-full text-3xl leading-[1.1] font-black italic tracking-tight whitespace-nowrap sm:text-5xl lg:text-5xl">
             <span className="block">Une équipe complète</span>
             <span className="block">d'agents IA pour votre entreprise,</span>
             <span className="block">pour moins de 1,30 € par jour.</span>

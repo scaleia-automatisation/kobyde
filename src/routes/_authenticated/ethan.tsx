@@ -406,6 +406,8 @@ function WatchTab({ kind }: { kind: "concurrentielle" | "generale" }) {
   const [frequency, setFrequency] = useState("hebdomadaire");
   const [active, setActive] = useState(true);
   const [result, setResult] = useState<any>(null);
+  const [edited, setEdited] = useState<string | null>(null);
+
 
   const runFn = useServerFn(runWatch);
   const saveFn = useServerFn(saveWatchTopic);

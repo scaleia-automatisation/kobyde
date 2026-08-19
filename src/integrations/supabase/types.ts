@@ -294,6 +294,124 @@ export type Database = {
           },
         ]
       }
+      client_portal_access: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_seen_at: string | null
+          org_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          org_id: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          org_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_access_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_access_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_requests: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          detail: string | null
+          id: string
+          kind: string
+          org_id: string
+          project_id: string | null
+          responded_at: string | null
+          response: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail?: string | null
+          id?: string
+          kind?: string
+          org_id: string
+          project_id?: string | null
+          responded_at?: string | null
+          response?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          project_id?: string | null
+          responded_at?: string | null
+          response?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -510,41 +628,64 @@ export type Database = {
       }
       documents: {
         Row: {
+          client_id: string | null
           created_at: string
           created_by: string | null
           file_url: string | null
+          from_client: boolean
           id: string
           kind: string | null
           name: string
           org_id: string
+          project_id: string | null
           size_kb: number | null
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           file_url?: string | null
+          from_client?: boolean
           id?: string
           kind?: string | null
           name: string
           org_id: string
+          project_id?: string | null
           size_kb?: number | null
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           file_url?: string | null
+          from_client?: boolean
           id?: string
           kind?: string | null
           name?: string
           org_id?: string
+          project_id?: string | null
           size_kb?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -608,9 +749,12 @@ export type Database = {
           created_at: string
           due_date: string | null
           id: string
+          installment_id: string | null
+          label: string | null
           number: string
           org_id: string
           paid_at: string | null
+          payment_id: string | null
           quote_id: string | null
           status: string
           updated_at: string
@@ -622,9 +766,12 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          installment_id?: string | null
+          label?: string | null
           number: string
           org_id: string
           paid_at?: string | null
+          payment_id?: string | null
           quote_id?: string | null
           status?: string
           updated_at?: string
@@ -636,9 +783,12 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          installment_id?: string | null
+          label?: string | null
           number?: string
           org_id?: string
           paid_at?: string | null
+          payment_id?: string | null
           quote_id?: string | null
           status?: string
           updated_at?: string
@@ -652,10 +802,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_installment_id_fkey"
+            columns: ["installment_id"]
+            isOneToOne: false
+            referencedRelation: "quote_installments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoices_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
             referencedColumns: ["id"]
           },
           {
@@ -704,34 +868,49 @@ export type Database = {
       }
       meetings: {
         Row: {
+          analysis: Json
           client_id: string | null
           created_at: string
           duration_min: number
           id: string
           notes: string | null
           org_id: string
+          report: string | null
+          source: string
           starts_at: string
+          summary: string | null
           title: string
+          transcript: string | null
         }
         Insert: {
+          analysis?: Json
           client_id?: string | null
           created_at?: string
           duration_min?: number
           id?: string
           notes?: string | null
           org_id: string
+          report?: string | null
+          source?: string
           starts_at?: string
+          summary?: string | null
           title: string
+          transcript?: string | null
         }
         Update: {
+          analysis?: Json
           client_id?: string | null
           created_at?: string
           duration_min?: number
           id?: string
           notes?: string | null
           org_id?: string
+          report?: string | null
+          source?: string
           starts_at?: string
+          summary?: string | null
           title?: string
+          transcript?: string | null
         }
         Relationships: [
           {
@@ -1025,6 +1204,104 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_requests: {
+        Row: {
+          amount_ht: number
+          amount_ttc: number
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          discount_amount: number
+          due_date: string | null
+          id: string
+          label: string
+          message: string | null
+          method: string
+          org_id: string
+          paid_at: string | null
+          payment_url: string | null
+          product_id: string | null
+          quote_id: string | null
+          status: string
+          token: string
+          updated_at: string
+          vat_rate: number
+        }
+        Insert: {
+          amount_ht?: number
+          amount_ttc?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number
+          due_date?: string | null
+          id?: string
+          label: string
+          message?: string | null
+          method?: string
+          org_id: string
+          paid_at?: string | null
+          payment_url?: string | null
+          product_id?: string | null
+          quote_id?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+          vat_rate?: number
+        }
+        Update: {
+          amount_ht?: number
+          amount_ttc?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number
+          due_date?: string | null
+          id?: string
+          label?: string
+          message?: string | null
+          method?: string
+          org_id?: string
+          paid_at?: string | null
+          payment_url?: string | null
+          product_id?: string | null
+          quote_id?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_requests_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -1036,6 +1313,7 @@ export type Database = {
           method: string
           org_id: string
           paid_at: string | null
+          payment_request_id: string | null
           status: string
           stripe_event_id: string | null
           stripe_payment_intent_id: string | null
@@ -1051,6 +1329,7 @@ export type Database = {
           method?: string
           org_id: string
           paid_at?: string | null
+          payment_request_id?: string | null
           status?: string
           stripe_event_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -1066,6 +1345,7 @@ export type Database = {
           method?: string
           org_id?: string
           paid_at?: string | null
+          payment_request_id?: string | null
           status?: string
           stripe_event_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -1091,6 +1371,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_request_id_fkey"
+            columns: ["payment_request_id"]
+            isOneToOne: false
+            referencedRelation: "payment_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -1146,6 +1433,7 @@ export type Database = {
         Row: {
           category: string | null
           created_at: string
+          default_quantity: number
           description: string | null
           id: string
           is_active: boolean
@@ -1153,12 +1441,18 @@ export type Database = {
           name: string
           org_id: string
           price: number
+          price_ht: number
+          sku: string | null
+          subservices: Json
+          terms: string | null
           unit: string | null
           updated_at: string
+          vat_rate: number
         }
         Insert: {
           category?: string | null
           created_at?: string
+          default_quantity?: number
           description?: string | null
           id?: string
           is_active?: boolean
@@ -1166,12 +1460,18 @@ export type Database = {
           name: string
           org_id: string
           price?: number
+          price_ht?: number
+          sku?: string | null
+          subservices?: Json
+          terms?: string | null
           unit?: string | null
           updated_at?: string
+          vat_rate?: number
         }
         Update: {
           category?: string | null
           created_at?: string
+          default_quantity?: number
           description?: string | null
           id?: string
           is_active?: boolean
@@ -1179,8 +1479,13 @@ export type Database = {
           name?: string
           org_id?: string
           price?: number
+          price_ht?: number
+          sku?: string | null
+          subservices?: Json
+          terms?: string | null
           unit?: string | null
           updated_at?: string
+          vat_rate?: number
         }
         Relationships: [
           {
@@ -1236,6 +1541,8 @@ export type Database = {
       project_steps: {
         Row: {
           created_at: string
+          description: string | null
+          due_date: string | null
           id: string
           name: string
           org_id: string
@@ -1245,6 +1552,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
+          due_date?: string | null
           id?: string
           name: string
           org_id: string
@@ -1254,6 +1563,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
+          due_date?: string | null
           id?: string
           name?: string
           org_id?: string
@@ -1282,13 +1593,17 @@ export type Database = {
         Row: {
           budget: number
           client_id: string | null
+          completed_at: string | null
           created_at: string
+          deliverables: string | null
           description: string | null
           end_date: string | null
           id: string
+          manager: string | null
           name: string
           org_id: string
           progress: number
+          quote_id: string | null
           start_date: string | null
           status: string
           updated_at: string
@@ -1296,13 +1611,17 @@ export type Database = {
         Insert: {
           budget?: number
           client_id?: string | null
+          completed_at?: string | null
           created_at?: string
+          deliverables?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
+          manager?: string | null
           name: string
           org_id: string
           progress?: number
+          quote_id?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string
@@ -1310,13 +1629,17 @@ export type Database = {
         Update: {
           budget?: number
           client_id?: string | null
+          completed_at?: string | null
           created_at?: string
+          deliverables?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
+          manager?: string | null
           name?: string
           org_id?: string
           progress?: number
+          quote_id?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string
@@ -1334,6 +1657,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -1482,33 +1812,172 @@ export type Database = {
           },
         ]
       }
+      quote_followups: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          org_id: string
+          quote_id: string
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          org_id: string
+          quote_id: string
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          org_id?: string
+          quote_id?: string
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_followups_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_followups_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_installments: {
+        Row: {
+          amount_ttc: number
+          created_at: string
+          due_date: string | null
+          id: string
+          label: string
+          org_id: string
+          paid_at: string | null
+          payment_request_id: string | null
+          percentage: number
+          position: number
+          quote_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_ttc?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          label: string
+          org_id: string
+          paid_at?: string | null
+          payment_request_id?: string | null
+          percentage?: number
+          position?: number
+          quote_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_ttc?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          label?: string
+          org_id?: string
+          paid_at?: string | null
+          payment_request_id?: string | null
+          percentage?: number
+          position?: number
+          quote_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_installments_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_installments_payment_request_id_fkey"
+            columns: ["payment_request_id"]
+            isOneToOne: false
+            referencedRelation: "payment_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_installments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           created_at: string
           id: string
           label: string
           org_id: string
+          position: number
+          product_id: string | null
           quantity: number
           quote_id: string
+          subservices: Json
           unit_price: number
+          vat_rate: number
         }
         Insert: {
           created_at?: string
           id?: string
           label: string
           org_id: string
+          position?: number
+          product_id?: string | null
           quantity?: number
           quote_id: string
+          subservices?: Json
           unit_price?: number
+          vat_rate?: number
         }
         Update: {
           created_at?: string
           id?: string
           label?: string
           org_id?: string
+          position?: number
+          product_id?: string | null
           quantity?: number
           quote_id?: string
+          subservices?: Json
           unit_price?: number
+          vat_rate?: number
         }
         Relationships: [
           {
@@ -1516,6 +1985,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
           {
@@ -1527,51 +2003,144 @@ export type Database = {
           },
         ]
       }
+      quote_versions: {
+        Row: {
+          author: string | null
+          change: string
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          quote_id: string
+          reason: string | null
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          author?: string | null
+          change: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          quote_id: string
+          reason?: string | null
+          snapshot?: Json
+          version: number
+        }
+        Update: {
+          author?: string | null
+          change?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          quote_id?: string
+          reason?: string | null
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_versions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_versions_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes: {
         Row: {
+          accepted_at: string | null
+          analysis: Json
+          client_comment: string | null
           client_id: string | null
           created_at: string
+          discount_amount: number
+          discount_type: string
+          discount_value: number
           id: string
+          meeting_id: string | null
           notes: string | null
           number: string
           org_id: string
+          refused_at: string | null
+          sent_at: string | null
+          source: string
           status: string
+          subtotal_ht: number
           title: string
           total_ht: number
           total_ttc: number
           updated_at: string
           valid_until: string | null
+          validity_days: number
           vat_rate: number
+          version: number
         }
         Insert: {
+          accepted_at?: string | null
+          analysis?: Json
+          client_comment?: string | null
           client_id?: string | null
           created_at?: string
+          discount_amount?: number
+          discount_type?: string
+          discount_value?: number
           id?: string
+          meeting_id?: string | null
           notes?: string | null
           number: string
           org_id: string
+          refused_at?: string | null
+          sent_at?: string | null
+          source?: string
           status?: string
+          subtotal_ht?: number
           title: string
           total_ht?: number
           total_ttc?: number
           updated_at?: string
           valid_until?: string | null
+          validity_days?: number
           vat_rate?: number
+          version?: number
         }
         Update: {
+          accepted_at?: string | null
+          analysis?: Json
+          client_comment?: string | null
           client_id?: string | null
           created_at?: string
+          discount_amount?: number
+          discount_type?: string
+          discount_value?: number
           id?: string
+          meeting_id?: string | null
           notes?: string | null
           number?: string
           org_id?: string
+          refused_at?: string | null
+          sent_at?: string | null
+          source?: string
           status?: string
+          subtotal_ht?: number
           title?: string
           total_ht?: number
           total_ttc?: number
           updated_at?: string
           valid_until?: string | null
+          validity_days?: number
           vat_rate?: number
+          version?: number
         }
         Relationships: [
           {
@@ -1579,6 +2148,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
             referencedColumns: ["id"]
           },
           {
@@ -1637,37 +2213,49 @@ export type Database = {
       tasks: {
         Row: {
           assignee: string | null
+          assignee_name: string | null
+          comments: Json
           created_at: string
+          description: string | null
           due_date: string | null
           id: string
           org_id: string
           priority: string
           project_id: string | null
           status: string
+          step_id: string | null
           title: string
           updated_at: string
         }
         Insert: {
           assignee?: string | null
+          assignee_name?: string | null
+          comments?: Json
           created_at?: string
+          description?: string | null
           due_date?: string | null
           id?: string
           org_id: string
           priority?: string
           project_id?: string | null
           status?: string
+          step_id?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           assignee?: string | null
+          assignee_name?: string | null
+          comments?: Json
           created_at?: string
+          description?: string | null
           due_date?: string | null
           id?: string
           org_id?: string
           priority?: string
           project_id?: string | null
           status?: string
+          step_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -1684,6 +2272,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "project_steps"
             referencedColumns: ["id"]
           },
         ]

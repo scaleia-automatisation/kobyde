@@ -158,7 +158,7 @@ function Landing() {
             {PAID_PLANS.map((p) => (
               <article
                 key={p.key}
-                className={`surface flex flex-col p-7 ${p.highlight ? "ring-2 ring-primary" : ""}`}
+                className={`plan-card flex flex-col p-8 ${p.highlight ? "ring-2 ring-primary" : ""}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-display text-xl font-bold">{p.name}</h3>

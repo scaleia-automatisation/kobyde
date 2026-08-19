@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,9 @@ function Settings() {
           <p className="mt-4 text-xs text-muted-foreground">
             Vos données sont isolées : personne d'une autre entreprise ne peut y accéder.
           </p>
+          <Button asChild className="mt-5 mr-2">
+            <Link to="/entreprise">Compléter la fiche entreprise</Link>
+          </Button>
           <Button variant="outline" className="mt-5" onClick={signOut}>
             Se déconnecter
           </Button>

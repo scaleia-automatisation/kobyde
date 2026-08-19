@@ -20,6 +20,7 @@ import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDevisRouteImport } from './routes/_authenticated/devis'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated/emails'
+import { Route as AuthenticatedEntrepriseRouteImport } from './routes/_authenticated/entreprise'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEricRouteImport } from './routes/_authenticated/eric'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
@@ -86,6 +87,11 @@ const AuthenticatedEmailsRoute = AuthenticatedEmailsRouteImport.update({
   path: '/emails',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEntrepriseRoute = AuthenticatedEntrepriseRouteImport.update({
+  id: '/entreprise',
+  path: '/entreprise',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/devis': typeof AuthenticatedDevisRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
+  '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
   '/marketing': typeof AuthenticatedMarketingRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/devis': typeof AuthenticatedDevisRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
+  '/entreprise': typeof AuthenticatedEntrepriseRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
   '/marketing': typeof AuthenticatedMarketingRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/_authenticated/devis': typeof AuthenticatedDevisRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
+  '/_authenticated/entreprise': typeof AuthenticatedEntrepriseRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/eric': typeof AuthenticatedEricRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/devis'
     | '/documents'
     | '/emails'
+    | '/entreprise'
     | '/equipe'
     | '/eric'
     | '/marketing'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/devis'
     | '/documents'
     | '/emails'
+    | '/entreprise'
     | '/equipe'
     | '/eric'
     | '/marketing'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authenticated/devis'
     | '/_authenticated/documents'
     | '/_authenticated/emails'
+    | '/_authenticated/entreprise'
     | '/_authenticated/equipe'
     | '/_authenticated/eric'
     | '/_authenticated/marketing'
@@ -362,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEmailsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/entreprise': {
+      id: '/_authenticated/entreprise'
+      path: '/entreprise'
+      fullPath: '/entreprise'
+      preLoaderRoute: typeof AuthenticatedEntrepriseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/equipe': {
       id: '/_authenticated/equipe'
       path: '/equipe'
@@ -444,6 +463,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDevisRoute: typeof AuthenticatedDevisRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
+  AuthenticatedEntrepriseRoute: typeof AuthenticatedEntrepriseRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedEricRoute: typeof AuthenticatedEricRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
@@ -464,6 +484,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDevisRoute: AuthenticatedDevisRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,
+  AuthenticatedEntrepriseRoute: AuthenticatedEntrepriseRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedEricRoute: AuthenticatedEricRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,

@@ -859,40 +859,103 @@ export type Database = {
       }
       organizations: {
         Row: {
+          address: string | null
+          city: string | null
+          company_type: string | null
+          country: string | null
           created_at: string
           created_by: string | null
           credits: number
+          currency: string
+          description: string | null
+          email: string | null
           id: string
           industry: string | null
+          languages: string | null
           logo_url: string | null
           name: string
+          phone: string | null
           plan: string
+          positioning: string | null
+          pricing_text: string | null
+          products_text: string | null
+          services_text: string | null
+          siret: string | null
           slug: string | null
+          social_links: string | null
+          target_audience: string | null
+          team_text: string | null
+          terms_text: string | null
           updated_at: string
+          values_text: string | null
+          vat_rate: number
+          website: string | null
         }
         Insert: {
+          address?: string | null
+          city?: string | null
+          company_type?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           credits?: number
+          currency?: string
+          description?: string | null
+          email?: string | null
           id?: string
           industry?: string | null
+          languages?: string | null
           logo_url?: string | null
           name: string
+          phone?: string | null
           plan?: string
+          positioning?: string | null
+          pricing_text?: string | null
+          products_text?: string | null
+          services_text?: string | null
+          siret?: string | null
           slug?: string | null
+          social_links?: string | null
+          target_audience?: string | null
+          team_text?: string | null
+          terms_text?: string | null
           updated_at?: string
+          values_text?: string | null
+          vat_rate?: number
+          website?: string | null
         }
         Update: {
+          address?: string | null
+          city?: string | null
+          company_type?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string | null
           credits?: number
+          currency?: string
+          description?: string | null
+          email?: string | null
           id?: string
           industry?: string | null
+          languages?: string | null
           logo_url?: string | null
           name?: string
+          phone?: string | null
           plan?: string
+          positioning?: string | null
+          pricing_text?: string | null
+          products_text?: string | null
+          services_text?: string | null
+          siret?: string | null
           slug?: string | null
+          social_links?: string | null
+          target_audience?: string | null
+          team_text?: string | null
+          terms_text?: string | null
           updated_at?: string
+          values_text?: string | null
+          vat_rate?: number
+          website?: string | null
         }
         Relationships: []
       }

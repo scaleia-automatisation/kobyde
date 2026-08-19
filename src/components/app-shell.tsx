@@ -4,6 +4,7 @@ import {
   BarChart3,
   Bot,
   Briefcase,
+  Building2,
   CircleHelp,
   CreditCard,
   FileText,
@@ -44,6 +45,7 @@ export const NAV = [
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/automatisations", label: "Automatisations", icon: Zap },
   { to: "/documents", label: "Documents", icon: Briefcase },
+  { to: "/entreprise", label: "Fiche entreprise", icon: Building2 },
   { to: "/parametres", label: "Paramètres", icon: Settings },
 ] as const;
 

@@ -48,6 +48,8 @@ export type GenerationActionsProps = {
   /** Relance la génération (même action, même coût en crédits). */
   onRegenerate?: () => void;
   regenerating?: boolean;
+  /** Bouton « Régénérer » personnalisé (ex. CreditActionButton) rendu à la place du bouton par défaut. */
+  regenerateSlot?: React.ReactNode;
   className?: string;
 };
 
@@ -58,8 +60,10 @@ export function GenerationActions({
   onEdit,
   onRegenerate,
   regenerating,
+  regenerateSlot,
   className,
 }: GenerationActionsProps) {
+
   const [draft, setDraft] = useState(text);
   const [editOpen, setEditOpen] = useState(false);
   const [email, setEmail] = useState("");

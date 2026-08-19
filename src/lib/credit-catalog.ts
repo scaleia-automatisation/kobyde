@@ -151,6 +151,8 @@ export const CREDIT_ACTIONS: CreditAction[] = [
     ["eric.answer", "Question nécessitant une réponse IA", 1],
     ["eric.analyze_request", "Analyse d'une demande complexe", 1],
     ["eric.task_run", "Exécution d'une tâche par un agent", 1],
+    ["agent.direct_message", "Demande directe à un agent", 1],
+
   ]),
 ];
 

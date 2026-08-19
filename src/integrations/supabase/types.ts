@@ -690,39 +690,137 @@ export type Database = {
           },
         ]
       }
+      email_sequences: {
+        Row: {
+          agent_key: string
+          audience: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          objective: string | null
+          org_id: string
+          status: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          agent_key?: string
+          audience?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          objective?: string | null
+          org_id: string
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          agent_key?: string
+          audience?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          objective?: string | null
+          org_id?: string
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_sequences_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
+          agent_key: string | null
+          analysis: Json
           body: string | null
           campaign_id: string | null
+          category: string | null
+          client_id: string | null
           created_at: string
+          direction: string
+          draft_body: string | null
+          draft_subject: string | null
+          from_email: string | null
+          from_name: string | null
           id: string
           org_id: string
+          priority: string
+          prospect_id: string | null
+          received_at: string
+          scheduled_at: string | null
           sent_at: string | null
           status: string
           subject: string
-          to_email: string
+          suggested_action: string | null
+          summary: string | null
+          to_email: string | null
+          updated_at: string
         }
         Insert: {
+          agent_key?: string | null
+          analysis?: Json
           body?: string | null
           campaign_id?: string | null
+          category?: string | null
+          client_id?: string | null
           created_at?: string
+          direction?: string
+          draft_body?: string | null
+          draft_subject?: string | null
+          from_email?: string | null
+          from_name?: string | null
           id?: string
           org_id: string
+          priority?: string
+          prospect_id?: string | null
+          received_at?: string
+          scheduled_at?: string | null
           sent_at?: string | null
           status?: string
           subject: string
-          to_email: string
+          suggested_action?: string | null
+          summary?: string | null
+          to_email?: string | null
+          updated_at?: string
         }
         Update: {
+          agent_key?: string | null
+          analysis?: Json
           body?: string | null
           campaign_id?: string | null
+          category?: string | null
+          client_id?: string | null
           created_at?: string
+          direction?: string
+          draft_body?: string | null
+          draft_subject?: string | null
+          from_email?: string | null
+          from_name?: string | null
           id?: string
           org_id?: string
+          priority?: string
+          prospect_id?: string | null
+          received_at?: string
+          scheduled_at?: string | null
           sent_at?: string | null
           status?: string
           subject?: string
-          to_email?: string
+          suggested_action?: string | null
+          summary?: string | null
+          to_email?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -733,10 +831,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "emails_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "emails_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "emails_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospects"
             referencedColumns: ["id"]
           },
         ]

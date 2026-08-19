@@ -127,7 +127,8 @@ function EricPage() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(prompt);
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+                send(prompt, newIdempotencyKey());
             }}
             placeholder="Écrivez simplement ce dont vous avez besoin..."
             rows={3}
@@ -135,14 +136,16 @@ function EricPage() {
           />
           <div className="flex items-center justify-between gap-3 px-1 pt-2">
             <span className="text-xs text-muted-foreground">Ctrl + Entrée pour envoyer</span>
-            <Button onClick={() => send(prompt)} disabled={mutation.isPending || !prompt.trim()}>
-              {mutation.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Send className="size-4" />
-              )}
+            <CreditActionButton
+              actionKey="eric.analyze_request"
+              pending={mutation.isPending}
+              disabled={!prompt.trim()}
+              buttonClassName="gap-2"
+              onConfirm={(key) => send(prompt, key)}
+            >
+              <Send className="size-4" />
               Envoyer
-            </Button>
+            </CreditActionButton>
           </div>
         </Card>
 
@@ -154,7 +157,7 @@ function EricPage() {
                 key={ex}
                 onClick={() => {
                   setPrompt(ex);
-                  send(ex);
+                  inputRef.current?.focus();
                 }}
                 disabled={mutation.isPending}
                 className="rounded-full border border-border bg-card px-3.5 py-2 text-left text-sm text-foreground/80 transition hover:border-primary/40 hover:bg-accent/40 disabled:opacity-50"
@@ -240,6 +243,17 @@ function EricPage() {
                           )}
                           {!state && <span className="text-muted-foreground">En attente</span>}
                         </div>
+                        {t.id && !state && (
+                          <CreditActionButton
+                            actionKey="eric.task_run"
+                            size="sm"
+                            variant="secondary"
+                            buttonClassName="gap-2"
+                            onConfirm={(key) => runOne(t.id!, key)}
+                          >
+                            Lancer la tâche
+                          </CreditActionButton>
+                        )}
                         {state?.result && (
                           <div className="rounded-xl bg-muted/60 p-3 text-sm leading-relaxed whitespace-pre-wrap">
                             {state.result}
@@ -258,9 +272,15 @@ function EricPage() {
                 <div className="space-y-2">
                   <p className="text-sm font-semibold">Action suivante proposée</p>
                   <p className="text-sm text-muted-foreground">{plan.prochaine_action}</p>
-                  <Button size="sm" variant="secondary" onClick={() => send(plan.prochaine_action)}>
+                  <CreditActionButton
+                    actionKey="eric.analyze_request"
+                    size="sm"
+                    variant="secondary"
+                    buttonClassName="gap-2"
+                    onConfirm={(key) => send(plan.prochaine_action, key)}
+                  >
                     Lancer <ArrowRight className="size-4" />
-                  </Button>
+                  </CreditActionButton>
                 </div>
               </Card>
             )}

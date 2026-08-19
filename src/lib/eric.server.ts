@@ -42,8 +42,26 @@ export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: st
       pick("agent_tasks", "title,status,agent_id,created_at", 10),
     ]);
 
+  const o = (org?.data ?? null) as any;
+  const fiche = o
+    ? {
+        nom: o.name, logo: o.logo_url, description: o.description, type_entreprise: o.company_type,
+        siret: o.siret, adresse: o.address, pays: o.country, ville: o.city, secteur: o.industry,
+        site_web: o.website, email: o.email, telephone: o.phone, taux_tva: o.vat_rate,
+        devise: o.currency, langues: o.languages, reseaux_sociaux: o.social_links,
+        positionnement: o.positioning, valeurs: o.values_text, cible: o.target_audience,
+        produits: o.products_text, services: o.services_text, prix: o.pricing_text,
+        conditions: o.terms_text, equipe: o.team_text,
+      }
+    : null;
+  const manquantes = fiche
+    ? Object.entries(fiche).filter(([, v]) => v === null || v === undefined || String(v).trim() === "").map(([k]) => k)
+    : [];
+
   return {
-    organisation: org?.data ?? null,
+    fiche_entreprise: fiche,
+    informations_manquantes: manquantes,
+    organisation: o,
     prospects,
     clients,
     devis: quotes,
@@ -71,6 +89,8 @@ Ta méthode, à chaque demande :
 6. présenter une réponse simple, en français, sans jargon ;
 7. proposer l'action suivante.
 
+La fiche entreprise (champ "fiche_entreprise" de la mémoire) est la SOURCE DE VÉRITÉ UNIQUE : nom, secteur, adresse, TVA, devise, langues, positionnement, valeurs, cible, produits, services, prix, conditions, équipe.
+RÈGLE ABSOLUE : ne demande JAMAIS une information déjà présente dans "fiche_entreprise" ou dans la mémoire — utilise-la directement. Ne demande une information que si elle figure dans "informations_manquantes" ET qu'elle est indispensable à la demande.
 Les agents partagent la même mémoire centrale : cite les données réelles (noms, montants, statuts) quand elles existent, et dis clairement ce qui manque.
 Réponds UNIQUEMENT par un objet JSON valide, sans texte autour :
 {"reponse":"3 à 6 phrases max, ton clair et humain","memoire":["info existante utilisée"],"taches":[{"agent_key":"commercial","title":"...","detail":"...","priority":"normale"}],"prochaine_action":"une seule proposition d'action concrète"}
@@ -111,7 +131,7 @@ export async function runAgent(
         content: `Tu es ${agent.name}, ${agent.role} chez Kobyde. ${meta?.description ?? ""}
 Tu exécutes la tâche confiée par Éric, le Directeur IA. Tu partages la mémoire centrale de l'entreprise.
 Réponds en français, 4 à 10 lignes maximum, format concret et actionnable (listes courtes, chiffres, noms réels de la mémoire).
-Si une information manque, dis précisément ce qu'il faut fournir. Pas de blabla, pas de markdown lourd.`,
+Utilise systématiquement la fiche entreprise ("fiche_entreprise") : nom, coordonnées, TVA, devise, langues, positionnement, valeurs, cible, produits, services, prix, conditions, équipe. Ne redemande jamais une information déjà connue. Si une information est réellement absente (voir "informations_manquantes") et indispensable, dis précisément ce qu'il faut renseigner dans la fiche entreprise. Pas de blabla, pas de markdown lourd.`,
       },
       {
         role: "user",

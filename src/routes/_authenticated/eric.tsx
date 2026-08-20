@@ -17,16 +17,18 @@ import { newIdempotencyKey } from "@/lib/credits";
 import { AiProgress } from "@/components/ui/states";
 
 /** États de génération lisibles plutôt qu'un simple « Loading… ». */
+const ERIC_STEPS = [
+  "Lecture de la mémoire de l'entreprise",
+  "Identification des agents concernés",
+  "Distribution des tâches",
+  "Rédaction de la réponse",
+];
+
 function EricProgress() {
-  const labels = [
-    "Lecture de la mémoire de l'entreprise",
-    "Identification des agents concernés",
-    "Distribution des tâches",
-    "Rédaction de la réponse",
-  ];
+  const labels = ERIC_STEPS;
   const [step, setStep] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setStep((s) => Math.min(s + 1, labels.length - 1)), 1600);
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, ERIC_STEPS.length - 1)), 1600);
     return () => clearInterval(t);
   }, []);
   return (

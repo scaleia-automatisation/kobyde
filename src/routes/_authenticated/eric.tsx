@@ -177,12 +177,8 @@ function EricPage() {
           </div>
         </div>
 
-        {mutation.isPending && (
-          <Card className="flex items-center gap-3 p-5 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" />
-            Éric analyse votre demande et mobilise l'équipe...
-          </Card>
-        )}
+        {mutation.isPending && <EricProgress />}
+
 
         {plan && !mutation.isPending && (
           <div className="space-y-4">

@@ -5,12 +5,13 @@ import {
   Briefcase,
   CheckCircle2,
   FileText,
-  ListTodo,
+  Inbox,
   Sparkles,
   TrendingUp,
   UserPlus,
   Users,
 } from "lucide-react";
+
 import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { euros, useProfile, useRows } from "@/lib/db";
@@ -48,7 +49,7 @@ type Project = Row & { name: string };
 type Task = Row & { title: string; status: string };
 type AgentTask = Row & { title: string; status: string };
 
-function Stat({
+function PrimaryStat({
   label,
   value,
   hint,
@@ -64,17 +65,38 @@ function Stat({
   return (
     <Link
       to={to}
-      className="surface interactive block p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="surface interactive block p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="size-4" aria-hidden />
         <p className="text-label">{label}</p>
-        <Icon className="size-4 text-muted-foreground" aria-hidden />
       </div>
-      <p className="mt-2 font-display text-[1.75rem] leading-none tracking-tight">{value}</p>
-      <p className="mt-1.5 text-caption">{hint}</p>
+      <p className="mt-3 font-display text-[2.5rem] leading-none tracking-tight">{value}</p>
+      <p className="mt-2 text-caption">{hint}</p>
     </Link>
   );
 }
+
+function MiniStat({
+  label,
+  value,
+  to,
+}: {
+  label: string;
+  value: string;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex items-baseline justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="truncate text-body text-muted-foreground">{label}</span>
+      <span className="font-display text-lg leading-none tracking-tight">{value}</span>
+    </Link>
+  );
+}
+
 
 const dayjs = (d?: string) =>
   d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "";
@@ -211,81 +233,62 @@ function Dashboard() {
         </Button>
       }
     >
-      <div className="grid gap-3 stagger-children sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
+      <div className="grid gap-4 stagger-children md:grid-cols-3">
+        <PrimaryStat
           label="Chiffre d'affaires"
           value={euros(ca)}
-          hint="Paiements encaissés"
+          hint="Paiements encaissés à ce jour"
           icon={TrendingUp}
           to="/paiements"
         />
-        <Stat
-          label="Prospects"
-          value={String(PR.length)}
-          hint="Clients potentiels"
-          icon={UserPlus}
-          to="/prospects"
-        />
-        <Stat
-          label="Clients"
-          value={String(C.length)}
-          hint="Ils vous font confiance"
-          icon={Users}
-          to="/clients"
-        />
-        <Stat
-          label="Devis"
-          value={String(Q.length)}
-          hint={`${devisEnAttente.length} en attente`}
+        <PrimaryStat
+          label="Devis en attente"
+          value={String(devisEnAttente.length)}
+          hint={`sur ${Q.length} devis au total`}
           icon={FileText}
           to="/devis"
         />
-        <Stat
-          label="Paiements"
-          value={String(P.length)}
-          hint={`${paiementsEnAttente.length} à encaisser`}
+        <PrimaryStat
+          label="À encaisser"
+          value={String(paiementsEnAttente.length)}
+          hint={
+            paiementsRetard.length > 0
+              ? `dont ${paiementsRetard.length} en retard`
+              : "aucun retard de paiement"
+          }
           icon={BadgeEuro}
           to="/paiements"
         />
-        <Stat
-          label="Projets"
-          value={String(PJ.length)}
-          hint="En cours et terminés"
-          icon={Briefcase}
-          to="/projets"
-        />
-        <Stat
-          label="Tâches"
-          value={String(T.length)}
-          hint={`${tachesOuvertes.length} à faire`}
-          icon={ListTodo}
-          to="/projets"
-        />
-        <Stat
-          label="Équipe IA"
-          value="10"
-          hint="Agents disponibles 24h/24"
-          icon={Sparkles}
-          to="/equipe"
-        />
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <div className="surface mt-4 grid gap-1 p-2 sm:grid-cols-2 lg:grid-cols-5">
+        <MiniStat label="Prospects" value={String(PR.length)} to="/prospects" />
+        <MiniStat label="Clients" value={String(C.length)} to="/clients" />
+        <MiniStat label="Projets" value={String(PJ.length)} to="/projets" />
+        <MiniStat label="Tâches à faire" value={String(tachesOuvertes.length)} to="/projets" />
+        <MiniStat label="Agents IA" value="10" to="/equipe" />
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[3fr_2fr]">
         <SectionCard
-          title="Votre IA vous recommande"
-          description="Les prochaines actions les plus utiles, classées par priorité."
+          className=""
+          title="La prochaine action utile"
+          description="Ce que votre équipe IA vous conseille de faire maintenant."
         >
           {recommendations.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              Tout est à jour, rien à faire pour l'instant.
-            </p>
+            <div className="flex items-center gap-3 rounded-xl bg-secondary/50 p-4">
+              <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden />
+              <p className="text-body text-muted-foreground">
+                Tout est à jour. Rien ne vous attend pour l'instant.
+              </p>
+            </div>
           ) : (
             <ul className="space-y-2.5 stagger-children">
               {recommendations.map((r, i) => (
                 <li
                   key={r.title}
                   className={cn(
-                    "interactive flex flex-wrap items-center gap-3 rounded-xl border border-border p-3.5",
+                    "interactive flex flex-wrap items-center gap-3 rounded-xl border border-border p-4",
                     i === 0 && "border-accent/40 bg-accent/5",
                   )}
                 >
@@ -296,7 +299,7 @@ function Dashboard() {
                   <Button
                     asChild
                     size="sm"
-                    variant={i === 0 ? "default" : "outline"}
+                    variant={i === 0 ? "default" : "ghost"}
                     className="gap-1"
                   >
                     <Link to={r.to}>
@@ -310,13 +313,21 @@ function Dashboard() {
         </SectionCard>
 
         <SectionCard
+          className=""
           title="Activité récente"
           description="Ce qui s'est passé dans votre entreprise."
         >
           {activity.length === 0 ? (
-            <p className="text-body text-muted-foreground">Aucune activité pour le moment.</p>
+            <div className="py-6 text-center">
+              <span className="mx-auto mb-3 grid size-10 place-items-center rounded-xl bg-secondary text-muted-foreground">
+                <Inbox className="size-4" aria-hidden />
+              </span>
+              <p className="text-body text-muted-foreground">
+                Rien encore. Les événements s'afficheront ici.
+              </p>
+            </div>
           ) : (
-            <ul className="space-y-1.5">
+            <ul className="space-y-1">
               {activity.map((a) => (
                 <li
                   key={a.id}
@@ -333,6 +344,7 @@ function Dashboard() {
           )}
         </SectionCard>
       </div>
+
     </AppShell>
   );
 }

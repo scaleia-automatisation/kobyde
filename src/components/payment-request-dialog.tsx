@@ -66,7 +66,10 @@ export function PaymentRequestDialog({
     if (!orgId) return;
     const fd = new FormData(e.currentTarget);
     const clientId = fixedClient ?? String(fd.get("client_id") ?? "");
-    if (!clientId) { toast.error("Choisissez un client"); return; }
+    if (!clientId) {
+      toast.error("Choisissez un client");
+      return;
+    }
     setSaving(true);
     const token = makeToken();
     const { error } = await supabase.from("payment_requests").insert({
@@ -86,7 +89,10 @@ export function PaymentRequestDialog({
       token,
     });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setLink(`${window.location.origin}/payer/${token}`);
     toast.success("Demande de paiement créée");
   };
@@ -192,7 +198,12 @@ export function PaymentRequestDialog({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="pr_due">Échéance</Label>
-                <Input id="pr_due" name="due_date" type="date" defaultValue={isoDate(addDays(15))} />
+                <Input
+                  id="pr_due"
+                  name="due_date"
+                  type="date"
+                  defaultValue={isoDate(addDays(15))}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="pr_method">Moyen de paiement</Label>

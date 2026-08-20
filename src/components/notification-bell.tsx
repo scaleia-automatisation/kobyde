@@ -14,7 +14,12 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label={`Notifications (${unread} non lues)`}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label={`Notifications (${unread} non lues)`}
+        >
           <Bell />
           {unread > 0 && (
             <span className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
@@ -64,7 +69,10 @@ export function NotificationBell() {
           })}
         </div>
         <div className="border-t border-border px-4 py-2">
-          <Link to="/notifications" className="text-sm font-medium text-primary underline-offset-2 hover:underline">
+          <Link
+            to="/notifications"
+            className="text-sm font-medium text-primary underline-offset-2 hover:underline"
+          >
             Voir toutes les notifications
           </Link>
         </div>

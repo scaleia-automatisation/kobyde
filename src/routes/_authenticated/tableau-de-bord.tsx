@@ -22,9 +22,16 @@ export const Route = createFileRoute("/_authenticated/tableau-de-bord")({
   head: () => ({
     meta: [
       { title: "Accueil — Kobyde" },
-      { name: "description", content: "Votre tableau de bord Kobyde : chiffre d'affaires, recommandations IA et activité récente." },
+      {
+        name: "description",
+        content:
+          "Votre tableau de bord Kobyde : chiffre d'affaires, recommandations IA et activité récente.",
+      },
       { property: "og:title", content: "Accueil — Kobyde" },
-      { property: "og:description", content: "Résumé de votre activité et recommandations de votre équipe IA." },
+      {
+        property: "og:description",
+        content: "Résumé de votre activité et recommandations de votre équipe IA.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -68,7 +75,6 @@ function Stat({
     </Link>
   );
 }
-
 
 const dayjs = (d?: string) =>
   d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "";
@@ -206,10 +212,34 @@ function Dashboard() {
       }
     >
       <div className="grid gap-3 stagger-children sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Chiffre d'affaires" value={euros(ca)} hint="Paiements encaissés" icon={TrendingUp} to="/paiements" />
-        <Stat label="Prospects" value={String(PR.length)} hint="Clients potentiels" icon={UserPlus} to="/prospects" />
-        <Stat label="Clients" value={String(C.length)} hint="Ils vous font confiance" icon={Users} to="/clients" />
-        <Stat label="Devis" value={String(Q.length)} hint={`${devisEnAttente.length} en attente`} icon={FileText} to="/devis" />
+        <Stat
+          label="Chiffre d'affaires"
+          value={euros(ca)}
+          hint="Paiements encaissés"
+          icon={TrendingUp}
+          to="/paiements"
+        />
+        <Stat
+          label="Prospects"
+          value={String(PR.length)}
+          hint="Clients potentiels"
+          icon={UserPlus}
+          to="/prospects"
+        />
+        <Stat
+          label="Clients"
+          value={String(C.length)}
+          hint="Ils vous font confiance"
+          icon={Users}
+          to="/clients"
+        />
+        <Stat
+          label="Devis"
+          value={String(Q.length)}
+          hint={`${devisEnAttente.length} en attente`}
+          icon={FileText}
+          to="/devis"
+        />
         <Stat
           label="Paiements"
           value={String(P.length)}
@@ -217,9 +247,27 @@ function Dashboard() {
           icon={BadgeEuro}
           to="/paiements"
         />
-        <Stat label="Projets" value={String(PJ.length)} hint="En cours et terminés" icon={Briefcase} to="/projets" />
-        <Stat label="Tâches" value={String(T.length)} hint={`${tachesOuvertes.length} à faire`} icon={ListTodo} to="/projets" />
-        <Stat label="Équipe IA" value="10" hint="Agents disponibles 24h/24" icon={Sparkles} to="/equipe" />
+        <Stat
+          label="Projets"
+          value={String(PJ.length)}
+          hint="En cours et terminés"
+          icon={Briefcase}
+          to="/projets"
+        />
+        <Stat
+          label="Tâches"
+          value={String(T.length)}
+          hint={`${tachesOuvertes.length} à faire`}
+          icon={ListTodo}
+          to="/projets"
+        />
+        <Stat
+          label="Équipe IA"
+          value="10"
+          hint="Agents disponibles 24h/24"
+          icon={Sparkles}
+          to="/equipe"
+        />
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -245,7 +293,12 @@ function Dashboard() {
                     <p className="text-h3">{r.title}</p>
                     <p className="mt-0.5 text-caption">{r.desc}</p>
                   </div>
-                  <Button asChild size="sm" variant={i === 0 ? "default" : "outline"} className="gap-1">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant={i === 0 ? "default" : "outline"}
+                    className="gap-1"
+                  >
                     <Link to={r.to}>
                       {r.cta} <ArrowRight className="size-4" />
                     </Link>
@@ -256,7 +309,10 @@ function Dashboard() {
           )}
         </SectionCard>
 
-        <SectionCard title="Activité récente" description="Ce qui s'est passé dans votre entreprise.">
+        <SectionCard
+          title="Activité récente"
+          description="Ce qui s'est passé dans votre entreprise."
+        >
           {activity.length === 0 ? (
             <p className="text-body text-muted-foreground">Aucune activité pour le moment.</p>
           ) : (
@@ -277,8 +333,6 @@ function Dashboard() {
           )}
         </SectionCard>
       </div>
-
     </AppShell>
   );
 }
-

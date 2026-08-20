@@ -12,7 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 /** Nom de fichier propre à partir d'un titre libre. */
 function slug(s: string) {
@@ -63,7 +69,6 @@ export function GenerationActions({
   regenerateSlot,
   className,
 }: GenerationActionsProps) {
-
   const [draft, setDraft] = useState(text);
   const [editOpen, setEditOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -88,7 +93,10 @@ export function GenerationActions({
     try {
       const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import("docx");
       const paragraphs = [
-        new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: title, bold: true })] }),
+        new Paragraph({
+          heading: HeadingLevel.HEADING_1,
+          children: [new TextRun({ text: title, bold: true })],
+        }),
         ...text.split("\n").map(
           (line) =>
             new Paragraph({
@@ -102,7 +110,10 @@ export function GenerationActions({
         sections: [
           {
             properties: {
-              page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } },
+              page: {
+                size: { width: 12240, height: 15840 },
+                margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
+              },
             },
             children: paragraphs,
           },
@@ -161,7 +172,10 @@ export function GenerationActions({
       toast.error("Entrez une adresse email valide.");
       return;
     }
-    const body = text.length > 1800 ? `${text.slice(0, 1800)}\n\n[…] Contenu complet en pièce jointe à ajouter.` : text;
+    const body =
+      text.length > 1800
+        ? `${text.slice(0, 1800)}\n\n[…] Contenu complet en pièce jointe à ajouter.`
+        : text;
     window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
     toast.success(`Email préparé pour ${email}.`);
   };
@@ -181,16 +195,27 @@ export function GenerationActions({
       {regenerateSlot}
 
       {!regenerateSlot && onRegenerate && (
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={onRegenerate} disabled={regenerating}>
-          {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Régénérer
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={onRegenerate}
+          disabled={regenerating}
+        >
+          {regenerating ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}{" "}
+          Régénérer
         </Button>
       )}
-
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1.5" disabled={busy !== null}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Télécharger
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{" "}
+            Télécharger
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -233,9 +258,20 @@ export function GenerationActions({
           <DialogHeader>
             <DialogTitle>Modifier « {title} »</DialogTitle>
           </DialogHeader>
-          <Textarea rows={18} value={draft} onChange={(e) => setDraft(e.target.value)} className="font-mono text-xs" />
+          <Textarea
+            rows={18}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="font-mono text-xs"
+          />
           <DialogFooter>
-            <Button variant="ghost" onClick={() => { setDraft(text); setEditOpen(false); }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDraft(text);
+                setEditOpen(false);
+              }}
+            >
               Annuler
             </Button>
             <Button

@@ -197,12 +197,20 @@ function SidebarFooter() {
             {plan.name}
           </span>
         </div>
-        <p className="mt-1 font-display text-xl text-sidebar-accent-foreground">{org?.credits ?? 0}</p>
+        <p className="mt-1 font-display text-xl text-sidebar-accent-foreground">
+          {org?.credits ?? 0}
+        </p>
         <div className="mt-1.5 flex gap-3 text-[11px]">
-          <Link to="/credits" className="text-sidebar-foreground/70 underline-offset-2 hover:underline">
+          <Link
+            to="/credits"
+            className="text-sidebar-foreground/70 underline-offset-2 hover:underline"
+          >
             Historique
           </Link>
-          <Link to="/plans" className="text-sidebar-foreground/70 underline-offset-2 hover:underline">
+          <Link
+            to="/plans"
+            className="text-sidebar-foreground/70 underline-offset-2 hover:underline"
+          >
             Changer de formule
           </Link>
         </div>
@@ -240,7 +248,13 @@ function SidebarFooter() {
   );
 }
 
-function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function CommandMenu({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
   const groups = NAV_GROUPS.filter((g) => isAdmin || !("adminOnly" in g && g.adminOnly));
@@ -310,7 +324,9 @@ export function AppShell({
             <span className="grid size-8 place-items-center rounded-lg bg-sidebar-primary font-display text-base text-sidebar-primary-foreground">
               K
             </span>
-            <span className="font-display text-[1.0625rem] text-sidebar-accent-foreground">Kobyde</span>
+            <span className="font-display text-[1.0625rem] text-sidebar-accent-foreground">
+              Kobyde
+            </span>
           </Link>
           <button
             onClick={() => setCmdOpen(true)}

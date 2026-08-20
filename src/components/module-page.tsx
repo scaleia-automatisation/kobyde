@@ -90,7 +90,9 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
           <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{config.addLabel}</DialogTitle>
-              <DialogDescription>Remplissez seulement ce que vous savez. Le reste peut attendre.</DialogDescription>
+              <DialogDescription>
+                Remplissez seulement ce que vous savez. Le reste peut attendre.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={submit} className="space-y-4">
               {config.fields.map((f) => (
@@ -145,7 +147,11 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                 {listFields.map((f, i) => (
                   <div key={f.name} className="min-w-0">
                     <p className="text-label">{f.label}</p>
-                    <p className={i === 0 ? "truncate font-medium" : "truncate text-sm text-muted-foreground"}>
+                    <p
+                      className={
+                        i === 0 ? "truncate font-medium" : "truncate text-sm text-muted-foreground"
+                      }
+                    >
                       {format(f, row[f.name])}
                     </p>
                   </div>
@@ -166,7 +172,9 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                   variant="ghost"
                   size="icon"
                   aria-label="Supprimer"
-                  onClick={() => remove.mutate(row.id, { onSuccess: () => toast.success("Supprimé") })}
+                  onClick={() =>
+                    remove.mutate(row.id, { onSuccess: () => toast.success("Supprimé") })
+                  }
                 >
                   <Trash2 className="size-4 text-muted-foreground" />
                 </Button>

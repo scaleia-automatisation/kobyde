@@ -269,9 +269,9 @@ function Dashboard() {
         <MiniStat label="Agents IA" value="10" to="/equipe" />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-5">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[3fr_2fr]">
         <SectionCard
-          className="lg:col-span-3"
+          className=""
           title="La prochaine action utile"
           description="Ce que votre équipe IA vous conseille de faire maintenant."
         >
@@ -313,7 +313,7 @@ function Dashboard() {
         </SectionCard>
 
         <SectionCard
-          className="lg:col-span-2"
+          className=""
           title="Activité récente"
           description="Ce qui s'est passé dans votre entreprise."
         >

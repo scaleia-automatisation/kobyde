@@ -13,7 +13,7 @@ export const CHANNELS = [
   "Google Search",
 ] as const;
 
-export const TOOLS = ["Automatique", "Apify", "PhantomBuster"] as const;
+export const TOOLS = ["Automatique", "Apify"] as const;
 
 export type SearchParams = {
   target: string;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -7,11 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   CREDIT_PACKS,
   PAID_PLANS,
   useChangePlan,
   usePlan,
   usePurchaseCredits,
+  planTiers,
+  type Plan,
   type PlanKey,
 } from "@/lib/plans";
 
@@ -133,5 +143,95 @@ function PlansPage() {
         </p>
       </div>
     </AppShell>
+  );
+}
+
+function PlanCard({
+  plan,
+  current,
+  pending,
+  onChoose,
+  onExtra,
+}: {
+  plan: Plan;
+  current: boolean;
+  pending: boolean;
+  onChoose: (key: PlanKey) => void;
+  onExtra: (credits: number) => void;
+}) {
+  const tiers = planTiers(plan);
+  const [tierCredits, setTierCredits] = useState(String(plan.credits));
+  const tier = tiers.find((t) => String(t.credits) === tierCredits) ?? tiers[0]!;
+  const extra = tier.credits - plan.credits;
+
+  const activate = () => {
+    onChoose(plan.key);
+    if (extra > 0) onExtra(extra);
+  };
+
+  return (
+    <Card className={`flex flex-col p-6 ${plan.highlight ? "ring-2 ring-primary" : ""}`}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-display text-xl font-bold">{plan.name}</h2>
+        {current ? (
+          <Badge>Formule actuelle</Badge>
+        ) : (
+          plan.highlight && <Badge variant="secondary">Recommandé</Badge>
+        )}
+      </div>
+      <p className="mt-2 text-sm text-muted-foreground">{plan.tagline}</p>
+
+      <p className="mt-5 font-display text-5xl font-bold tracking-tight">{tier.price} €</p>
+      <p className="mt-1 text-sm text-muted-foreground">par mois, TVA incl.</p>
+
+      <Select value={tierCredits} onValueChange={setTierCredits}>
+        <SelectTrigger className="mt-4 h-11">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {tiers.map((t) => (
+            <SelectItem key={t.credits} value={String(t.credits)}>
+              <span className="flex w-full items-center justify-between gap-3">
+                <span className="flex items-center gap-2">
+                  {t.credits} crédits mensuels
+                  {current && t.credits === plan.credits && (
+                    <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                      Actuel
+                    </Badge>
+                  )}
+                  {t.saving > 0 && (
+                    <Badge variant="outline" className="px-1.5 py-0 text-[10px] text-accent">
+                      Économisez {t.saving} %
+                    </Badge>
+                  )}
+                </span>
+                <span className="text-muted-foreground">{t.price} € /mois</span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Button
+        className="mt-4"
+        variant={current && extra === 0 ? "outline" : "cta"}
+        disabled={pending || (current && extra === 0)}
+        onClick={activate}
+      >
+        {current && extra === 0 ? "Formule active" : current ? "Mettre à niveau" : `Choisir ${plan.name}`}
+      </Button>
+
+      <p className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-primary">
+        <Sparkles className="size-4" /> {tier.credits} crédits IA / mois
+      </p>
+      <ul className="mt-3 flex-1 space-y-1.5 text-sm">
+        {plan.features.map((f) => (
+          <li key={f} className="flex items-start gap-2">
+            <Check className="mt-0.5 size-4 shrink-0 text-accent" />
+            <span className="text-muted-foreground">{f}</span>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

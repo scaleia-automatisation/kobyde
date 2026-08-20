@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { Inbox, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState, LoadingState } from "@/components/ui/states";
 import { useCreateRow, useDeleteRow, useRows, euros } from "@/lib/db";
 
 export type FieldDef = {
@@ -111,8 +112,8 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                 </div>
               ))}
               <DialogFooter>
-                <Button type="submit" disabled={create.isPending}>
-                  {create.isPending ? "Enregistrement…" : "Enregistrer"}
+                <Button type="submit" loading={create.isPending} loadingText="Enregistrement…">
+                  Enregistrer
                 </Button>
               </DialogFooter>
             </form>
@@ -135,16 +136,15 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
         />
       ) : (
         <div className="grid gap-3 stagger-children">
-
           {(rows ?? []).map((row: any) => (
             <article
               key={row.id}
-              className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="surface interactive flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="grid flex-1 gap-x-8 gap-y-2 sm:grid-cols-4">
                 {listFields.map((f, i) => (
                   <div key={f.name} className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{f.label}</p>
+                    <p className="text-label">{f.label}</p>
                     <p className={i === 0 ? "truncate font-medium" : "truncate text-sm text-muted-foreground"}>
                       {format(f, row[f.name])}
                     </p>

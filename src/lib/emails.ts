@@ -31,7 +31,7 @@ export const EMAIL_ROUTING: { category: string; label: string; agentKey: string;
   { category: "devis", label: "Email devis", agentKey: "devis", agentName: "Michael" },
   { category: "client", label: "Email client", agentKey: "clients", agentName: "Jennifer" },
   { category: "relance", label: "Email relance", agentKey: "relances", agentName: "Clara" },
-  { category: "rh", label: "Email RH", agentKey: "rh", agentName: "Salim" },
+  { category: "rh", label: "Email RH", agentKey: "rh", agentName: "Mariéme" },
   { category: "marketing", label: "Email marketing", agentKey: "marketing", agentName: "Lamine" },
   { category: "facturation", label: "Email facturation / gestion", agentKey: "gestion", agentName: "Audrey" },
   { category: "projet", label: "Email projet", agentKey: "projets", agentName: "Chloé" },

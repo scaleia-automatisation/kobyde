@@ -39,7 +39,7 @@ const fileSchema = z.object({
 
 /* ------------------------------- Offre d'emploi -------------------------------- */
 
-/** Salim analyse une offre collée ou importée depuis un lien. */
+/** Mariéme analyse une offre collée ou importée depuis un lien. */
 export const analyzeJobOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -103,7 +103,7 @@ export const analyzeJobOffer = createServerFn({ method: "POST" })
 
 /* ---------------------------------- Candidat ----------------------------------- */
 
-/** Salim importe un CV (PDF/DOCX) et une lettre, puis extrait les informations. */
+/** Mariéme importe un CV (PDF/DOCX) et une lettre, puis extrait les informations. */
 export const importCandidate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -175,7 +175,7 @@ export const importCandidate = createServerFn({ method: "POST" })
     }
   });
 
-/** Salim note un candidat par rapport à l'offre (score global + sous-scores). */
+/** Mariéme note un candidat par rapport à l'offre (score global + sous-scores). */
 export const scoreCandidate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -371,7 +371,7 @@ export const updateInterview = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Salim transcrit et analyse l'enregistrement audio d'un entretien. */
+/** Mariéme transcrit et analyse l'enregistrement audio d'un entretien. */
 export const analyzeInterviewAudio = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>

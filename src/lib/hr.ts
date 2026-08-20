@@ -1,4 +1,4 @@
-/** Constantes partagées du module RH et recrutement (Salim). */
+/** Constantes partagées du module RH et recrutement (Mariéme). */
 
 export const HR_STAGES = [
   "candidature",

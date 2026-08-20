@@ -1,9 +1,11 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import {
+  ArrowLeft,
   BadgeEuro,
   Bell,
   BarChart3,
   Bot,
+
   Briefcase,
   Building2,
   CircleHelp,
@@ -299,8 +301,12 @@ export function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDashboard = pathname === "/tableau-de-bord";
   useMonthlyRenewal();
   useSessionTracking();
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -361,10 +367,28 @@ export function AppShell({
               </div>
             </SheetContent>
           </Sheet>
+          {!isDashboard && (
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Retour"
+                onClick={() => router.history.back()}
+              >
+                <ArrowLeft />
+              </Button>
+              <Button asChild variant="outline" size="icon" aria-label="Retour au tableau de bord">
+                <Link to="/tableau-de-bord">
+                  <Home />
+                </Link>
+              </Button>
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-h1">{title}</h1>
             {subtitle && <p className="truncate text-caption">{subtitle}</p>}
           </div>
+
           <Button
             variant="ghost"
             size="icon"

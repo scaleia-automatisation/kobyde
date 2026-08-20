@@ -61,7 +61,7 @@ function TasksPage() {
       <div className="mb-5 grid gap-3 sm:grid-cols-4">
         {[
           { label: "Total", value: tasks?.length ?? 0 },
-          { label: "En cours", value: counts["doing"] ?? 0 },
+          { label: "En cours", value: counts["in_progress"] ?? 0 },
           { label: "Terminées", value: counts["done"] ?? 0 },
           { label: "Crédits utilisés", value: credits },
         ].map((s) => (
@@ -73,7 +73,7 @@ function TasksPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {["tout", "todo", "doing", "done", "failed"].map((s) => (
+        {FILTERS.map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}

@@ -32,10 +32,12 @@ type AgentTask = {
 
 const STATUS: Record<string, { label: string; tone: string }> = {
   todo: { label: "En attente", tone: "bg-slate-100 text-slate-700" },
-  doing: { label: "En cours", tone: "bg-amber-100 text-amber-900" },
+  in_progress: { label: "En cours", tone: "bg-amber-100 text-amber-900" },
   done: { label: "Terminée", tone: "bg-emerald-100 text-emerald-900" },
   failed: { label: "Échouée", tone: "bg-rose-100 text-rose-900" },
 };
+
+const FILTERS = ["tout", "todo", "in_progress", "done", "failed"] as const;
 
 function TasksPage() {
   const { data: tasks, isLoading } = useRows<AgentTask>("agent_tasks", { order: "created_at", limit: 200 });

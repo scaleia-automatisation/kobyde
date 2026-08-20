@@ -67,9 +67,16 @@ function CreditsPage() {
               {plan.credits} crédits ajoutés chaque mois
               {renewsAt && ` · renouvellement le ${renewsAt.toLocaleDateString("fr-FR")}`}
             </p>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/plans">Changer de formule</Link>
-            </Button>
+            <div className="flex gap-2">
+              <Button asChild size="sm" variant="outline">
+                <Link to="/plans">Changer de formule</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/plans" hash="packs">
+                  Acheter des crédits
+                </Link>
+              </Button>
+            </div>
           </div>
           <Progress className="mt-4" value={total > 0 ? (balance / total) * 100 : 0} />
           <p className="mt-3 text-sm text-muted-foreground">

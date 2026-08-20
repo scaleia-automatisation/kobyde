@@ -155,6 +155,35 @@ export function useMonthlyRenewal() {
   }, [orgId, qc]);
 }
 
+export type CreditPack = { credits: number; price: number };
+
+/** Packs de crédits à la carte, réservés aux utilisateurs déjà inscrits (0,30 € le crédit). */
+export const CREDIT_PACKS: CreditPack[] = [
+  { credits: 50, price: 15 },
+  { credits: 100, price: 30 },
+  { credits: 150, price: 45 },
+  { credits: 200, price: 60 },
+];
+
+export function usePurchaseCredits() {
+  const orgId = useOrgId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (credits: number) => {
+      const { data, error } = await (supabase as any).rpc("purchase_credits", {
+        _org: orgId,
+        _credits: credits,
+      });
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["credit-history"] });
+    },
+  });
+}
+
 export function useChangePlan() {
   const orgId = useOrgId();
   const qc = useQueryClient();

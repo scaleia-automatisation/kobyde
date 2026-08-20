@@ -6,7 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PAID_PLANS, useChangePlan, usePlan, type PlanKey } from "@/lib/plans";
+import {
+  CREDIT_PACKS,
+  PAID_PLANS,
+  useChangePlan,
+  usePlan,
+  usePurchaseCredits,
+  type PlanKey,
+} from "@/lib/plans";
 
 const TITLE = "Formules et abonnements — Kobyde";
 const DESC =
@@ -29,6 +36,14 @@ export const Route = createFileRoute("/_authenticated/plans")({
 function PlansPage() {
   const { plan, credits, creditsUsed, creditsTotal, renewsAt } = usePlan();
   const change = useChangePlan();
+  const buy = usePurchaseCredits();
+
+  const buyPack = (creditsCount: number) => {
+    buy.mutate(creditsCount, {
+      onSuccess: () => toast.success(`${creditsCount} crédits ajoutés à votre solde.`),
+      onError: (e) => toast.error(e instanceof Error ? e.message : "Achat impossible"),
+    });
+  };
 
   const choose = (key: PlanKey) => {
     change.mutate(key, {
@@ -109,6 +124,38 @@ function PlansPage() {
             );
           })}
         </div>
+
+        <section id="packs" className="scroll-mt-24 space-y-4">
+          <div>
+            <h2 className="font-display text-2xl font-bold">Plus de crédits ? Achetez à la carte</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {credits === 0
+                ? "Votre solde est épuisé : achetez un pack de crédits immédiatement utilisable, ou passez à une formule supérieure pour recevoir des crédits chaque mois."
+                : "Réservé aux comptes déjà inscrits : ajoutez des crédits ponctuellement, sans changer de formule. Ils s'ajoutent à votre solde et ne expirent pas."}
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CREDIT_PACKS.map((pack) => (
+              <Card key={pack.credits} className="flex flex-col p-5">
+                <p className="flex items-center gap-1.5 font-display text-2xl font-bold">
+                  <Sparkles className="size-5 text-primary" /> {pack.credits} crédits
+                </p>
+                <p className="mt-1 text-3xl font-bold">{pack.price} €</p>
+                <p className="mt-1 flex-1 text-sm text-muted-foreground">
+                  Paiement unique · {(pack.price / pack.credits).toFixed(2).replace(".", ",")} € le crédit
+                </p>
+                <Button
+                  className="mt-4"
+                  variant="secondary"
+                  disabled={buy.isPending}
+                  onClick={() => buyPack(pack.credits)}
+                >
+                  Acheter {pack.credits} crédits
+                </Button>
+              </Card>
+            ))}
+          </div>
+        </section>
 
         <p className="text-sm text-muted-foreground">
           Chaque mois, les crédits de votre formule s'ajoutent à votre solde : vos crédits non utilisés ne

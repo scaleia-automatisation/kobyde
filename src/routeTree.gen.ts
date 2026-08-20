@@ -36,6 +36,7 @@ import { Route as AuthenticatedProspectsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
@@ -185,6 +186,11 @@ const AuthenticatedTableauDeBordRoute =
     path: '/tableau-de-bord',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntretienTokenRoute = EntretienTokenRouteImport.update({
   id: '/entretien/$token',
   path: '/entretien/$token',
@@ -273,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/blog/': typeof BlogIndexRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -312,6 +319,7 @@ export interface FileRoutesByTo {
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/blog': typeof BlogIndexRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -353,6 +361,7 @@ export interface FileRoutesById {
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/blog/': typeof BlogIndexRoute
   '/_authenticated/clients/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
   '/_authenticated/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -394,6 +403,7 @@ export interface FileRouteTypes {
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
+    | '/blog/'
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
+    | '/blog'
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
@@ -473,6 +484,7 @@ export interface FileRouteTypes {
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
+    | '/blog/'
     | '/_authenticated/clients/$id'
     | '/_authenticated/devis/$id'
     | '/_authenticated/projets/$id'
@@ -490,6 +502,7 @@ export interface RootRouteChildren {
   EntretienTokenRoute: typeof EntretienTokenRoute
   EspaceTokenRoute: typeof EspaceTokenRoute
   PayerTokenRoute: typeof PayerTokenRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
@@ -685,6 +698,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTableauDeBordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entretien/$token': {
       id: '/entretien/$token'
       path: '/entretien/$token'
@@ -841,6 +861,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntretienTokenRoute: EntretienTokenRoute,
   EspaceTokenRoute: EspaceTokenRoute,
   PayerTokenRoute: PayerTokenRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }

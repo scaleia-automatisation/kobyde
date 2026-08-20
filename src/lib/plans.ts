@@ -202,3 +202,23 @@ export function useChangePlan() {
     },
   });
 }
+
+export type PlanTier = { credits: number; price: number; saving: number };
+
+const TIER_STEPS: { factor: number; saving: number }[] = [
+  { factor: 1, saving: 0 },
+  { factor: 2, saving: 0 },
+  { factor: 4, saving: 2 },
+  { factor: 8, saving: 4 },
+  { factor: 12, saving: 6 },
+  { factor: 20, saving: 10 },
+];
+
+/** Paliers de crédits mensuels disponibles pour une formule (style « 200 crédits mensuels »). */
+export function planTiers(plan: Plan): PlanTier[] {
+  return TIER_STEPS.map(({ factor, saving }) => ({
+    credits: plan.credits * factor,
+    price: Math.round(plan.price * factor * (1 - saving / 100)),
+    saving,
+  }));
+}

@@ -58,7 +58,7 @@ export const Route = createFileRoute("/_authenticated/rh")({
       {
         name: "description",
         content:
-          "Salim analyse vos offres, lit les CV, note les candidats, organise les entretiens et respecte le RGPD.",
+          "Mariéme analyse vos offres, lit les CV, note les candidats, organise les entretiens et respecte le RGPD.",
       },
       { property: "og:title", content: "RH et recrutement — Kobyde" },
       { property: "og:description", content: "De l'offre à la décision : un recrutement piloté par votre agent RH." },
@@ -152,7 +152,7 @@ function OffersTab() {
       setResult(r.analysis);
       setEdited(null);
       void qc.invalidateQueries({ queryKey: ["rows", "job_offers"] });
-      toast.success("Offre analysée par Salim.");
+      toast.success("Offre analysée par Mariéme.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec de l'analyse."),
   });
@@ -188,7 +188,7 @@ function OffersTab() {
       <div className="space-y-4">
         {run.isPending ? (
           <Card className="flex items-center gap-3 p-6 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Salim lit l'offre…
+            <Loader2 className="size-4 animate-spin" /> Mariéme lit l'offre…
           </Card>
         ) : null}
 
@@ -547,7 +547,7 @@ function CandidateDetail({ candidate, onChange }: { candidate: any; onChange: ()
       scoreFn({ data: { orgId: orgId!, idempotencyKey, candidateId: candidate.id } }),
     onSuccess: () => {
       onChange();
-      toast.success("Candidat noté par Salim.");
+      toast.success("Candidat noté par Mariéme.");
     },
     onError: (e: any) => toast.error(e?.message ?? "Échec du scoring."),
   });
@@ -727,7 +727,7 @@ function PipelineTab() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">Importez un premier CV : Salim l'analyse et le note.</p>
+            <p className="text-sm text-muted-foreground">Importez un premier CV : Mariéme l'analyse et le note.</p>
           )}
         </Card>
       </div>
@@ -849,7 +849,7 @@ function HrPage() {
       <header>
         <h1 className="text-2xl font-semibold">RH et recrutement</h1>
         <p className="text-muted-foreground">
-          Salim vous accompagne de l'offre à la décision : analyse, CV, score, entretiens, RGPD.
+          Mariéme vous accompagne de l'offre à la décision : analyse, CV, score, entretiens, RGPD.
         </p>
       </header>
 

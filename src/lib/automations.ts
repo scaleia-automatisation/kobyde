@@ -87,7 +87,7 @@ export const AUTOMATIONS: AutomationRule[] = [
     title: "Candidature reçue → analyse",
     trigger: "Un candidat est ajouté",
     condition: "Son CV n'a pas encore été analysé",
-    action: "Salim analyse la candidature et attribue un score",
+    action: "Mariéme analyse la candidature et attribue un score",
   },
 ];
 

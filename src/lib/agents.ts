@@ -142,7 +142,7 @@ export const AGENTS: AgentMeta[] = [
   },
   {
     key: "rh",
-    name: "Salim",
+    name: "Mariéme",
     role: "Ressources humaines",
     description: "Recrutement et RH : offres, CV, entretiens et vivier de talents.",
     mission: "Recruter mieux",

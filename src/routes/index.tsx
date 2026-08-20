@@ -77,7 +77,7 @@ const TEMOIGNAGES = [
   {
     name: "Nadia F.",
     role: "Startup SaaS",
-    text: "Salim trie les CV, note les candidats et prépare les entretiens. Le recrutement n'est plus un gouffre de temps.",
+    text: "Mariéme trie les CV, note les candidats et prépare les entretiens. Le recrutement n'est plus un gouffre de temps.",
   },
   {
     name: "Pierre D.",

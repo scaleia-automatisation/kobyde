@@ -53,9 +53,15 @@
   --color-aurora-4: var(--aurora-solid-4);
   --color-aurora-5: var(--aurora-solid-5);
   --color-aurora-6: var(--aurora-solid-6);
-  --shadow-soft: 0 1px 2px oklch(0.2 0.04 250 / 0.04), 0 8px 24px oklch(0.2 0.04 250 / 0.06);
-  --shadow-lift: 0 2px 6px oklch(0.2 0.04 250 / 0.06), 0 18px 40px oklch(0.2 0.04 250 / 0.1);
+  --shadow-subtle: 0 1px 2px oklch(0.2 0.04 250 / 0.05);
+  --shadow-card: 0 1px 2px oklch(0.2 0.04 250 / 0.04), 0 6px 16px oklch(0.2 0.04 250 / 0.05);
+  --shadow-elevated: 0 2px 6px oklch(0.2 0.04 250 / 0.06), 0 14px 32px oklch(0.2 0.04 250 / 0.09);
+  --shadow-modal: 0 8px 20px oklch(0.2 0.04 250 / 0.1), 0 32px 64px oklch(0.2 0.04 250 / 0.16);
+  --shadow-soft: 0 1px 2px oklch(0.2 0.04 250 / 0.04), 0 6px 16px oklch(0.2 0.04 250 / 0.05);
+  --shadow-lift: 0 2px 6px oklch(0.2 0.04 250 / 0.06), 0 14px 32px oklch(0.2 0.04 250 / 0.09);
+  --ease-out-quick: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 
 :root {
   --radius: 0.9rem;

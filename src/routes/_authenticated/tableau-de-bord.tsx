@@ -191,8 +191,20 @@ function Dashboard() {
     .slice(0, 8);
 
   return (
-    <AppShell title={`Bonjour, ${firstName}`} subtitle="Voici le résumé de votre activité aujourd'hui.">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <AppShell
+      title={`Bonjour, ${firstName}`}
+      subtitle="Voici le résumé de votre activité aujourd'hui."
+      action={
+        <Button asChild className="gap-2">
+          <Link to="/eric">
+            <Sparkles className="size-4" />
+            <span className="hidden sm:inline">Demander à Éric</span>
+          </Link>
+        </Button>
+      }
+    >
+      <div className="grid gap-3 stagger-children sm:grid-cols-2 lg:grid-cols-4">
+
         <Stat label="Chiffre d'affaires" value={euros(ca)} hint="Paiements encaissés" icon={TrendingUp} to="/paiements" />
         <Stat label="Prospects" value={String(PR.length)} hint="Clients potentiels" icon={UserPlus} to="/prospects" />
         <Stat label="Clients" value={String(C.length)} hint="Ils vous font confiance" icon={Users} to="/clients" />

@@ -9,7 +9,7 @@ export const CHANNELS = [
   "Google Search",
 ] as const;
 
-export const TOOLS = ["Automatique", "Apify", "PhantomBuster"] as const;
+export const TOOLS = ["Automatique", "Apify"] as const;
 
 export const WORKFLOW_STEPS = [
   "Entreprise + Offre + Persona + Cible + Localisation",

@@ -14,7 +14,36 @@ import { useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
+import { AiProgress } from "@/components/ui/states";
 
+/** États de génération lisibles plutôt qu'un simple « Loading… ». */
+const ERIC_STEPS = [
+  "Lecture de la mémoire de l'entreprise",
+  "Identification des agents concernés",
+  "Distribution des tâches",
+  "Rédaction de la réponse",
+];
+
+function EricProgress() {
+  const labels = ERIC_STEPS;
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, ERIC_STEPS.length - 1)), 1600);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <Card className="animate-rise p-5">
+      <p className="text-h3">Éric travaille sur votre demande</p>
+      <AiProgress
+        className="mt-3"
+        steps={labels.map((label, i) => ({
+          label,
+          status: i < step ? "done" : i === step ? "active" : "pending",
+        }))}
+      />
+    </Card>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/eric")({
   component: EricPage,
@@ -113,7 +142,6 @@ function EricPage() {
     mutation.mutate({ text: value, key });
   };
 
-
   return (
     <AppShell title="Éric — Directeur IA" subtitle="L'orchestrateur central de votre équipe">
       <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -125,8 +153,8 @@ function EricPage() {
             Que voulez-vous faire ?
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Éric comprend votre demande, consulte la mémoire de l'entreprise et confie le travail aux bons
-            agents.
+            Éric comprend votre demande, consulte la mémoire de l'entreprise et confie le travail
+            aux bons agents.
           </p>
         </div>
 
@@ -136,8 +164,7 @@ function EricPage() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
-                send(prompt, newIdempotencyKey());
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(prompt, newIdempotencyKey());
             }}
             placeholder="Écrivez simplement ce dont vous avez besoin..."
             rows={3}
@@ -159,7 +186,9 @@ function EricPage() {
         </Card>
 
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Exemples</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Exemples
+          </p>
           <div className="flex flex-wrap gap-2">
             {EXAMPLES.map((ex) => (
               <button
@@ -177,12 +206,7 @@ function EricPage() {
           </div>
         </div>
 
-        {mutation.isPending && (
-          <Card className="flex items-center gap-3 p-5 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" />
-            Éric analyse votre demande et mobilise l'équipe...
-          </Card>
-        )}
+        {mutation.isPending && <EricProgress />}
 
         {plan && !mutation.isPending && (
           <div className="space-y-4">
@@ -245,7 +269,9 @@ function EricPage() {
                     return (
                       <Card key={i} className="space-y-2 p-4">
                         <div className="flex items-center gap-2">
-                          <span className={`grid size-8 place-items-center rounded-lg ${meta.ring}`}>
+                          <span
+                            className={`grid size-8 place-items-center rounded-lg ${meta.ring}`}
+                          >
                             {meta.emoji}
                           </span>
                           <div className="min-w-0">
@@ -296,7 +322,9 @@ function EricPage() {
                               <GenerationActions
                                 title={t.title}
                                 text={taskEdits[t.id ?? ""] ?? state.result}
-                                onEdit={(text) => setTaskEdits((e) => ({ ...e, [t.id ?? ""]: text }))}
+                                onEdit={(text) =>
+                                  setTaskEdits((e) => ({ ...e, [t.id ?? ""]: text }))
+                                }
                                 regenerateSlot={
                                   t.id ? (
                                     <CreditActionButton
@@ -315,7 +343,6 @@ function EricPage() {
                             )}
                           </>
                         )}
-
                       </Card>
                     );
                   })}
@@ -360,8 +387,8 @@ function EricPage() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground">
-            Tous les agents partagent la même mémoire centrale : prospects, clients, devis, factures,
-            projets et historique des tâches.
+            Tous les agents partagent la même mémoire centrale : prospects, clients, devis,
+            factures, projets et historique des tâches.
           </p>
         </div>
 

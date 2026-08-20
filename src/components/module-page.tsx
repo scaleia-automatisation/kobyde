@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
+import { Inbox, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState, LoadingState } from "@/components/ui/states";
 import { useCreateRow, useDeleteRow, useRows, euros } from "@/lib/db";
 
 export type FieldDef = {
@@ -89,7 +90,9 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
           <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{config.addLabel}</DialogTitle>
-              <DialogDescription>Remplissez seulement ce que vous savez. Le reste peut attendre.</DialogDescription>
+              <DialogDescription>
+                Remplissez seulement ce que vous savez. Le reste peut attendre.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={submit} className="space-y-4">
               {config.fields.map((f) => (
@@ -111,8 +114,8 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                 </div>
               ))}
               <DialogFooter>
-                <Button type="submit" disabled={create.isPending}>
-                  {create.isPending ? "Enregistrement…" : "Enregistrer"}
+                <Button type="submit" loading={create.isPending} loadingText="Enregistrement…">
+                  Enregistrer
                 </Button>
               </DialogFooter>
             </form>
@@ -121,27 +124,34 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
       }
     >
       {isLoading ? (
-        <div className="surface p-10 text-center text-muted-foreground">Chargement…</div>
+        <LoadingState rows={4} />
       ) : (rows ?? []).length === 0 ? (
-        <div className="surface p-12 text-center">
-          <p className="font-display text-xl">Rien ici pour l'instant</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{config.emptyText}</p>
-          <Button className="mt-6 gap-2" onClick={() => setOpen(true)}>
-            <Plus className="size-4" /> {config.addLabel}
-          </Button>
-        </div>
+        <EmptyState
+          icon={Inbox}
+          title="Rien ici pour l'instant"
+          description={config.emptyText}
+          action={
+            <Button className="gap-2" onClick={() => setOpen(true)}>
+              <Plus className="size-4" /> {config.addLabel}
+            </Button>
+          }
+        />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-3 stagger-children">
           {(rows ?? []).map((row: any) => (
             <article
               key={row.id}
-              className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="surface interactive flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="grid flex-1 gap-x-8 gap-y-2 sm:grid-cols-4">
                 {listFields.map((f, i) => (
                   <div key={f.name} className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{f.label}</p>
-                    <p className={i === 0 ? "truncate font-medium" : "truncate text-sm text-muted-foreground"}>
+                    <p className="text-label">{f.label}</p>
+                    <p
+                      className={
+                        i === 0 ? "truncate font-medium" : "truncate text-sm text-muted-foreground"
+                      }
+                    >
                       {format(f, row[f.name])}
                     </p>
                   </div>
@@ -162,7 +172,9 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                   variant="ghost"
                   size="icon"
                   aria-label="Supprimer"
-                  onClick={() => remove.mutate(row.id, { onSuccess: () => toast.success("Supprimé") })}
+                  onClick={() =>
+                    remove.mutate(row.id, { onSuccess: () => toast.success("Supprimé") })
+                  }
                 >
                   <Trash2 className="size-4 text-muted-foreground" />
                 </Button>

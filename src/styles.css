@@ -53,9 +53,15 @@
   --color-aurora-4: var(--aurora-solid-4);
   --color-aurora-5: var(--aurora-solid-5);
   --color-aurora-6: var(--aurora-solid-6);
-  --shadow-soft: 0 1px 2px oklch(0.2 0.04 250 / 0.04), 0 8px 24px oklch(0.2 0.04 250 / 0.06);
-  --shadow-lift: 0 2px 6px oklch(0.2 0.04 250 / 0.06), 0 18px 40px oklch(0.2 0.04 250 / 0.1);
+  --shadow-subtle: 0 1px 2px oklch(0.2 0.04 250 / 0.05);
+  --shadow-card: 0 1px 2px oklch(0.2 0.04 250 / 0.04), 0 6px 16px oklch(0.2 0.04 250 / 0.05);
+  --shadow-elevated: 0 2px 6px oklch(0.2 0.04 250 / 0.06), 0 14px 32px oklch(0.2 0.04 250 / 0.09);
+  --shadow-modal: 0 8px 20px oklch(0.2 0.04 250 / 0.1), 0 32px 64px oklch(0.2 0.04 250 / 0.16);
+  --shadow-soft: 0 1px 2px oklch(0.2 0.04 250 / 0.04), 0 6px 16px oklch(0.2 0.04 250 / 0.05);
+  --shadow-lift: 0 2px 6px oklch(0.2 0.04 250 / 0.06), 0 14px 32px oklch(0.2 0.04 250 / 0.09);
+  --ease-out-quick: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 
 :root {
   --radius: 0.9rem;
@@ -293,5 +299,127 @@
   .aurora-bg::before,
   .hero-title {
     animation: none;
+  }
+}
+
+/* ---------- Design system : échelle typographique ---------- */
+@utility text-display {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+@utility text-h1 {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 650;
+}
+
+@utility text-h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+@utility text-h3 {
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+@utility text-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+@utility text-caption {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-muted-foreground);
+}
+
+@utility text-label {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+/* ---------- Surfaces & micro-interactions ---------- */
+@utility surface-elevated {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevated);
+}
+
+@utility interactive {
+  transition:
+    transform 0.16s var(--ease-out-quick),
+    box-shadow 0.16s var(--ease-out-quick),
+    border-color 0.16s var(--ease-out-quick),
+    background-color 0.16s var(--ease-out-quick);
+
+  &:hover {
+    border-color: color-mix(in oklab, var(--color-foreground) 14%, transparent);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  &:active {
+    transform: scale(0.995);
+  }
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: rise-in 0.28s var(--ease-out-quick) both;
+}
+
+@utility stagger-children {
+  & > * {
+    animation: rise-in 0.3s var(--ease-out-quick) both;
+  }
+  & > *:nth-child(1) { animation-delay: 0ms; }
+  & > *:nth-child(2) { animation-delay: 40ms; }
+  & > *:nth-child(3) { animation-delay: 80ms; }
+  & > *:nth-child(4) { animation-delay: 120ms; }
+  & > *:nth-child(5) { animation-delay: 160ms; }
+  & > *:nth-child(6) { animation-delay: 200ms; }
+  & > *:nth-child(n + 7) { animation-delay: 240ms; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

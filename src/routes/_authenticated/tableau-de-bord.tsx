@@ -15,14 +15,23 @@ import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { euros, useProfile, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { SectionCard } from "@/components/ui/states";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/tableau-de-bord")({
   head: () => ({
     meta: [
       { title: "Accueil — Kobyde" },
-      { name: "description", content: "Votre tableau de bord Kobyde : chiffre d'affaires, recommandations IA et activité récente." },
+      {
+        name: "description",
+        content:
+          "Votre tableau de bord Kobyde : chiffre d'affaires, recommandations IA et activité récente.",
+      },
       { property: "og:title", content: "Accueil — Kobyde" },
-      { property: "og:description", content: "Résumé de votre activité et recommandations de votre équipe IA." },
+      {
+        property: "og:description",
+        content: "Résumé de votre activité et recommandations de votre équipe IA.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -53,13 +62,16 @@ function Stat({
   to: string;
 }) {
   return (
-    <Link to={to} className="surface block p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <Icon className="size-4 text-accent" />
+    <Link
+      to={to}
+      className="surface interactive block p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-label">{label}</p>
+        <Icon className="size-4 text-muted-foreground" aria-hidden />
       </div>
-      <p className="mt-1 font-display text-3xl">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      <p className="mt-2 font-display text-[1.75rem] leading-none tracking-tight">{value}</p>
+      <p className="mt-1.5 text-caption">{hint}</p>
     </Link>
   );
 }
@@ -187,12 +199,47 @@ function Dashboard() {
     .slice(0, 8);
 
   return (
-    <AppShell title={`Bonjour, ${firstName}`} subtitle="Voici le résumé de votre activité aujourd'hui.">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Chiffre d'affaires" value={euros(ca)} hint="Paiements encaissés" icon={TrendingUp} to="/paiements" />
-        <Stat label="Prospects" value={String(PR.length)} hint="Clients potentiels" icon={UserPlus} to="/prospects" />
-        <Stat label="Clients" value={String(C.length)} hint="Ils vous font confiance" icon={Users} to="/clients" />
-        <Stat label="Devis" value={String(Q.length)} hint={`${devisEnAttente.length} en attente`} icon={FileText} to="/devis" />
+    <AppShell
+      title={`Bonjour, ${firstName}`}
+      subtitle="Voici le résumé de votre activité aujourd'hui."
+      action={
+        <Button asChild className="gap-2">
+          <Link to="/eric">
+            <Sparkles className="size-4" />
+            <span className="hidden sm:inline">Demander à Éric</span>
+          </Link>
+        </Button>
+      }
+    >
+      <div className="grid gap-3 stagger-children sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="Chiffre d'affaires"
+          value={euros(ca)}
+          hint="Paiements encaissés"
+          icon={TrendingUp}
+          to="/paiements"
+        />
+        <Stat
+          label="Prospects"
+          value={String(PR.length)}
+          hint="Clients potentiels"
+          icon={UserPlus}
+          to="/prospects"
+        />
+        <Stat
+          label="Clients"
+          value={String(C.length)}
+          hint="Ils vous font confiance"
+          icon={Users}
+          to="/clients"
+        />
+        <Stat
+          label="Devis"
+          value={String(Q.length)}
+          hint={`${devisEnAttente.length} en attente`}
+          icon={FileText}
+          to="/devis"
+        />
         <Stat
           label="Paiements"
           value={String(P.length)}
@@ -200,57 +247,92 @@ function Dashboard() {
           icon={BadgeEuro}
           to="/paiements"
         />
-        <Stat label="Projets" value={String(PJ.length)} hint="En cours et terminés" icon={Briefcase} to="/projets" />
-        <Stat label="Tâches" value={String(T.length)} hint={`${tachesOuvertes.length} à faire`} icon={ListTodo} to="/projets" />
-        <Stat label="Équipe IA" value="10" hint="Agents disponibles 24h/24" icon={Sparkles} to="/equipe" />
+        <Stat
+          label="Projets"
+          value={String(PJ.length)}
+          hint="En cours et terminés"
+          icon={Briefcase}
+          to="/projets"
+        />
+        <Stat
+          label="Tâches"
+          value={String(T.length)}
+          hint={`${tachesOuvertes.length} à faire`}
+          icon={ListTodo}
+          to="/projets"
+        />
+        <Stat
+          label="Équipe IA"
+          value="10"
+          hint="Agents disponibles 24h/24"
+          icon={Sparkles}
+          to="/equipe"
+        />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <section className="surface p-6">
-          <h2 className="flex items-center gap-2 text-lg">
-            <Sparkles className="size-5 text-accent" /> Votre IA vous recommande
-          </h2>
-          <ul className="mt-5 space-y-3">
-            {recommendations.length === 0 && (
-              <li className="text-sm text-muted-foreground">Tout est à jour, rien à faire pour l'instant.</li>
-            )}
-            {recommendations.map((r) => (
-              <li key={r.title} className="flex items-start gap-3 rounded-xl border border-border p-4">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{r.title}</p>
-                  <p className="text-sm text-muted-foreground">{r.desc}</p>
-                </div>
-                <Button asChild size="sm" className="gap-1">
-                  <Link to={r.to}>
-                    {r.cta} <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <SectionCard
+          title="Votre IA vous recommande"
+          description="Les prochaines actions les plus utiles, classées par priorité."
+        >
+          {recommendations.length === 0 ? (
+            <p className="text-body text-muted-foreground">
+              Tout est à jour, rien à faire pour l'instant.
+            </p>
+          ) : (
+            <ul className="space-y-2.5 stagger-children">
+              {recommendations.map((r, i) => (
+                <li
+                  key={r.title}
+                  className={cn(
+                    "interactive flex flex-wrap items-center gap-3 rounded-xl border border-border p-3.5",
+                    i === 0 && "border-accent/40 bg-accent/5",
+                  )}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-h3">{r.title}</p>
+                    <p className="mt-0.5 text-caption">{r.desc}</p>
+                  </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant={i === 0 ? "default" : "outline"}
+                    className="gap-1"
+                  >
+                    <Link to={r.to}>
+                      {r.cta} <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
 
-        <section className="surface p-6">
-          <h2 className="flex items-center gap-2 text-lg">
-            <TrendingUp className="size-5 text-accent" /> Activité récente
-          </h2>
-          <ul className="mt-5 space-y-3">
-            {activity.length === 0 && (
-              <li className="text-sm text-muted-foreground">Aucune activité pour le moment.</li>
-            )}
-            {activity.map((a) => (
-              <li key={a.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent/10">
-                  <a.icon className="size-4 text-accent" />
-                </span>
-                <p className="min-w-0 flex-1 truncate text-sm">{a.label}</p>
-                <span className="shrink-0 text-xs text-muted-foreground">{dayjs(a.at)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <SectionCard
+          title="Activité récente"
+          description="Ce qui s'est passé dans votre entreprise."
+        >
+          {activity.length === 0 ? (
+            <p className="text-body text-muted-foreground">Aucune activité pour le moment.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {activity.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-secondary/60"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
+                    <a.icon className="size-4" aria-hidden />
+                  </span>
+                  <p className="min-w-0 flex-1 truncate text-body">{a.label}</p>
+                  <span className="shrink-0 text-caption">{dayjs(a.at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
       </div>
     </AppShell>
   );
 }
-

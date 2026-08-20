@@ -59,6 +59,8 @@ export const NAV = [
   { to: "/emails", label: "Emails", icon: Mail },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/automatisations", label: "Automatisations", icon: Zap },
+  { to: "/taches", label: "Tâches des agents", icon: ListChecks },
+  { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/documents", label: "Documents", icon: Briefcase },
   { to: "/credits", label: "Crédits IA", icon: Coins },
   { to: "/plans", label: "Formules", icon: BadgeEuro },

@@ -268,23 +268,26 @@ function Dashboard() {
         <MiniStat label="Agents IA" value="10" to="/equipe" />
       </div>
 
-
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 lg:grid-cols-5">
         <SectionCard
-          title="Votre IA vous recommande"
-          description="Les prochaines actions les plus utiles, classées par priorité."
+          className="lg:col-span-3"
+          title="La prochaine action utile"
+          description="Ce que votre équipe IA vous conseille de faire maintenant."
         >
           {recommendations.length === 0 ? (
-            <p className="text-body text-muted-foreground">
-              Tout est à jour, rien à faire pour l'instant.
-            </p>
+            <div className="flex items-center gap-3 rounded-xl bg-secondary/50 p-4">
+              <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden />
+              <p className="text-body text-muted-foreground">
+                Tout est à jour. Rien ne vous attend pour l'instant.
+              </p>
+            </div>
           ) : (
             <ul className="space-y-2.5 stagger-children">
               {recommendations.map((r, i) => (
                 <li
                   key={r.title}
                   className={cn(
-                    "interactive flex flex-wrap items-center gap-3 rounded-xl border border-border p-3.5",
+                    "interactive flex flex-wrap items-center gap-3 rounded-xl border border-border p-4",
                     i === 0 && "border-accent/40 bg-accent/5",
                   )}
                 >
@@ -295,7 +298,7 @@ function Dashboard() {
                   <Button
                     asChild
                     size="sm"
-                    variant={i === 0 ? "default" : "outline"}
+                    variant={i === 0 ? "default" : "ghost"}
                     className="gap-1"
                   >
                     <Link to={r.to}>
@@ -309,13 +312,21 @@ function Dashboard() {
         </SectionCard>
 
         <SectionCard
+          className="lg:col-span-2"
           title="Activité récente"
           description="Ce qui s'est passé dans votre entreprise."
         >
           {activity.length === 0 ? (
-            <p className="text-body text-muted-foreground">Aucune activité pour le moment.</p>
+            <div className="py-6 text-center">
+              <span className="mx-auto mb-3 grid size-10 place-items-center rounded-xl bg-secondary text-muted-foreground">
+                <Inbox className="size-4" aria-hidden />
+              </span>
+              <p className="text-body text-muted-foreground">
+                Rien encore. Les événements s'afficheront ici.
+              </p>
+            </div>
           ) : (
-            <ul className="space-y-1.5">
+            <ul className="space-y-1">
               {activity.map((a) => (
                 <li
                   key={a.id}
@@ -332,6 +343,7 @@ function Dashboard() {
           )}
         </SectionCard>
       </div>
+
     </AppShell>
   );
 }

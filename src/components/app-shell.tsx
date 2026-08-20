@@ -103,7 +103,10 @@ export const NAV_GROUPS = [
   },
 ] as const;
 
-export const NAV = NAV_GROUPS.flatMap((g) => g.items);
+export type NavItem = (typeof NAV_GROUPS)[number]["items"][number];
+export type NavGroup = { label: string; items: readonly NavItem[] };
+
+export const NAV: readonly NavItem[] = NAV_GROUPS.flatMap((g) => g.items as readonly NavItem[]);
 
 const MOBILE_NAV = NAV.filter((n) =>
   ["/eric", "/tableau-de-bord", "/equipe", "/prospects"].includes(n.to),
@@ -122,15 +125,15 @@ function useIsAdmin() {
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = useIsAdmin();
-  const groups = isAdmin
+  const groups: readonly NavGroup[] = isAdmin
     ? [
-        ...NAV_GROUPS,
+        ...(NAV_GROUPS as readonly NavGroup[]),
         {
           label: "Plateforme",
-          items: [{ to: "/super-admin", label: "Super Admin", icon: ShieldCheck }],
-        } as const,
+          items: [{ to: "/super-admin", label: "Super Admin", icon: ShieldCheck }] as const,
+        },
       ]
-    : NAV_GROUPS;
+    : (NAV_GROUPS as readonly NavGroup[]);
 
   return (
     <nav className="space-y-5">
@@ -243,15 +246,15 @@ function SidebarFooter() {
 function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const navigate = useNavigate();
   const isAdmin = useIsAdmin();
-  const groups = isAdmin
+  const groups: readonly NavGroup[] = isAdmin
     ? [
-        ...NAV_GROUPS,
+        ...(NAV_GROUPS as readonly NavGroup[]),
         {
           label: "Plateforme",
-          items: [{ to: "/super-admin", label: "Super Admin", icon: ShieldCheck }],
-        } as const,
+          items: [{ to: "/super-admin", label: "Super Admin", icon: ShieldCheck }] as const,
+        },
       ]
-    : NAV_GROUPS;
+    : (NAV_GROUPS as readonly NavGroup[]);
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>

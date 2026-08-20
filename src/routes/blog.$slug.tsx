@@ -32,7 +32,7 @@ export const Route = createFileRoute("/blog/$slug")({
   },
   errorComponent: () => <Missing text="Article momentanément indisponible." />,
   notFoundComponent: () => <Missing text="Cet article n'existe pas ou n'est plus publié." />,
-  component: BlogPostPage;
+  component: BlogPostPage,
 });
 
 function Missing({ text }: { text: string }) {

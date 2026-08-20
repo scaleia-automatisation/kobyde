@@ -14,6 +14,7 @@ import {
   FolderKanban,
   Home,
   LineChart,
+  ListChecks,
   LogOut,
   Mail,
   Megaphone,
@@ -37,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useRows } from "@/lib/db";
 import { useMonthlyRenewal, usePlan } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -224,6 +226,7 @@ export function AppShell({
             <h1 className="truncate text-xl font-semibold lg:text-2xl">{title}</h1>
             {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
           </div>
+          <NotificationBell />
           {action}
         </header>
         <main className="flex-1 px-4 py-6 lg:px-8">{children}</main>

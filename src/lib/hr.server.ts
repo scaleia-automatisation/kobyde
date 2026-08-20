@@ -4,7 +4,7 @@ import { loadCompanyMemory } from "./eric.server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const SALIM = `Tu es Mariéme, l'agent IA « Ressources humaines et recrutement » de Kobyde.
+const MARIEME = `Tu es Mariéme, l'agent IA « Ressources humaines et recrutement » de Kobyde.
 Tu écris en français, de façon factuelle, neutre et professionnelle.
 Règle absolue : tu n'inventes JAMAIS une information (diplôme, entreprise, date, compétence, coordonnée).
 Si une information est absente du document, tu écris exactement « Non trouvé ».
@@ -202,7 +202,7 @@ export async function analyzeJobOfferAI(
   offerText: string,
 ): Promise<JobAnalysis> {
   const p = await chatJson(
-    `${SALIM}
+    `${MARIEME}
 Tu analyses une offre d'emploi et tu en extrais la structure exacte.
 Réponds uniquement en JSON :
 {"intitule":"","missions":[""],"competences":[""],"experience":"","formation":"","langues":[""],"localisation":"","contrat":"","criteres_obligatoires":[""],"criteres_souhaites":[""],"synthese":""}`,
@@ -253,7 +253,7 @@ export async function extractCandidateAI(
   if (letter) content.push(fileBlock(letter, "Lettre de motivation"));
 
   const p = await chatJson(
-    `${SALIM}
+    `${MARIEME}
 Tu extrais les informations d'un CV.
 Réponds uniquement en JSON :
 {"prenom":"","nom":"","email":"","telephone":"","localisation":"","experiences":[{"poste":"","entreprise":"","dates":"","detail":""}],"formations":[{"diplome":"","etablissement":"","dates":""}],"certifications":[""],"competences":[""],"langues":[""],"resume":""}`,
@@ -307,7 +307,7 @@ export async function scoreCandidateAI(args: {
   letterText: string;
 }): Promise<CandidateScore> {
   const p = await chatJson(
-    `${SALIM}
+    `${MARIEME}
 Tu notes un candidat par rapport à une offre, de 0 à 100, avec des sous-scores de 0 à 100.
 Le score global reflète l'adéquation réelle : un critère obligatoire non rempli fait fortement baisser la note.
 Réponds uniquement en JSON :
@@ -375,7 +375,7 @@ export async function analyzeInterviewAudioAI(args: {
   notes: string;
 }): Promise<InterviewAnalysis> {
   const p = await chatJson(
-    `${SALIM}
+    `${MARIEME}
 Tu analyses l'enregistrement d'un entretien de recrutement : tu transcris, tu résumes, puis tu évalues.
 Tu ne juges que ce qui est réellement dit. Ce que tu n'entends pas vaut « Non trouvé ».
 Réponds uniquement en JSON :

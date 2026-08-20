@@ -5,12 +5,13 @@ import {
   Briefcase,
   CheckCircle2,
   FileText,
-  ListTodo,
+  Inbox,
   Sparkles,
   TrendingUp,
   UserPlus,
   Users,
 } from "lucide-react";
+
 import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { euros, useProfile, useRows } from "@/lib/db";

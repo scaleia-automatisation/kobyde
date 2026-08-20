@@ -196,6 +196,12 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
+        <nav className="mb-3 flex flex-wrap justify-center gap-x-5 gap-y-2">
+          <Link to="/blog" className="hover:underline">Blog</Link>
+          <Link to="/mentions-legales" className="hover:underline">Mentions légales</Link>
+          <Link to="/confidentialite" className="hover:underline">Confidentialité</Link>
+          <Link to="/cgv" className="hover:underline">CGV</Link>
+        </nav>
         © {new Date().getFullYear()} Kobyde — Votre équipe IA d'entreprise.
       </footer>
     </div>

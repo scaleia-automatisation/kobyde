@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CgvRouteImport } from './routes/cgv'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
+import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as AuthenticatedAideRouteImport } from './routes/_authenticated/aide'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAutomatisationsRouteImport } from './routes/_authenticated/automatisations'
@@ -28,6 +31,7 @@ import { Route as AuthenticatedFunnelRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedJasonRouteImport } from './routes/_authenticated/jason'
 import { Route as AuthenticatedLamineRouteImport } from './routes/_authenticated/lamine'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedPaiementsRouteImport } from './routes/_authenticated/paiements'
 import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -35,6 +39,9 @@ import { Route as AuthenticatedProspectsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
+import { Route as AuthenticatedTachesRouteImport } from './routes/_authenticated/taches'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
@@ -59,6 +66,21 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CgvRoute = CgvRouteImport.update({
+  id: '/cgv',
+  path: '/cgv',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
+  id: '/mentions-legales',
+  path: '/mentions-legales',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAideRoute = AuthenticatedAideRouteImport.update({
@@ -142,6 +164,12 @@ const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
   path: '/marketing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPaiementsRoute = AuthenticatedPaiementsRouteImport.update({
   id: '/paiements',
   path: '/paiements',
@@ -178,6 +206,21 @@ const AuthenticatedTableauDeBordRoute =
     path: '/tableau-de-bord',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTachesRoute = AuthenticatedTachesRouteImport.update({
+  id: '/taches',
+  path: '/taches',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntretienTokenRoute = EntretienTokenRouteImport.update({
   id: '/entretien/$token',
   path: '/entretien/$token',
@@ -239,6 +282,9 @@ const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cgv': typeof CgvRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
@@ -255,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/plans': typeof AuthenticatedPlansRoute
@@ -262,9 +309,12 @@ export interface FileRoutesByFullPath {
   '/rh': typeof AuthenticatedRhRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/taches': typeof AuthenticatedTachesRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/blog/': typeof BlogIndexRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -277,6 +327,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cgv': typeof CgvRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
@@ -293,6 +346,7 @@ export interface FileRoutesByTo {
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
   '/plans': typeof AuthenticatedPlansRoute
@@ -300,9 +354,12 @@ export interface FileRoutesByTo {
   '/rh': typeof AuthenticatedRhRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/taches': typeof AuthenticatedTachesRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/blog': typeof BlogIndexRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -317,6 +374,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/cgv': typeof CgvRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/_authenticated/aide': typeof AuthenticatedAideRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/automatisations': typeof AuthenticatedAutomatisationsRoute
@@ -333,6 +393,7 @@ export interface FileRoutesById {
   '/_authenticated/jason': typeof AuthenticatedJasonRoute
   '/_authenticated/lamine': typeof AuthenticatedLamineRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/paiements': typeof AuthenticatedPaiementsRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
@@ -340,9 +401,12 @@ export interface FileRoutesById {
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/_authenticated/taches': typeof AuthenticatedTachesRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
+  '/blog/': typeof BlogIndexRoute
   '/_authenticated/clients/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
   '/_authenticated/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -357,6 +421,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cgv'
+    | '/confidentialite'
+    | '/mentions-legales'
     | '/aide'
     | '/analytics'
     | '/automatisations'
@@ -373,6 +440,7 @@ export interface FileRouteTypes {
     | '/jason'
     | '/lamine'
     | '/marketing'
+    | '/notifications'
     | '/paiements'
     | '/parametres'
     | '/plans'
@@ -380,9 +448,12 @@ export interface FileRouteTypes {
     | '/rh'
     | '/super-admin'
     | '/tableau-de-bord'
+    | '/taches'
+    | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
+    | '/blog/'
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
@@ -395,6 +466,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/cgv'
+    | '/confidentialite'
+    | '/mentions-legales'
     | '/aide'
     | '/analytics'
     | '/automatisations'
@@ -411,6 +485,7 @@ export interface FileRouteTypes {
     | '/jason'
     | '/lamine'
     | '/marketing'
+    | '/notifications'
     | '/paiements'
     | '/parametres'
     | '/plans'
@@ -418,9 +493,12 @@ export interface FileRouteTypes {
     | '/rh'
     | '/super-admin'
     | '/tableau-de-bord'
+    | '/taches'
+    | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
+    | '/blog'
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
@@ -434,6 +512,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/cgv'
+    | '/confidentialite'
+    | '/mentions-legales'
     | '/_authenticated/aide'
     | '/_authenticated/analytics'
     | '/_authenticated/automatisations'
@@ -450,6 +531,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jason'
     | '/_authenticated/lamine'
     | '/_authenticated/marketing'
+    | '/_authenticated/notifications'
     | '/_authenticated/paiements'
     | '/_authenticated/parametres'
     | '/_authenticated/plans'
@@ -457,9 +539,12 @@ export interface FileRouteTypes {
     | '/_authenticated/rh'
     | '/_authenticated/super-admin'
     | '/_authenticated/tableau-de-bord'
+    | '/_authenticated/taches'
+    | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
+    | '/blog/'
     | '/_authenticated/clients/$id'
     | '/_authenticated/devis/$id'
     | '/_authenticated/projets/$id'
@@ -474,9 +559,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CgvRoute: typeof CgvRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
+  MentionsLegalesRoute: typeof MentionsLegalesRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   EntretienTokenRoute: typeof EntretienTokenRoute
   EspaceTokenRoute: typeof EspaceTokenRoute
   PayerTokenRoute: typeof PayerTokenRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
@@ -502,6 +592,27 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cgv': {
+      id: '/cgv'
+      path: '/cgv'
+      fullPath: '/cgv'
+      preLoaderRoute: typeof CgvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentions-legales': {
+      id: '/mentions-legales'
+      path: '/mentions-legales'
+      fullPath: '/mentions-legales'
+      preLoaderRoute: typeof MentionsLegalesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/aide': {
@@ -616,6 +727,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/paiements': {
       id: '/_authenticated/paiements'
       path: '/paiements'
@@ -664,6 +782,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/tableau-de-bord'
       preLoaderRoute: typeof AuthenticatedTableauDeBordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/taches': {
+      id: '/_authenticated/taches'
+      path: '/taches'
+      fullPath: '/taches'
+      preLoaderRoute: typeof AuthenticatedTachesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/entretien/$token': {
       id: '/entretien/$token'
@@ -762,6 +901,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedJasonRoute: typeof AuthenticatedJasonRoute
   AuthenticatedLamineRoute: typeof AuthenticatedLamineRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPaiementsRoute: typeof AuthenticatedPaiementsRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
@@ -769,6 +909,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
+  AuthenticatedTachesRoute: typeof AuthenticatedTachesRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedDevisIdRoute: typeof AuthenticatedDevisIdRoute
   AuthenticatedProjetsIdRoute: typeof AuthenticatedProjetsIdRoute
@@ -794,6 +935,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJasonRoute: AuthenticatedJasonRoute,
   AuthenticatedLamineRoute: AuthenticatedLamineRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPaiementsRoute: AuthenticatedPaiementsRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
@@ -801,6 +943,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
+  AuthenticatedTachesRoute: AuthenticatedTachesRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedDevisIdRoute: AuthenticatedDevisIdRoute,
   AuthenticatedProjetsIdRoute: AuthenticatedProjetsIdRoute,
@@ -816,9 +959,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CgvRoute: CgvRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
+  MentionsLegalesRoute: MentionsLegalesRoute,
+  BlogSlugRoute: BlogSlugRoute,
   EntretienTokenRoute: EntretienTokenRoute,
   EspaceTokenRoute: EspaceTokenRoute,
   PayerTokenRoute: PayerTokenRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }

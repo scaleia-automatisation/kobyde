@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "@/lib/db";
+import { lovable } from "@/integrations/lovable/index";
 
 const TITLE = "Connexion — Kobyde";
 const DESC = "Connectez-vous à Kobyde et retrouvez vos 10 agents IA d'entreprise.";
@@ -30,6 +31,7 @@ function AuthPage() {
   const { mode } = Route.useSearch();
   const [isSignup, setIsSignup] = useState(mode === "signup");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
   const { session } = useSession();
 
@@ -51,6 +53,24 @@ function AuthPage() {
     };
   }, [session, navigate]);
 
+
+  const onGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error("Connexion Google impossible pour le moment.");
+        return;
+      }
+      if (result.redirected) return;
+    } catch {
+      toast.error("Connexion Google impossible pour le moment.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

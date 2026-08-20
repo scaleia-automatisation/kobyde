@@ -121,17 +121,21 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
       }
     >
       {isLoading ? (
-        <div className="surface p-10 text-center text-muted-foreground">Chargement…</div>
+        <LoadingState rows={4} />
       ) : (rows ?? []).length === 0 ? (
-        <div className="surface p-12 text-center">
-          <p className="font-display text-xl">Rien ici pour l'instant</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{config.emptyText}</p>
-          <Button className="mt-6 gap-2" onClick={() => setOpen(true)}>
-            <Plus className="size-4" /> {config.addLabel}
-          </Button>
-        </div>
+        <EmptyState
+          icon={Inbox}
+          title="Rien ici pour l'instant"
+          description={config.emptyText}
+          action={
+            <Button className="gap-2" onClick={() => setOpen(true)}>
+              <Plus className="size-4" /> {config.addLabel}
+            </Button>
+          }
+        />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-3 stagger-children">
+
           {(rows ?? []).map((row: any) => (
             <article
               key={row.id}

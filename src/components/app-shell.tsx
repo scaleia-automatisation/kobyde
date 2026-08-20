@@ -299,8 +299,12 @@ export function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDashboard = pathname === "/tableau-de-bord";
   useMonthlyRenewal();
   useSessionTracking();
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

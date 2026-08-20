@@ -12,8 +12,9 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
+
+const fmt = (n: number) => n.toLocaleString("fr-FR");
 import {
   CREDIT_PACKS,
   PAID_PLANS,
@@ -186,14 +187,14 @@ function PlanCard({
 
       <Select value={tierCredits} onValueChange={setTierCredits}>
         <SelectTrigger className="mt-4 h-11">
-          <SelectValue />
+          <span>{fmt(tier.credits)} crédits mensuels</span>
         </SelectTrigger>
         <SelectContent>
           {tiers.map((t) => (
             <SelectItem key={t.credits} value={String(t.credits)}>
               <span className="flex w-full items-center justify-between gap-3">
                 <span className="flex items-center gap-2">
-                  {t.credits} crédits mensuels
+                  {fmt(t.credits)} crédits mensuels
                   {current && t.credits === plan.credits && (
                     <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
                       Actuel
@@ -222,7 +223,7 @@ function PlanCard({
       </Button>
 
       <p className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-primary">
-        <Sparkles className="size-4" /> {tier.credits} crédits IA / mois
+        <Sparkles className="size-4" /> {fmt(tier.credits)} crédits IA / mois
       </p>
       <ul className="mt-3 flex-1 space-y-1.5 text-sm">
         {plan.features.map((f) => (

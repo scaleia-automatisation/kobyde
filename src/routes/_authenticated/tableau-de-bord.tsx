@@ -232,64 +232,42 @@ function Dashboard() {
         </Button>
       }
     >
-      <div className="grid gap-3 stagger-children sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
+      <div className="grid gap-4 stagger-children md:grid-cols-3">
+        <PrimaryStat
           label="Chiffre d'affaires"
           value={euros(ca)}
-          hint="Paiements encaissés"
+          hint="Paiements encaissés à ce jour"
           icon={TrendingUp}
           to="/paiements"
         />
-        <Stat
-          label="Prospects"
-          value={String(PR.length)}
-          hint="Clients potentiels"
-          icon={UserPlus}
-          to="/prospects"
-        />
-        <Stat
-          label="Clients"
-          value={String(C.length)}
-          hint="Ils vous font confiance"
-          icon={Users}
-          to="/clients"
-        />
-        <Stat
-          label="Devis"
-          value={String(Q.length)}
-          hint={`${devisEnAttente.length} en attente`}
+        <PrimaryStat
+          label="Devis en attente"
+          value={String(devisEnAttente.length)}
+          hint={`sur ${Q.length} devis au total`}
           icon={FileText}
           to="/devis"
         />
-        <Stat
-          label="Paiements"
-          value={String(P.length)}
-          hint={`${paiementsEnAttente.length} à encaisser`}
+        <PrimaryStat
+          label="À encaisser"
+          value={String(paiementsEnAttente.length)}
+          hint={
+            paiementsRetard.length > 0
+              ? `dont ${paiementsRetard.length} en retard`
+              : "aucun retard de paiement"
+          }
           icon={BadgeEuro}
           to="/paiements"
         />
-        <Stat
-          label="Projets"
-          value={String(PJ.length)}
-          hint="En cours et terminés"
-          icon={Briefcase}
-          to="/projets"
-        />
-        <Stat
-          label="Tâches"
-          value={String(T.length)}
-          hint={`${tachesOuvertes.length} à faire`}
-          icon={ListTodo}
-          to="/projets"
-        />
-        <Stat
-          label="Équipe IA"
-          value="10"
-          hint="Agents disponibles 24h/24"
-          icon={Sparkles}
-          to="/equipe"
-        />
       </div>
+
+      <div className="surface mt-4 grid gap-1 p-2 sm:grid-cols-2 lg:grid-cols-5">
+        <MiniStat label="Prospects" value={String(PR.length)} to="/prospects" />
+        <MiniStat label="Clients" value={String(C.length)} to="/clients" />
+        <MiniStat label="Projets" value={String(PJ.length)} to="/projets" />
+        <MiniStat label="Tâches à faire" value={String(tachesOuvertes.length)} to="/projets" />
+        <MiniStat label="Agents IA" value="10" to="/equipe" />
+      </div>
+
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <SectionCard

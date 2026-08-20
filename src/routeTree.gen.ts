@@ -36,6 +36,7 @@ import { Route as AuthenticatedProspectsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
+import { Route as AuthenticatedTachesRouteImport } from './routes/_authenticated/taches'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
@@ -187,6 +188,11 @@ const AuthenticatedTableauDeBordRoute =
     path: '/tableau-de-bord',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTachesRoute = AuthenticatedTachesRouteImport.update({
+  id: '/taches',
+  path: '/taches',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/rh': typeof AuthenticatedRhRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/taches': typeof AuthenticatedTachesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/rh': typeof AuthenticatedRhRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/taches': typeof AuthenticatedTachesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/_authenticated/taches': typeof AuthenticatedTachesRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/rh'
     | '/super-admin'
     | '/tableau-de-bord'
+    | '/taches'
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/rh'
     | '/super-admin'
     | '/tableau-de-bord'
+    | '/taches'
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rh'
     | '/_authenticated/super-admin'
     | '/_authenticated/tableau-de-bord'
+    | '/_authenticated/taches'
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
@@ -711,6 +723,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTableauDeBordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/taches': {
+      id: '/_authenticated/taches'
+      path: '/taches'
+      fullPath: '/taches'
+      preLoaderRoute: typeof AuthenticatedTachesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/blog/': {
       id: '/blog/'
       path: '/blog'
@@ -830,6 +849,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
   AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
+  AuthenticatedTachesRoute: typeof AuthenticatedTachesRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedDevisIdRoute: typeof AuthenticatedDevisIdRoute
   AuthenticatedProjetsIdRoute: typeof AuthenticatedProjetsIdRoute
@@ -863,6 +883,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRhRoute: AuthenticatedRhRoute,
   AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
+  AuthenticatedTachesRoute: AuthenticatedTachesRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedDevisIdRoute: AuthenticatedDevisIdRoute,
   AuthenticatedProjetsIdRoute: AuthenticatedProjetsIdRoute,

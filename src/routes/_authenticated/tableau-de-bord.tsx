@@ -48,7 +48,7 @@ type Project = Row & { name: string };
 type Task = Row & { title: string; status: string };
 type AgentTask = Row & { title: string; status: string };
 
-function Stat({
+function PrimaryStat({
   label,
   value,
   hint,
@@ -64,17 +64,38 @@ function Stat({
   return (
     <Link
       to={to}
-      className="surface interactive block p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="surface interactive block p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="size-4" aria-hidden />
         <p className="text-label">{label}</p>
-        <Icon className="size-4 text-muted-foreground" aria-hidden />
       </div>
-      <p className="mt-2 font-display text-[1.75rem] leading-none tracking-tight">{value}</p>
-      <p className="mt-1.5 text-caption">{hint}</p>
+      <p className="mt-3 font-display text-[2.5rem] leading-none tracking-tight">{value}</p>
+      <p className="mt-2 text-caption">{hint}</p>
     </Link>
   );
 }
+
+function MiniStat({
+  label,
+  value,
+  to,
+}: {
+  label: string;
+  value: string;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex items-baseline justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="truncate text-body text-muted-foreground">{label}</span>
+      <span className="font-display text-lg leading-none tracking-tight">{value}</span>
+    </Link>
+  );
+}
+
 
 const dayjs = (d?: string) =>
   d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "";

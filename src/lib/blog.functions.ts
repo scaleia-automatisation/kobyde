@@ -17,10 +17,20 @@ export type BlogPost = {
   published_at: string | null;
 };
 
-const publicClient = () =>
-  createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, {
+const publicClient = () => {
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  return createClient(process.env["SUPABASE_URL"]!, key, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
   });
+};
 
 const COLS = "id,slug,title,excerpt,content,category,author,cover_url,meta_description,published_at";
 

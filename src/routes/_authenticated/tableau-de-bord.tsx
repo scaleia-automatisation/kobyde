@@ -53,16 +53,20 @@ function Stat({
   to: string;
 }) {
   return (
-    <Link to={to} className="surface block p-5 transition hover:-translate-y-0.5 hover:shadow-lg">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <Icon className="size-4 text-accent" />
+    <Link
+      to={to}
+      className="surface interactive block p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-label">{label}</p>
+        <Icon className="size-4 text-muted-foreground" aria-hidden />
       </div>
-      <p className="mt-1 font-display text-3xl">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      <p className="mt-2 font-display text-[1.75rem] leading-none tracking-tight">{value}</p>
+      <p className="mt-1.5 text-caption">{hint}</p>
     </Link>
   );
 }
+
 
 const dayjs = (d?: string) =>
   d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }) : "";

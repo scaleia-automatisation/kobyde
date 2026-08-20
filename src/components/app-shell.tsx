@@ -108,11 +108,14 @@ export const NAV_GROUPS = [
   },
 ] as const;
 
-export const NAV = NAV_GROUPS.flatMap((g) => g.items as readonly { to: string; label: string }[]);
+export const NAV = NAV_GROUPS.flatMap((g) => g.items.map((i) => ({ to: i.to, label: i.label })));
 
-const MOBILE_NAV = NAV.filter((n) =>
-  ["/eric", "/tableau-de-bord", "/equipe", "/prospects"].includes(n.to),
-);
+const MOBILE_NAV = [
+  { to: "/eric", label: "Éric", icon: Sparkles },
+  { to: "/tableau-de-bord", label: "Accueil", icon: Home },
+  { to: "/equipe", label: "Équipe", icon: Bot },
+  { to: "/prospects", label: "Prospects", icon: Target },
+] as const;
 
 function useIsAdmin() {
   const checkAdmin = useServerFn(amIPlatformAdmin);

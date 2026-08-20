@@ -14,6 +14,36 @@ import { useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
+import { AiProgress } from "@/components/ui/states";
+
+/** États de génération lisibles plutôt qu'un simple « Loading… ». */
+function EricProgress() {
+  const labels = [
+    "Lecture de la mémoire de l'entreprise",
+    "Identification des agents concernés",
+    "Distribution des tâches",
+    "Rédaction de la réponse",
+  ];
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, labels.length - 1)), 1600);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <Card className="animate-rise p-5">
+      <p className="text-h3">Éric travaille sur votre demande</p>
+      <AiProgress
+        className="mt-3"
+        steps={labels.map((label, i) => ({
+          label,
+          status: i < step ? "done" : i === step ? "active" : "pending",
+        }))}
+      />
+    </Card>
+  );
+}
+
+
 
 
 export const Route = createFileRoute("/_authenticated/eric")({
@@ -112,34 +142,6 @@ function EricPage() {
     setLastPrompt(value);
     mutation.mutate({ text: value, key });
   };
-
-
-/** États de génération lisibles plutôt qu'un simple « Loading… ». */
-function EricProgress() {
-  const labels = [
-    "Lecture de la mémoire de l'entreprise",
-    "Identification des agents concernés",
-    "Distribution des tâches",
-    "Rédaction de la réponse",
-  ];
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setStep((s) => Math.min(s + 1, labels.length - 1)), 1600);
-    return () => clearInterval(t);
-  }, []);
-  return (
-    <Card className="animate-rise p-5">
-      <p className="text-h3">Éric travaille sur votre demande</p>
-      <AiProgress
-        className="mt-3"
-        steps={labels.map((label, i) => ({
-          label,
-          status: i < step ? "done" : i === step ? "active" : "pending",
-        }))}
-      />
-    </Card>
-  );
-}
 
 
   return (

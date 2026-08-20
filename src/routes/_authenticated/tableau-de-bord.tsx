@@ -204,7 +204,6 @@ function Dashboard() {
       }
     >
       <div className="grid gap-3 stagger-children sm:grid-cols-2 lg:grid-cols-4">
-
         <Stat label="Chiffre d'affaires" value={euros(ca)} hint="Paiements encaissés" icon={TrendingUp} to="/paiements" />
         <Stat label="Prospects" value={String(PR.length)} hint="Clients potentiels" icon={UserPlus} to="/prospects" />
         <Stat label="Clients" value={String(C.length)} hint="Ils vous font confiance" icon={Users} to="/clients" />
@@ -221,51 +220,62 @@ function Dashboard() {
         <Stat label="Équipe IA" value="10" hint="Agents disponibles 24h/24" icon={Sparkles} to="/equipe" />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <section className="surface p-6">
-          <h2 className="flex items-center gap-2 text-lg">
-            <Sparkles className="size-5 text-accent" /> Votre IA vous recommande
-          </h2>
-          <ul className="mt-5 space-y-3">
-            {recommendations.length === 0 && (
-              <li className="text-sm text-muted-foreground">Tout est à jour, rien à faire pour l'instant.</li>
-            )}
-            {recommendations.map((r) => (
-              <li key={r.title} className="flex items-start gap-3 rounded-xl border border-border p-4">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{r.title}</p>
-                  <p className="text-sm text-muted-foreground">{r.desc}</p>
-                </div>
-                <Button asChild size="sm" className="gap-1">
-                  <Link to={r.to}>
-                    {r.cta} <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <SectionCard
+          title="Votre IA vous recommande"
+          description="Les prochaines actions les plus utiles, classées par priorité."
+        >
+          {recommendations.length === 0 ? (
+            <p className="text-body text-muted-foreground">
+              Tout est à jour, rien à faire pour l'instant.
+            </p>
+          ) : (
+            <ul className="space-y-2.5 stagger-children">
+              {recommendations.map((r, i) => (
+                <li
+                  key={r.title}
+                  className={cn(
+                    "interactive flex flex-wrap items-center gap-3 rounded-xl border border-border p-3.5",
+                    i === 0 && "border-accent/40 bg-accent/5",
+                  )}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-h3">{r.title}</p>
+                    <p className="mt-0.5 text-caption">{r.desc}</p>
+                  </div>
+                  <Button asChild size="sm" variant={i === 0 ? "default" : "outline"} className="gap-1">
+                    <Link to={r.to}>
+                      {r.cta} <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
 
-        <section className="surface p-6">
-          <h2 className="flex items-center gap-2 text-lg">
-            <TrendingUp className="size-5 text-accent" /> Activité récente
-          </h2>
-          <ul className="mt-5 space-y-3">
-            {activity.length === 0 && (
-              <li className="text-sm text-muted-foreground">Aucune activité pour le moment.</li>
-            )}
-            {activity.map((a) => (
-              <li key={a.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent/10">
-                  <a.icon className="size-4 text-accent" />
-                </span>
-                <p className="min-w-0 flex-1 truncate text-sm">{a.label}</p>
-                <span className="shrink-0 text-xs text-muted-foreground">{dayjs(a.at)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <SectionCard title="Activité récente" description="Ce qui s'est passé dans votre entreprise.">
+          {activity.length === 0 ? (
+            <p className="text-body text-muted-foreground">Aucune activité pour le moment.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {activity.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-secondary/60"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
+                    <a.icon className="size-4" aria-hidden />
+                  </span>
+                  <p className="min-w-0 flex-1 truncate text-body">{a.label}</p>
+                  <span className="shrink-0 text-caption">{dayjs(a.at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
       </div>
+
     </AppShell>
   );
 }

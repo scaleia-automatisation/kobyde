@@ -37,6 +37,7 @@ import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
@@ -191,6 +192,11 @@ const BlogIndexRoute = BlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntretienTokenRoute = EntretienTokenRouteImport.update({
   id: '/entretien/$token',
   path: '/entretien/$token',
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/rh': typeof AuthenticatedRhRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
@@ -316,6 +323,7 @@ export interface FileRoutesByTo {
   '/rh': typeof AuthenticatedRhRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
@@ -358,6 +366,7 @@ export interface FileRoutesById {
   '/_authenticated/rh': typeof AuthenticatedRhRoute
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/rh'
     | '/super-admin'
     | '/tableau-de-bord'
+    | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
@@ -440,6 +450,7 @@ export interface FileRouteTypes {
     | '/rh'
     | '/super-admin'
     | '/tableau-de-bord'
+    | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
@@ -481,6 +492,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rh'
     | '/_authenticated/super-admin'
     | '/_authenticated/tableau-de-bord'
+    | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
     | '/payer/$token'
@@ -499,6 +511,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   EntretienTokenRoute: typeof EntretienTokenRoute
   EspaceTokenRoute: typeof EspaceTokenRoute
   PayerTokenRoute: typeof PayerTokenRoute
@@ -705,6 +718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entretien/$token': {
       id: '/entretien/$token'
       path: '/entretien/$token'
@@ -858,6 +878,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BlogSlugRoute: BlogSlugRoute,
   EntretienTokenRoute: EntretienTokenRoute,
   EspaceTokenRoute: EspaceTokenRoute,
   PayerTokenRoute: PayerTokenRoute,

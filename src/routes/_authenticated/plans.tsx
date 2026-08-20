@@ -81,48 +81,17 @@ function PlansPage() {
           <Progress className="mt-4" value={creditsTotal > 0 ? (credits / creditsTotal) * 100 : 0} />
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {PAID_PLANS.map((p) => {
-            const current = p.key === plan.key;
-            return (
-              <Card
-                key={p.key}
-                className={`flex flex-col p-6 ${p.highlight ? "ring-2 ring-primary" : ""}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="font-display text-xl font-bold">{p.name}</h2>
-                  {current ? (
-                    <Badge>Formule actuelle</Badge>
-                  ) : (
-                    p.highlight && <Badge variant="secondary">Recommandé</Badge>
-                  )}
-                </div>
-                <p className="mt-3 font-display text-3xl font-bold">
-                  {p.price} €<span className="text-base font-normal text-muted-foreground"> / mois</span>
-                </p>
-                <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-primary">
-                  <Sparkles className="size-4" /> {p.credits} crédits IA / mois
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">{p.tagline}</p>
-                <ul className="mt-4 flex-1 space-y-1.5 text-sm">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2">
-                      <Check className="mt-0.5 size-4 shrink-0 text-accent" />
-                      <span className="text-muted-foreground">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className="mt-6"
-                  variant={current ? "outline" : p.highlight ? "default" : "secondary"}
-                  disabled={current || change.isPending}
-                  onClick={() => choose(p.key)}
-                >
-                  {current ? "Formule active" : `Choisir ${p.name}`}
-                </Button>
-              </Card>
-            );
-          })}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {PAID_PLANS.map((p) => (
+            <PlanCard
+              key={p.key}
+              plan={p}
+              current={p.key === plan.key}
+              pending={change.isPending || buy.isPending}
+              onChoose={choose}
+              onExtra={buyPack}
+            />
+          ))}
         </div>
 
         <section id="packs" className="scroll-mt-24 space-y-4">

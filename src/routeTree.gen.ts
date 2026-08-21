@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CgvRouteImport } from './routes/cgv'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
+import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as AuthenticatedAideRouteImport } from './routes/_authenticated/aide'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -76,6 +77,11 @@ const CgvRoute = CgvRouteImport.update({
 const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
   id: '/confidentialite',
   path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataDeletionRoute = DataDeletionRouteImport.update({
+  id: '/data-deletion',
+  path: '/data-deletion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
+  '/data-deletion': typeof DataDeletionRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -329,6 +336,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
+  '/data-deletion': typeof DataDeletionRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -376,6 +384,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
+  '/data-deletion': typeof DataDeletionRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/_authenticated/aide': typeof AuthenticatedAideRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cgv'
     | '/confidentialite'
+    | '/data-deletion'
     | '/mentions-legales'
     | '/aide'
     | '/analytics'
@@ -468,6 +478,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cgv'
     | '/confidentialite'
+    | '/data-deletion'
     | '/mentions-legales'
     | '/aide'
     | '/analytics'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cgv'
     | '/confidentialite'
+    | '/data-deletion'
     | '/mentions-legales'
     | '/_authenticated/aide'
     | '/_authenticated/analytics'
@@ -561,6 +573,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CgvRoute: typeof CgvRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
+  DataDeletionRoute: typeof DataDeletionRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   BlogSlugRoute: typeof BlogSlugRoute
   EntretienTokenRoute: typeof EntretienTokenRoute
@@ -606,6 +619,13 @@ declare module '@tanstack/react-router' {
       path: '/confidentialite'
       fullPath: '/confidentialite'
       preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-deletion': {
+      id: '/data-deletion'
+      path: '/data-deletion'
+      fullPath: '/data-deletion'
+      preLoaderRoute: typeof DataDeletionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentions-legales': {
@@ -961,6 +981,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CgvRoute: CgvRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
+  DataDeletionRoute: DataDeletionRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   BlogSlugRoute: BlogSlugRoute,
   EntretienTokenRoute: EntretienTokenRoute,

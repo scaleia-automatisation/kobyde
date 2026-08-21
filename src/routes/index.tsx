@@ -518,7 +518,7 @@ function Landing() {
           <Link to="/confidentialite" className="hover:underline">Confidentialité</Link>
           <Link to="/cgv" className="hover:underline">CGV</Link>
           <Link to="/data-deletion" className="hover:underline">Suppression des données</Link>
-
+          <Link to="/data-deletion-request" className="hover:underline">Demande de suppression</Link>
         </nav>
         © {new Date().getFullYear()} Kobyde — Votre équipe IA d'entreprise.
       </footer>

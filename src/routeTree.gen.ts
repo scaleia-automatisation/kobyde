@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CgvRouteImport } from './routes/cgv'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
+import { Route as DataDeletionRequestRouteImport } from './routes/data-deletion-request'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as AuthenticatedAideRouteImport } from './routes/_authenticated/aide'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -82,6 +83,11 @@ const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
 const DataDeletionRoute = DataDeletionRouteImport.update({
   id: '/data-deletion',
   path: '/data-deletion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataDeletionRequestRoute = DataDeletionRequestRouteImport.update({
+  id: '/data-deletion-request',
+  path: '/data-deletion-request',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/data-deletion': typeof DataDeletionRoute
+  '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/data-deletion': typeof DataDeletionRoute
+  '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -385,6 +393,7 @@ export interface FileRoutesById {
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/data-deletion': typeof DataDeletionRoute
+  '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/_authenticated/aide': typeof AuthenticatedAideRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
@@ -433,6 +442,7 @@ export interface FileRouteTypes {
     | '/cgv'
     | '/confidentialite'
     | '/data-deletion'
+    | '/data-deletion-request'
     | '/mentions-legales'
     | '/aide'
     | '/analytics'
@@ -479,6 +489,7 @@ export interface FileRouteTypes {
     | '/cgv'
     | '/confidentialite'
     | '/data-deletion'
+    | '/data-deletion-request'
     | '/mentions-legales'
     | '/aide'
     | '/analytics'
@@ -526,6 +537,7 @@ export interface FileRouteTypes {
     | '/cgv'
     | '/confidentialite'
     | '/data-deletion'
+    | '/data-deletion-request'
     | '/mentions-legales'
     | '/_authenticated/aide'
     | '/_authenticated/analytics'
@@ -574,6 +586,7 @@ export interface RootRouteChildren {
   CgvRoute: typeof CgvRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   DataDeletionRoute: typeof DataDeletionRoute
+  DataDeletionRequestRoute: typeof DataDeletionRequestRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   BlogSlugRoute: typeof BlogSlugRoute
   EntretienTokenRoute: typeof EntretienTokenRoute
@@ -626,6 +639,13 @@ declare module '@tanstack/react-router' {
       path: '/data-deletion'
       fullPath: '/data-deletion'
       preLoaderRoute: typeof DataDeletionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-deletion-request': {
+      id: '/data-deletion-request'
+      path: '/data-deletion-request'
+      fullPath: '/data-deletion-request'
+      preLoaderRoute: typeof DataDeletionRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentions-legales': {
@@ -982,6 +1002,7 @@ const rootRouteChildren: RootRouteChildren = {
   CgvRoute: CgvRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   DataDeletionRoute: DataDeletionRoute,
+  DataDeletionRequestRoute: DataDeletionRequestRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   BlogSlugRoute: BlogSlugRoute,
   EntretienTokenRoute: EntretienTokenRoute,

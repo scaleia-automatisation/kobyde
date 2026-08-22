@@ -187,7 +187,6 @@ function IntegrationButtons() {
     <>
       {OUTILS.map((tool) => {
         const isActive = active === tool.name;
-        const Logo = tool.logo;
         return (
           <button
             key={tool.name}
@@ -208,10 +207,17 @@ function IntegrationButtons() {
             <span
               className={`
                 grid size-7 place-items-center rounded-lg transition-colors duration-200
-                ${isActive ? "bg-white/20 text-white" : "bg-muted text-foreground group-hover:bg-white/10 group-hover:text-white"}
+                ${isActive ? "bg-white/20" : "bg-muted group-hover:bg-white/10"}
               `}
             >
-              <Logo className="size-4" />
+              <img
+                src={tool.logoSrc}
+                alt={`Logo ${tool.name}`}
+                width={28}
+                height={28}
+                loading="lazy"
+                className="size-5 object-contain transition-transform duration-200 group-hover:scale-105"
+              />
             </span>
             <span className="font-display">{tool.name}</span>
           </button>

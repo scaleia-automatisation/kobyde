@@ -2891,33 +2891,48 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean | null
           created_at: string
           current_period_end: string | null
+          current_period_start: string | null
+          environment: string
           id: string
           org_id: string
           plan: string
+          price_id: string | null
+          product_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string
         }
         Insert: {
+          cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
           id?: string
           org_id: string
           plan?: string
+          price_id?: string | null
+          product_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
         }
         Update: {
+          cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
           id?: string
           org_id?: string
           plan?: string
+          price_id?: string | null
+          product_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null

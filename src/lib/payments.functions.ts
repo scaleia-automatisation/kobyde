@@ -11,7 +11,7 @@ type CheckoutSessionResult = { clientSecret: string } | { error: string };
 
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
-  options: { email?: string; orgId: string },
+  options: { email: string | undefined; orgId: string },
 ): Promise<string> {
   if (!/^[a-zA-Z0-9_-]+$/.test(options.orgId)) {
     throw new Error('Invalid orgId');
@@ -21,10 +21,10 @@ async function resolveOrCreateCustomer(
     query: `metadata['orgId']:'${options.orgId}'`,
     limit: 1,
   });
-  if (found.data.length) return found.data[0].id;
+  if (found.data.length && found.data[0]) return found.data[0].id;
 
   const created = await stripe.customers.create({
-    ...(options.email && { email: options.email }),
+    ...(options.email ? { email: options.email } : {}),
     metadata: { orgId: options.orgId },
   });
   return created.id;

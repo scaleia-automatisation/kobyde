@@ -258,12 +258,12 @@ function IntegrationButtons() {
             onClick={() => setActive(isActive ? null : tool.name)}
             className={`
               group relative flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-semibold
-              transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md
+              transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:text-white
               focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
               ${
                 isActive
                   ? `border-transparent bg-gradient-to-r ${tool.color} text-white shadow-lg ${tool.shadow} ring-2 ${tool.ring} focus-visible:ring-offset-background`
-                  : "border-border bg-card text-foreground hover:border-transparent hover:bg-gradient-to-r hover:from-background hover:via-background hover:to-card hover:text-foreground"
+                  : `border-border bg-card text-foreground hover:border-transparent hover:bg-gradient-to-r ${tool.color}`
               }
             `}
             aria-pressed={isActive}

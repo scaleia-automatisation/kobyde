@@ -99,17 +99,44 @@ async function handleCheckoutSessionCompleted(session: any) {
 
   if (session.payment_status === 'unpaid') return;
 
-  const lineItem = session.line_items?.data?.[0] ?? {};
-  const price = lineItem.price ?? {};
-  const priceId = price.lookup_key || price.metadata?.lovable_external_id || price.id;
+  const priceId = session.metadata?.price_id;
+  if (!priceId) return;
 
-  const oneTimePriceIds = ['credits_50', 'credits_100', 'credits_150', 'credits_200'];
-  if (oneTimePriceIds.includes(priceId)) {
-    const credits = priceId === 'credits_50' ? 50
-      : priceId === 'credits_100' ? 100
-      : priceId === 'credits_150' ? 150
-      : 200;
-    await getSupabase().rpc('purchase_credits', { _org: orgId, _credits: credits });
+  const credits = CREDITS_BY_PRICE[priceId];
+  if (credits) {
+    const { data: org } = await getSupabase()
+      .from('organizations')
+      .select('credits, credits_total')
+      .eq('id', orgId)
+      .maybeSingle();
+    if (org) {
+      const newCredits = (org.credits ?? 0) + credits;
+      const newTotal = (org.credits_total ?? 0) + credits;
+      await getSupabase()
+        .from('organizations')
+        .update({ credits: newCredits, credits_total: newTotal })
+        .eq('id', orgId);
+
+      await getSupabase().from('credit_transactions').insert({
+        org_id: orgId,
+        amount: credits,
+        reason: 'Achat de crédits Stripe',
+        action_key: 'credits.purchase',
+        action_label: `Pack ${credits} crédits (Stripe)`,
+        balance_before: org.credits ?? 0,
+        balance_after: newCredits,
+        status: 'completed',
+        idempotency_key: `stripe-credits-${session.id}`,
+      });
+    }
+  }
+
+  const plan = PLAN_BY_PRICE[priceId];
+  if (plan) {
+    await getSupabase()
+      .from('organizations')
+      .update({ plan })
+      .eq('id', orgId);
   }
 }
 

@@ -54,6 +54,7 @@ import { Route as AuthenticatedDevisIdRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProjetsIndexRouteImport } from './routes/_authenticated/projets.index'
 import { Route as AuthenticatedProjetsIdRouteImport } from './routes/_authenticated/projets.$id'
 import { Route as ApiPublicMetaDeauthRouteImport } from './routes/api/public/meta/deauth'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 
@@ -286,6 +287,12 @@ const ApiPublicMetaDeauthRoute = ApiPublicMetaDeauthRouteImport.update({
   path: '/api/public/meta/deauth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe/webhook',
   path: '/api/public/stripe/webhook',
@@ -342,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/devis/': typeof AuthenticatedDevisIndexRoute
   '/projets/': typeof AuthenticatedProjetsIndexRoute
   '/api/public/meta/deauth': typeof ApiPublicMetaDeauthRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -390,6 +398,7 @@ export interface FileRoutesByTo {
   '/devis': typeof AuthenticatedDevisIndexRoute
   '/projets': typeof AuthenticatedProjetsIndexRoute
   '/api/public/meta/deauth': typeof ApiPublicMetaDeauthRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -440,6 +449,7 @@ export interface FileRoutesById {
   '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
   '/_authenticated/projets/': typeof AuthenticatedProjetsIndexRoute
   '/api/public/meta/deauth': typeof ApiPublicMetaDeauthRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/devis/'
     | '/projets/'
     | '/api/public/meta/deauth'
+    | '/api/public/payments/webhook'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
@@ -538,6 +549,7 @@ export interface FileRouteTypes {
     | '/devis'
     | '/projets'
     | '/api/public/meta/deauth'
+    | '/api/public/payments/webhook'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   id:
@@ -587,6 +599,7 @@ export interface FileRouteTypes {
     | '/_authenticated/devis/'
     | '/_authenticated/projets/'
     | '/api/public/meta/deauth'
+    | '/api/public/payments/webhook'
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
@@ -606,6 +619,7 @@ export interface RootRouteChildren {
   PayerTokenRoute: typeof PayerTokenRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicMetaDeauthRoute: typeof ApiPublicMetaDeauthRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
@@ -927,6 +941,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMetaDeauthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stripe/webhook': {
       id: '/api/public/stripe/webhook'
       path: '/api/public/stripe/webhook'
@@ -1030,6 +1051,7 @@ const rootRouteChildren: RootRouteChildren = {
   PayerTokenRoute: PayerTokenRoute,
   BlogIndexRoute: BlogIndexRoute,
   ApiPublicMetaDeauthRoute: ApiPublicMetaDeauthRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }

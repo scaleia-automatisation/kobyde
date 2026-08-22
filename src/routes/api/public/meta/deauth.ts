@@ -29,7 +29,7 @@ function parseSignedRequest(signedRequest: string, secret: string): { user_id: s
     };
     if (payload.algorithm?.toUpperCase() !== "HMAC-SHA256") return null;
     if (!payload.user_id) return null;
-    return { user_id: payload.user_id, issued_at: payload.issued_at };
+    return { user_id: payload.user_id, ...(payload.issued_at !== undefined && { issued_at: payload.issued_at }) };
   } catch {
     return null;
   }

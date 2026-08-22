@@ -33,6 +33,7 @@ import { Route as AuthenticatedFunnelRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedJasonRouteImport } from './routes/_authenticated/jason'
 import { Route as AuthenticatedLamineRouteImport } from './routes/_authenticated/lamine'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
+import { Route as AuthenticatedMerciRouteImport } from './routes/_authenticated/merci'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedPaiementsRouteImport } from './routes/_authenticated/paiements'
 import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
@@ -176,6 +177,11 @@ const AuthenticatedLamineRoute = AuthenticatedLamineRouteImport.update({
 const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
   id: '/marketing',
   path: '/marketing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMerciRoute = AuthenticatedMerciRouteImport.update({
+  id: '/merci',
+  path: '/merci',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNotificationsRoute =
@@ -328,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
+  '/merci': typeof AuthenticatedMerciRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByTo {
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
+  '/merci': typeof AuthenticatedMerciRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -428,6 +436,7 @@ export interface FileRoutesById {
   '/_authenticated/jason': typeof AuthenticatedJasonRoute
   '/_authenticated/lamine': typeof AuthenticatedLamineRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
+  '/_authenticated/merci': typeof AuthenticatedMerciRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/paiements': typeof AuthenticatedPaiementsRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
@@ -479,6 +488,7 @@ export interface FileRouteTypes {
     | '/jason'
     | '/lamine'
     | '/marketing'
+    | '/merci'
     | '/notifications'
     | '/paiements'
     | '/parametres'
@@ -528,6 +538,7 @@ export interface FileRouteTypes {
     | '/jason'
     | '/lamine'
     | '/marketing'
+    | '/merci'
     | '/notifications'
     | '/paiements'
     | '/parametres'
@@ -578,6 +589,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jason'
     | '/_authenticated/lamine'
     | '/_authenticated/marketing'
+    | '/_authenticated/merci'
     | '/_authenticated/notifications'
     | '/_authenticated/paiements'
     | '/_authenticated/parametres'
@@ -794,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/merci': {
+      id: '/_authenticated/merci'
+      path: '/merci'
+      fullPath: '/merci'
+      preLoaderRoute: typeof AuthenticatedMerciRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/notifications': {
       id: '/_authenticated/notifications'
       path: '/notifications'
@@ -982,6 +1001,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedJasonRoute: typeof AuthenticatedJasonRoute
   AuthenticatedLamineRoute: typeof AuthenticatedLamineRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
+  AuthenticatedMerciRoute: typeof AuthenticatedMerciRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPaiementsRoute: typeof AuthenticatedPaiementsRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
@@ -1016,6 +1036,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJasonRoute: AuthenticatedJasonRoute,
   AuthenticatedLamineRoute: AuthenticatedLamineRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
+  AuthenticatedMerciRoute: AuthenticatedMerciRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPaiementsRoute: AuthenticatedPaiementsRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,

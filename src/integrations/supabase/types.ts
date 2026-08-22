@@ -1573,6 +1573,51 @@ export type Database = {
           },
         ]
       }
+      oauth_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          provider: string
+          provider_email: string | null
+          provider_user_id: string
+          refresh_token: string | null
+          revoked: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          provider_email?: string | null
+          provider_user_id: string
+          refresh_token?: string | null
+          revoked?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          provider_email?: string | null
+          provider_user_id?: string
+          refresh_token?: string | null
+          revoked?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       opportunities: {
         Row: {
           amount: number

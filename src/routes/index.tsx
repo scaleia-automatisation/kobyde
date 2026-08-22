@@ -243,6 +243,47 @@ const FAQ = [
   },
 ];
 
+function IntegrationButtons() {
+  const [active, setActive] = useState<string | null>(null);
+
+  return (
+    <>
+      {OUTILS.map((tool) => {
+        const isActive = active === tool.name;
+        const Logo = tool.logo;
+        return (
+          <button
+            key={tool.name}
+            type="button"
+            onClick={() => setActive(isActive ? null : tool.name)}
+            className={`
+              group relative flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-semibold
+              transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+              ${
+                isActive
+                  ? `border-transparent bg-gradient-to-r ${tool.color} text-white shadow-lg ${tool.shadow} ring-2 ${tool.ring} focus-visible:ring-offset-background`
+                  : "border-border bg-card text-foreground hover:border-transparent hover:bg-gradient-to-r hover:from-background hover:via-background hover:to-card hover:text-foreground"
+              }
+            `}
+            aria-pressed={isActive}
+          >
+            <span
+              className={`
+                grid size-7 place-items-center rounded-lg transition-colors duration-200
+                ${isActive ? "bg-white/20 text-white" : "bg-muted text-foreground group-hover:bg-white/10"}
+              `}
+            >
+              <Logo className="size-4" />
+            </span>
+            <span className="font-display">{tool.name}</span>
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
 function Landing() {
   const lead = AGENTS.find((a) => a.key === "directeur") ?? AGENTS[0]!;
   const rest = AGENTS.filter((a) => a.key !== lead.key);

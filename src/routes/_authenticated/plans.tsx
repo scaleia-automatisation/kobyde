@@ -13,22 +13,37 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 import {
   CREDIT_PACKS,
   PAID_PLANS,
-  useChangePlan,
   usePlan,
-  usePurchaseCredits,
   planTiers,
   type Plan,
   type PlanKey,
+  type CreditPack,
 } from "@/lib/plans";
 
 const TITLE = "Formules et abonnements — Kobyde";
 const DESC =
   "4 formules mensuelles Kobyde : Gratuit 0 €, Starter 49 €, Business 79 €, Pro 149 €. Crédits IA renouvelés chaque mois et crédits non utilisés reportés.";
+
+const PLAN_PRICE_ID: Record<PlanKey, string> = {
+  gratuit: "",
+  starter: "starter_monthly",
+  business: "business_monthly",
+  pro: "pro_monthly",
+};
+
+const CREDIT_PRICE_ID: Record<number, string> = {
+  50: "credits_50",
+  100: "credits_100",
+  150: "credits_150",
+  200: "credits_200",
+};
 
 export const Route = createFileRoute("/_authenticated/plans")({
   head: () => ({
@@ -46,21 +61,28 @@ export const Route = createFileRoute("/_authenticated/plans")({
 
 function PlansPage() {
   const { plan, credits, creditsUsed, creditsTotal, renewsAt } = usePlan();
-  const change = useChangePlan();
-  const buy = usePurchaseCredits();
+  const { openCheckout, checkoutElement } = useStripeCheckout();
+  const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
 
-  const buyPack = (creditsCount: number) => {
-    buy.mutate(creditsCount, {
-      onSuccess: () => toast.success(`${creditsCount} crédits ajoutés à votre solde.`),
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Achat impossible"),
+  const startCheckout = (priceId: string, label: string) => {
+    setBusyPriceId(priceId);
+    openCheckout({
+      priceId,
+      returnUrl: `${window.location.origin}/formules?checkout=success`,
     });
+    setBusyPriceId(null);
   };
 
-  const choose = (key: PlanKey) => {
-    change.mutate(key, {
-      onSuccess: () => toast.success(`Formule ${key} activée : crédits ajoutés à votre solde.`),
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Changement impossible"),
-    });
+  const choosePlan = (key: PlanKey) => {
+    const priceId = PLAN_PRICE_ID[key];
+    if (!priceId) return;
+    startCheckout(priceId, `Formule ${key}`);
+  };
+
+  const buyPack = (pack: CreditPack) => {
+    const priceId = CREDIT_PRICE_ID[pack.credits];
+    if (!priceId) return;
+    startCheckout(priceId, `Pack ${pack.credits} crédits`);
   };
 
   return (
@@ -68,6 +90,7 @@ function PlansPage() {
       title="Formules"
       subtitle="Abonnement mensuel, renouvelé automatiquement. Les crédits non utilisés sont reportés au mois suivant."
     >
+      <PaymentTestModeBanner />
       <div className="space-y-8">
         <Card className="p-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -98,9 +121,8 @@ function PlansPage() {
               key={p.key}
               plan={p}
               current={p.key === plan.key}
-              pending={change.isPending || buy.isPending}
-              onChoose={choose}
-              onExtra={buyPack}
+              busyPriceId={busyPriceId}
+              onChoose={() => choosePlan(p.key)}
             />
           ))}
         </div>
@@ -111,7 +133,7 @@ function PlansPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {credits === 0
                 ? "Votre solde est épuisé : achetez un pack de crédits immédiatement utilisable, ou passez à une formule supérieure pour recevoir des crédits chaque mois."
-                : "Réservé aux comptes déjà inscrits : ajoutez des crédits ponctuellement, sans changer de formule. Ils s'ajoutent à votre solde et ne expirent pas."}
+                : "Réservé aux comptes déjà inscrits : ajoutez des crédits ponctuellement, sans changer de formule. Ils s'ajoutent à votre solde et n'expirent pas."}
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -127,8 +149,8 @@ function PlansPage() {
                 <Button
                   className="mt-4"
                   variant="secondary"
-                  disabled={buy.isPending}
-                  onClick={() => buyPack(pack.credits)}
+                  disabled={busyPriceId === CREDIT_PRICE_ID[pack.credits]}
+                  onClick={() => buyPack(pack)}
                 >
                   Acheter {pack.credits} crédits
                 </Button>
@@ -143,6 +165,8 @@ function PlansPage() {
           l'historique des crédits.
         </p>
       </div>
+
+      {checkoutElement}
     </AppShell>
   );
 }
@@ -150,25 +174,19 @@ function PlansPage() {
 function PlanCard({
   plan,
   current,
-  pending,
+  busyPriceId,
   onChoose,
-  onExtra,
 }: {
   plan: Plan;
   current: boolean;
-  pending: boolean;
-  onChoose: (key: PlanKey) => void;
-  onExtra: (credits: number) => void;
+  busyPriceId: string | null;
+  onChoose: () => void;
 }) {
   const tiers = planTiers(plan);
   const [tierCredits, setTierCredits] = useState(String(plan.credits));
   const tier = tiers.find((t) => String(t.credits) === tierCredits) ?? tiers[0]!;
   const extra = tier.credits - plan.credits;
-
-  const activate = () => {
-    onChoose(plan.key);
-    if (extra > 0) onExtra(extra);
-  };
+  const priceId = PLAN_PRICE_ID[plan.key];
 
   return (
     <Card className={`flex flex-col p-6 ${plan.highlight ? "ring-2 ring-primary" : ""}`}>
@@ -216,8 +234,8 @@ function PlanCard({
       <Button
         className="mt-4"
         variant={current && extra === 0 ? "outline" : "cta"}
-        disabled={pending || (current && extra === 0)}
-        onClick={activate}
+        disabled={busyPriceId === priceId || (current && extra === 0)}
+        onClick={onChoose}
       >
         {current && extra === 0 ? "Formule active" : current ? "Mettre à niveau" : `Choisir ${plan.name}`}
       </Button>

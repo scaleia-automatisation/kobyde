@@ -49,7 +49,14 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
       const isRecurring = stripePrice.type === 'recurring';
 
       const { data: { user } } = await context.supabase.auth.getUser();
-      const orgId = context.userId;
+      const { data: profile } = await context.supabase
+        .from('profiles')
+        .select('current_org_id')
+        .eq('user_id', context.userId)
+        .maybeSingle();
+      const orgId = profile?.current_org_id;
+      if (!orgId) throw new Error('Aucune entreprise liée au profil.');
+
       const customerId = await resolveOrCreateCustomer(stripe, {
         email: user?.email ?? undefined,
         orgId,

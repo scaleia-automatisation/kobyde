@@ -9,7 +9,7 @@ const TITLE = "Merci pour votre achat — Kobyde";
 const DESC =
   "Confirmation de paiement Kobyde : votre nouvelle formule ou vos crédits IA sont activés. Retournez au tableau de bord pour piloter votre équipe d'agents.";
 
-type Search = { type: "plan" | "credits"; plan?: PlanKey; credits?: number };
+type Search = { type: "plan" | "credits"; plan?: PlanKey | undefined; credits?: number | undefined };
 
 export const Route = createFileRoute("/_authenticated/merci")({
   validateSearch: (search: Record<string, unknown>): Search => ({

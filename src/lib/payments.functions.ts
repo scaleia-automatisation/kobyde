@@ -3,6 +3,8 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { z } from 'zod';
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from '@/lib/stripe.server';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 
 async function resolveOrCreateCustomer(

@@ -48,6 +48,7 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
       if (!prices.data.length) throw new Error('Price not found');
       const stripePrice = prices.data[0];
+      if (!stripePrice) throw new Error('Price not found');
       const isRecurring = stripePrice.type === 'recurring';
 
       const { data: { user } } = await context.supabase.auth.getUser();
@@ -68,21 +69,22 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
       if (!isRecurring) {
         const productId = typeof stripePrice.product === 'string'
           ? stripePrice.product
-          : stripePrice.product.id;
-        const product = await stripe.products.retrieve(productId);
-        productDescription = product.name;
+          : stripePrice.product?.id;
+        if (productId) {
+          const product = await stripe.products.retrieve(productId);
+          productDescription = product.name;
+        }
       }
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: data.quantity }],
         mode: isRecurring ? 'subscription' : 'payment',
-        ui_mode: 'embedded_page',
+        ui_mode: 'embedded',
         return_url: data.returnUrl,
         customer: customerId,
-        ...(!isRecurring && { payment_intent_data: { description: productDescription } }),
+        ...(!isRecurring && productDescription ? { payment_intent_data: { description: productDescription } } : {}),
         metadata: { orgId, priceId: data.priceId },
-        ...(isRecurring && { subscription_data: { metadata: { orgId } } }),
-        managed_payments: { enabled: true },
+        ...(isRecurring ? { subscription_data: { metadata: { orgId } } } : {}),
       } as Stripe.Checkout.SessionCreateParams);
 
       return { clientSecret: session.client_secret ?? '' };

@@ -13,6 +13,19 @@ function getSupabase() {
   return _supabase;
 }
 
+const CREDITS_BY_PRICE: Record<string, number> = {
+  credits_50: 50,
+  credits_100: 100,
+  credits_150: 150,
+  credits_200: 200,
+};
+
+const PLAN_BY_PRICE: Record<string, string> = {
+  starter_monthly: 'starter',
+  business_monthly: 'business',
+  pro_monthly: 'pro',
+};
+
 async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const orgId = subscription.metadata?.org_id;
   if (!orgId) {

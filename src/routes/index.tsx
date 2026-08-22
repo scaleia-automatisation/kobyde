@@ -271,7 +271,7 @@ function IntegrationButtons() {
             <span
               className={`
                 grid size-7 place-items-center rounded-lg transition-colors duration-200
-                ${isActive ? "bg-white/20 text-white" : "bg-muted text-foreground group-hover:bg-white/10"}
+                ${isActive ? "bg-white/20 text-white" : "bg-muted text-foreground group-hover:bg-white/10 group-hover:text-white"}
               `}
             >
               <Logo className="size-4" />

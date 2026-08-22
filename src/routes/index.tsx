@@ -44,14 +44,125 @@ export const Route = createFileRoute("/")({
 });
 
 const OUTILS = [
-  "Gmail",
-  "Outlook",
-  "Stripe",
-  "Notion",
-  "Google Agenda",
-  "Slack",
-  "WhatsApp",
-  "LinkedIn",
+  {
+    name: "Gmail",
+    color: "from-red-500 to-red-600",
+    shadow: "shadow-red-500/25",
+    ring: "ring-red-500/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 6.5l8 6.5 8-6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M2 6.5v11h18v-11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M2 6.5l8 6.5 8-6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M20 6.5v11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M10 13L2 17.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M14 13l8 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    name: "Outlook",
+    color: "from-sky-500 to-blue-600",
+    shadow: "shadow-sky-500/25",
+    ring: "ring-sky-500/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="6" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M9 12l-5 4V8l5 4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M15 10h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M15 14h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    name: "Stripe",
+    color: "from-indigo-500 to-violet-600",
+    shadow: "shadow-indigo-500/25",
+    ring: "ring-indigo-500/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 9c-1.5 0-2.5.8-2.5 2.1 0 2.5 4.5 1.5 4.5 3.4 0 .7-.6 1.1-1.5 1.1-1.2 0-2.5-.6-3.5-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M12 20c-5 0-9-2.5-9-6.5 0-2.5 2-4.5 5-5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M12 4c5 0 9 2.5 9 6.5 0 2.5-2 4.5-5 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    name: "Notion",
+    color: "from-slate-700 to-slate-900",
+    shadow: "shadow-slate-500/25",
+    ring: "ring-slate-500/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 5.5L7 4h12l-3 1.5v13L9 19.5V6.5L4 5.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M9 6.5l5 1v12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M7 8.5l5 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    name: "Google Agenda",
+    color: "from-blue-500 via-green-500 to-yellow-500",
+    shadow: "shadow-blue-500/25",
+    ring: "ring-green-500/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M3 9h18" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="7.5" cy="13.5" r="1.5" fill="currentColor" className="text-blue-500" />
+        <circle cx="12" cy="13.5" r="1.5" fill="currentColor" className="text-green-500" />
+        <circle cx="16.5" cy="13.5" r="1.5" fill="currentColor" className="text-yellow-500" />
+        <circle cx="7.5" cy="17" r="1.5" fill="currentColor" className="text-red-500" />
+        <circle cx="12" cy="17" r="1.5" fill="currentColor" className="text-blue-500" />
+        <circle cx="16.5" cy="17" r="1.5" fill="currentColor" className="text-green-500" />
+      </svg>
+    ),
+  },
+  {
+    name: "Slack",
+    color: "from-red-400 via-green-400 to-purple-500",
+    shadow: "shadow-purple-500/25",
+    ring: "ring-purple-500/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 8a2 2 0 100-4 2 2 0 000 4z" fill="currentColor" className="text-blue-400" />
+        <path d="M11 4v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M9 11a2 2 0 11-4 0 2 2 0 014 0z" fill="currentColor" className="text-green-400" />
+        <path d="M9 13h-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M17 20a2 2 0 110-4 2 2 0 010 4z" fill="currentColor" className="text-red-400" />
+        <path d="M13 20v-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M15 13a2 2 0 114 0 2 2 0 01-4 0z" fill="currentColor" className="text-purple-400" />
+        <path d="M15 11h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    name: "WhatsApp",
+    color: "from-green-500 to-emerald-600",
+    shadow: "shadow-green-500/25",
+    ring: "ring-green-500/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 20c4.4 0 8-3.6 8-8s-3.6-8-8-8-8 3.6-8 8c0 1.4.4 2.8 1 3.9L4 20l4.1-1c1.1.7 2.4 1 3.9 1z" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M9 11.5c.5 1 1.5 1.7 2.5 1.5M11.5 13l1 2.5M14 11.5a2.5 2.5 0 00-2.5-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    name: "LinkedIn",
+    color: "from-blue-600 to-blue-700",
+    shadow: "shadow-blue-600/25",
+    ring: "ring-blue-600/30",
+    logo: (props: { className?: string }) => (
+      <svg viewBox="0 0 24 24" className={props.className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M7 10v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M7 7.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M11 10v6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M11 12.5a2.5 2.5 0 012.5-2.5 2.5 2.5 0 012.5 2.5v3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
 const TEMOIGNAGES = [

@@ -68,7 +68,7 @@ function PlansPage() {
     setBusyPriceId(priceId);
     openCheckout({
       priceId,
-      returnUrl: `${window.location.origin}/formules?checkout=success`,
+      returnUrl: `${window.location.origin}/plans?checkout=success`,
     });
     setBusyPriceId(null);
   };

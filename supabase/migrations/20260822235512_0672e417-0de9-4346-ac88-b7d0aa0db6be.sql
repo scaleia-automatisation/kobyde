@@ -1,0 +1,21 @@
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.set_updated_at() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.apply_monthly_renewal(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.change_plan(uuid, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.purchase_credits(uuid, integer) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.reserve_credits(uuid, text, text, integer, text, uuid, uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.complete_credits(uuid, text, uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.refund_credits(uuid, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.has_org_role(uuid, app_role) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.is_org_member(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.is_platform_admin() FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.apply_monthly_renewal(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.change_plan(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.purchase_credits(uuid, integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reserve_credits(uuid, text, text, integer, text, uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.complete_credits(uuid, text, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.refund_credits(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.has_org_role(uuid, app_role) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_org_member(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_platform_admin() TO authenticated;

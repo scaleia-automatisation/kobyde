@@ -346,16 +346,12 @@ function Landing() {
       </section>
 
       {/* BANDEAU OUTILS */}
-      <section id="outils" className="border-y border-border bg-card/40 py-8">
+      <section id="outils" className="border-y border-border bg-card/40 py-10">
         <p className="text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Connecté à vos outils du quotidien
         </p>
-        <div className="mx-auto mt-5 flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-5">
-          {OUTILS.map((o) => (
-            <span key={o} className="font-display text-lg font-semibold text-muted-foreground/70">
-              {o}
-            </span>
-          ))}
+        <div className="mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-center gap-3 px-5">
+          <IntegrationButtons />
         </div>
       </section>
 

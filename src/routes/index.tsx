@@ -149,12 +149,23 @@ function Landing() {
           </span>
           <span className="font-display text-xl">Kobyde</span>
         </div>
-        <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-          <a href="#agents" className="hover:text-foreground">Agents</a>
-          <a href="#outils" className="hover:text-foreground">Intégrations</a>
-          <a href="#tarifs" className="hover:text-foreground">Tarifs</a>
-          <a href="#faq" className="hover:text-foreground">FAQ</a>
+        <nav className="hidden items-center gap-3 md:flex">
+          {[
+            { href: "#agents", label: "Agents" },
+            { href: "#outils", label: "Intégrations" },
+            { href: "#tarifs", label: "Tarifs" },
+            { href: "#faq", label: "FAQ" },
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="rounded-xl border border-border bg-card px-4 py-2 text-lg font-semibold text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md active:translate-y-0"
+            >
+              {item.label}
+            </a>
+          ))}
         </nav>
+
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost">
             <Link to="/auth">Se connecter</Link>

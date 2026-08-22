@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, Sparkles } from "lucide-react";
-import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,11 +63,11 @@ function PlansPage() {
   const { openCheckout, checkoutElement } = useStripeCheckout();
   const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
 
-  const startCheckout = (priceId: string, label: string) => {
+  const startCheckout = (priceId: string, returnPath: string) => {
     setBusyPriceId(priceId);
     openCheckout({
       priceId,
-      returnUrl: `${window.location.origin}/plans?checkout=success`,
+      returnUrl: `${window.location.origin}${returnPath}`,
     });
     setBusyPriceId(null);
   };
@@ -76,13 +75,13 @@ function PlansPage() {
   const choosePlan = (key: PlanKey) => {
     const priceId = PLAN_PRICE_ID[key];
     if (!priceId) return;
-    startCheckout(priceId, `Formule ${key}`);
+    startCheckout(priceId, `/merci?type=plan&plan=${key}`);
   };
 
   const buyPack = (pack: CreditPack) => {
     const priceId = CREDIT_PRICE_ID[pack.credits];
     if (!priceId) return;
-    startCheckout(priceId, `Pack ${pack.credits} crédits`);
+    startCheckout(priceId, `/merci?type=credits&credits=${pack.credits}`);
   };
 
   return (

@@ -193,33 +193,33 @@ function IntegrationButtons() {
             type="button"
             onClick={() => setActive(isActive ? null : tool.name)}
             className={`
-              group relative flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-semibold
-              transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:text-white
+              group relative flex flex-col items-center justify-center gap-3 rounded-2xl border px-5 py-4
+              text-center font-semibold transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:text-white
               focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
               ${
                 isActive
-                  ? `border-transparent bg-gradient-to-r ${tool.color} text-white shadow-lg ${tool.shadow} ring-2 ${tool.ring} focus-visible:ring-offset-background`
-                  : `border-border bg-card text-foreground hover:border-transparent hover:bg-gradient-to-r ${tool.color}`
+                  ? `border-transparent bg-gradient-to-br ${tool.color} text-white shadow-xl ${tool.shadow} ring-2 ${tool.ring} focus-visible:ring-offset-background`
+                  : `border-border bg-card text-foreground hover:border-transparent hover:bg-gradient-to-br ${tool.color}`
               }
             `}
             aria-pressed={isActive}
           >
             <span
               className={`
-                grid size-7 place-items-center rounded-lg transition-colors duration-200
+                grid size-20 place-items-center rounded-2xl transition-colors duration-200
                 ${isActive ? "bg-white/20" : "bg-muted group-hover:bg-white/10"}
               `}
             >
               <img
                 src={tool.logoSrc}
                 alt={`Logo ${tool.name}`}
-                width={28}
-                height={28}
+                width={80}
+                height={80}
                 loading="lazy"
-                className="size-5 object-contain transition-transform duration-200 group-hover:scale-105"
+                className="size-16 object-contain transition-transform duration-200 group-hover:scale-105"
               />
             </span>
-            <span className="font-display">{tool.name}</span>
+            <span className="font-display text-lg">{tool.name}</span>
           </button>
         );
       })}

@@ -79,7 +79,7 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: data.quantity }],
         mode: isRecurring ? 'subscription' : 'payment',
-        ui_mode: 'embedded',
+        ui_mode: 'embedded_page',
         return_url: data.returnUrl,
         customer: customerId,
         ...(!isRecurring && productDescription ? { payment_intent_data: { description: productDescription } } : {}),

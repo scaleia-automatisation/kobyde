@@ -1,17 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { createClient } from '@supabase/supabase-js';
 import { type StripeEnv, verifyWebhook } from '@/lib/stripe.server';
-
-let _supabase: ReturnType<typeof createClient> | null = null;
-function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
-  }
-  return _supabase;
-}
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const CREDITS_BY_PRICE: Record<string, number> = {
   credits_50: 50,
@@ -26,7 +15,11 @@ const PLAN_BY_PRICE: Record<string, string> = {
   pro_monthly: 'pro',
 };
 
-async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
+async function handleSubscriptionCreated(
+  supabase: SupabaseClient,
+  subscription: any,
+  env: StripeEnv,
+) {
   const orgId = subscription.metadata?.org_id;
   if (!orgId) {
     console.error('No org_id in subscription metadata');
@@ -41,7 +34,7 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
 
-  await getSupabase().from('subscriptions').upsert(
+  await supabase.from('subscriptions').upsert(
     {
       org_id: orgId,
       stripe_subscription_id: subscription.id,
@@ -58,7 +51,11 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   );
 }
 
-async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
+async function handleSubscriptionUpdated(
+  supabase: SupabaseClient,
+  subscription: any,
+  env: StripeEnv,
+) {
   const item = subscription.items?.data?.[0];
   const priceId = item?.price?.lookup_key
     || item?.price?.metadata?.lovable_external_id
@@ -67,7 +64,7 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
 
-  await getSupabase()
+  await supabase
     .from('subscriptions')
     .update({
       status: subscription.status,
@@ -82,8 +79,12 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
     .eq('environment', env);
 }
 
-async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
-  await getSupabase()
+async function handleSubscriptionDeleted(
+  supabase: SupabaseClient,
+  subscription: any,
+  env: StripeEnv,
+) {
+  await supabase
     .from('subscriptions')
     .update({
       status: 'canceled',
@@ -93,7 +94,10 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
     .eq('environment', env);
 }
 
-async function handleCheckoutSessionCompleted(session: any) {
+async function handleCheckoutSessionCompleted(
+  supabase: SupabaseClient,
+  session: any,
+) {
   const orgId = session.metadata?.org_id;
   if (!orgId) return;
 
@@ -104,7 +108,7 @@ async function handleCheckoutSessionCompleted(session: any) {
 
   const credits = CREDITS_BY_PRICE[priceId];
   if (credits) {
-    const { data: org } = await getSupabase()
+    const { data: org } = await supabase
       .from('organizations')
       .select('credits, credits_total')
       .eq('id', orgId)
@@ -112,12 +116,12 @@ async function handleCheckoutSessionCompleted(session: any) {
     if (org) {
       const newCredits = (org.credits ?? 0) + credits;
       const newTotal = (org.credits_total ?? 0) + credits;
-      await getSupabase()
+      await supabase
         .from('organizations')
         .update({ credits: newCredits, credits_total: newTotal })
         .eq('id', orgId);
 
-      await getSupabase().from('credit_transactions').insert({
+      await supabase.from('credit_transactions').insert({
         org_id: orgId,
         amount: credits,
         reason: 'Achat de crédits Stripe',
@@ -133,7 +137,7 @@ async function handleCheckoutSessionCompleted(session: any) {
 
   const plan = PLAN_BY_PRICE[priceId];
   if (plan) {
-    await getSupabase()
+    await supabase
       .from('organizations')
       .update({ plan })
       .eq('id', orgId);
@@ -141,28 +145,27 @@ async function handleCheckoutSessionCompleted(session: any) {
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const event = await verifyWebhook(req, env);
 
   switch (event.type) {
     case 'customer.subscription.created':
-      await handleSubscriptionCreated(event.data.object, env);
+      await handleSubscriptionCreated(supabaseAdmin, event.data.object, env);
       break;
     case 'customer.subscription.updated':
-      await handleSubscriptionUpdated(event.data.object, env);
+      await handleSubscriptionUpdated(supabaseAdmin, event.data.object, env);
       break;
     case 'customer.subscription.deleted':
-      await handleSubscriptionDeleted(event.data.object, env);
+      await handleSubscriptionDeleted(supabaseAdmin, event.data.object, env);
       break;
-    case 'checkout.session.completed': {
-      await handleCheckoutSessionCompleted(event.data.object);
+    case 'checkout.session.completed':
+      await handleCheckoutSessionCompleted(supabaseAdmin, event.data.object);
       break;
-    }
-    case 'checkout.session.async_payment_succeeded': {
-      await handleCheckoutSessionCompleted(event.data.object);
+    case 'checkout.session.async_payment_succeeded':
+      await handleCheckoutSessionCompleted(supabaseAdmin, event.data.object);
       break;
-    }
     default:
-      console.log('Unhandled event:', event.type);
+      console.log('Unhandled Stripe event:', event.type);
   }
 }
 

@@ -55,7 +55,7 @@ export const portalRespondQuote = createServerFn({ method: "POST" })
       { clientId: access.client_id, entityType: "quote", entityId: data.quoteId },
     );
 
-    if (data.action === "accepte") await maybeCreateProject(data.quoteId);
+    if (data.action === "accepte") await createProjectFromQuote(data.quoteId);
     return { ok: true };
   });
 

@@ -180,6 +180,55 @@ function ConnexionsPage() {
           </Card>
         )}
       </div>
+
+      <Dialog open={dialogKey !== null} onOpenChange={(o) => !o && setDialogKey(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{def?.name ?? "Connexion"}</DialogTitle>
+            <DialogDescription>
+              Renseignez les informations demandées par la plateforme (clé API, jeton, client ID, secret…).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+            {dialogFields.map((fd) => (
+              <div key={fd.key} className="space-y-1.5">
+                <Label htmlFor={`f-${fd.key}`}>
+                  {fd.label}
+                  {fd.required !== false && <span className="text-destructive"> *</span>}
+                </Label>
+                <Input
+                  id={`f-${fd.key}`}
+                  type={fd.secret ? "password" : "text"}
+                  autoComplete="off"
+                  placeholder={fd.placeholder ?? ""}
+                  value={values[fd.key] ?? ""}
+                  onChange={(e) => setValues((v) => ({ ...v, [fd.key]: e.target.value }))}
+                />
+              </div>
+            ))}
+            <div className="space-y-1.5">
+              <Label htmlFor="f-account_label">Nom du compte (facultatif)</Label>
+              <Input
+                id="f-account_label"
+                value={values["account_label"] ?? ""}
+                onChange={(e) => setValues((v) => ({ ...v, account_label: e.target.value }))}
+                placeholder="ex. contact@monentreprise.fr"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogKey(null)}>
+              Annuler
+            </Button>
+            <Button disabled={saving} onClick={() => void submitManual()}>
+              {saving ? "Enregistrement…" : "Enregistrer et connecter"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+
   );
 }

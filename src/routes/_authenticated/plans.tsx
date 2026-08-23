@@ -13,7 +13,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { useNavigate } from "@tanstack/react-router";
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 import {
@@ -60,28 +60,27 @@ export const Route = createFileRoute("/_authenticated/plans")({
 
 function PlansPage() {
   const { plan, credits, creditsUsed, creditsTotal, renewsAt } = usePlan();
-  const { openCheckout, checkoutElement } = useStripeCheckout();
+  const navigate = useNavigate();
   const [busyPriceId, setBusyPriceId] = useState<string | null>(null);
 
-  const startCheckout = (priceId: string, returnPath: string) => {
+  const startCheckout = (priceId: string, returnPath: string, titre: string) => {
     setBusyPriceId(priceId);
-    openCheckout({
-      priceId,
-      returnUrl: `${window.location.origin}${returnPath}`,
+    void navigate({
+      to: "/paiement",
+      search: { priceId, retour: returnPath, titre },
     });
-    setBusyPriceId(null);
   };
 
   const choosePlan = (key: PlanKey) => {
     const priceId = PLAN_PRICE_ID[key];
     if (!priceId) return;
-    startCheckout(priceId, `/merci?type=plan&plan=${key}`);
+    startCheckout(priceId, `/merci?type=plan&plan=${key}`, `Formule ${key}`);
   };
 
   const buyPack = (pack: CreditPack) => {
     const priceId = CREDIT_PRICE_ID[pack.credits];
     if (!priceId) return;
-    startCheckout(priceId, `/merci?type=credits&credits=${pack.credits}`);
+    startCheckout(priceId, `/merci?type=credits&credits=${pack.credits}`, `${pack.credits} crédits IA`);
   };
 
   return (
@@ -165,7 +164,6 @@ function PlansPage() {
         </p>
       </div>
 
-      {checkoutElement}
     </AppShell>
   );
 }

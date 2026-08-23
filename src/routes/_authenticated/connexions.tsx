@@ -66,7 +66,7 @@ function ConnexionsPage() {
 
   return (
     <AppShell title="Mes connexions" subtitle="Autorisez vos agents à agir dans vos outils, en votre nom">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex flex-col gap-4">
         {items.map((c) => (
           <Card key={c.key} className="space-y-3 p-5">
             <div className="flex items-start justify-between gap-3">

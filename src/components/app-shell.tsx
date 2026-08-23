@@ -16,6 +16,7 @@ import {
   FolderKanban,
   Home,
   LineChart,
+  Link2,
   ListChecks,
   LogOut,
   Mail,

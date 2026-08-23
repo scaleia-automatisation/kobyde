@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrgId, useProfile } from "@/lib/db";
 
@@ -41,6 +41,33 @@ export function useCreditHistory(limit = 100) {
       if (error) throw error;
       return (data ?? []) as unknown as CreditTransaction[];
     },
+  });
+}
+
+/** Supprime une transaction de crédits. */
+export function useDeleteCreditTransaction() {
+  const orgId = useOrgId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("credit_transactions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["credit-history", orgId] }),
+  });
+}
+
+/** Supprime toutes les transactions de crédits de l'organisation. */
+export function useDeleteAllCreditTransactions() {
+  const orgId = useOrgId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!orgId) throw new Error("Organisation non identifiée");
+      const { error } = await supabase.from("credit_transactions").delete().eq("org_id", orgId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["credit-history", orgId] }),
   });
 }
 

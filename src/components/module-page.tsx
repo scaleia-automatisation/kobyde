@@ -114,24 +114,24 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
       action={
         <div className="flex items-center gap-2">
         {(rows ?? []).length > 0 && (
-          <Button
-            variant="outline"
-            className="gap-2"
+          <button
+            type="button"
+            className="agent-suggestion-chip"
             onClick={() => {
               if (!window.confirm(`Supprimer définitivement tous les éléments de « ${config.title} » ?`)) return;
               removeAll.mutate(undefined, { onSuccess: () => toast.success("Tout a été supprimé") });
             }}
           >
-            <Trash2 className="size-4" />
+            <Trash2 className="mr-1.5 inline size-4" />
             <span className="hidden sm:inline">Tout supprimer</span>
-          </Button>
+          </button>
         )}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="size-4" />
+            <button type="button" className="agent-suggestion-chip">
+              <Plus className="mr-1.5 inline size-4" />
               <span className="hidden sm:inline">{config.addLabel}</span>
-            </Button>
+            </button>
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
@@ -180,9 +180,9 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
           title="Rien ici pour l'instant"
           description={config.emptyText}
           action={
-            <Button className="gap-2" onClick={() => setOpen(true)}>
-              <Plus className="size-4" /> {config.addLabel}
-            </Button>
+            <button type="button" className="agent-suggestion-chip" onClick={() => setOpen(true)}>
+              <Plus className="mr-1.5 inline size-4" /> {config.addLabel}
+            </button>
           }
         />
       ) : (

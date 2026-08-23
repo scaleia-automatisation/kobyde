@@ -267,6 +267,16 @@ function DocumentsPage() {
                     {s}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  className="agent-suggestion-chip"
+                  onClick={() => {
+                    setName("");
+                    document.getElementById("doc-name")?.focus();
+                  }}
+                >
+                  Personnalisé — je saisis le nom
+                </button>
               </div>
             </div>
 

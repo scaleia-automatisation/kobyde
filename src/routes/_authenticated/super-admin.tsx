@@ -168,6 +168,11 @@ function SuperAdminPage() {
           <TabsTrigger value="funnel">Funnel SaaS</TabsTrigger>
           <TabsTrigger value="comportement">Comportement</TabsTrigger>
           <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
+          <TabsTrigger value="connecteurs">Connecteurs</TabsTrigger>
+          <TabsTrigger value="couts">Coûts API</TabsTrigger>
+          <TabsTrigger value="tarifs">Tarifs</TabsTrigger>
+          <TabsTrigger value="budgets">Budgets</TabsTrigger>
+          <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-8">

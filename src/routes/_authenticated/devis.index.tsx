@@ -316,28 +316,40 @@ function DevisPage() {
         ) : (
           <div className="grid gap-3">
             {(quotes ?? []).map((q: any) => (
-              <Link
-                key={q.id}
-                to="/devis/$id"
-                params={{ id: q.id }}
-                className="surface flex flex-wrap items-center justify-between gap-4 p-4 transition hover:shadow-md"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs text-muted-foreground">{q.number}</span>
-                    <h3 className="font-display truncate text-lg">{q.title}</h3>
-                    <Badge variant="secondary">{QUOTE_STATUS_LABEL[q.status] ?? q.status}</Badge>
-                    {q.version > 1 && <Badge variant="outline">v{q.version}</Badge>}
+              <div key={q.id} className="relative">
+                <Link
+                  to="/devis/$id"
+                  params={{ id: q.id }}
+                  className="surface flex flex-wrap items-center justify-between gap-4 p-4 pr-12 transition hover:shadow-md"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs text-muted-foreground">{q.number}</span>
+                      <h3 className="font-display truncate text-lg">{q.title}</h3>
+                      <Badge variant="secondary">{QUOTE_STATUS_LABEL[q.status] ?? q.status}</Badge>
+                      {q.version > 1 && <Badge variant="outline">v{q.version}</Badge>}
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {clientName(q.client_id)} · valable jusqu'au {frDate(q.valid_until)}
+                    </p>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {clientName(q.client_id)} · valable jusqu'au {frDate(q.valid_until)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-display text-xl">{eur2(q.total_ttc)}</p>
-                  <p className="text-xs text-muted-foreground">{eur2(q.total_ht)} HT</p>
-                </div>
-              </Link>
+                  <div className="text-right">
+                    <p className="font-display text-xl">{eur2(q.total_ttc)}</p>
+                    <p className="text-xs text-muted-foreground">{eur2(q.total_ht)} HT</p>
+                  </div>
+                </Link>
+                <button
+                  type="button"
+                  aria-label="Supprimer le devis"
+                  onClick={() => {
+                    if (!window.confirm(`Supprimer le devis ${q.number} ?`)) return;
+                    removeQuote.mutate(q.id, { onSuccess: () => toast.success("Devis supprimé") });
+                  }}
+                  className="absolute right-3 top-3 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             ))}
           </div>
         )}

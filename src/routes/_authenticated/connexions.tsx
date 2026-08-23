@@ -23,6 +23,7 @@ import {
   myConnections,
   saveMyManualConnection,
   startConnection,
+  testMyConnection,
 } from "@/lib/connectors.functions";
 import { CATEGORY_LABELS, CONNECTOR_MAP, type ConnectorField } from "@/lib/connectors.catalog";
 
@@ -60,6 +61,9 @@ function ConnexionsPage() {
   const listFn = useServerFn(myConnections);
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
+  const testFn = useServerFn(testMyConnection);
+  const [testing, setTesting] = useState<string | null>(null);
+  const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
@@ -89,6 +93,23 @@ function ConnexionsPage() {
       openDialog(key);
     } catch {
       openDialog(key);
+    }
+  };
+
+  const runTest = async (key: string) => {
+    setTesting(key);
+    try {
+      const res = await testFn({ data: { connectorKey: key } });
+      setResults((prev) => ({ ...prev, [key]: res }));
+      if (res.ok) toast.success(res.message);
+      else toast.error(res.message);
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Test impossible.";
+      setResults((prev) => ({ ...prev, [key]: { ok: false, message } }));
+      toast.error(message);
+    } finally {
+      setTesting(null);
     }
   };
 
@@ -138,10 +159,10 @@ function ConnexionsPage() {
             </div>
 
             {c.services.length > 0 && (
-              <ul className="space-y-1 text-xs text-muted-foreground">
+              <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 {c.services.map((s: { key: string; label: string }) => (
-                  <li key={s.key} className="flex items-center gap-2">
-                    <CheckCircle2 className="size-3 text-emerald-600" /> {s.label}
+                  <li key={s.key} className="flex items-center gap-1.5 whitespace-nowrap">
+                    <CheckCircle2 className="size-3 shrink-0 text-emerald-600" /> {s.label}
                   </li>
                 ))}
               </ul>
@@ -149,7 +170,14 @@ function ConnexionsPage() {
 
             {c.connected && c.account && <p className="text-xs">Compte : {c.account}</p>}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="secondary"
+                disabled={testing === c.key}
+                onClick={() => void runTest(c.key)}
+              >
+                {testing === c.key ? "Test en cours…" : "Tester la connexion"}
+              </Button>
               {c.connected ? (
                 <>
                   <Button variant="outline" onClick={() => openDialog(c.key)}>
@@ -176,6 +204,12 @@ function ConnexionsPage() {
               )}
             </div>
 
+            {results[c.key] && (
+              <p className={`text-xs ${results[c.key]!.ok ? "text-emerald-600" : "text-destructive"}`}>
+                {results[c.key]!.ok ? "✓ " : "✕ "}
+                {results[c.key]!.message}
+              </p>
+            )}
           </Card>
         ))}
         {items.length === 0 && !list.isLoading && (

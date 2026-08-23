@@ -157,6 +157,24 @@ function OffersTab() {
     onError: (e: any) => toast.error(e?.message ?? "Échec de l'analyse."),
   });
 
+  const canAnalyze = mode === "texte" ? content.trim().length >= 60 : /^https?:\/\/\S+$/.test(url.trim());
+  const analyze = async (k: string) => {
+    if (!canAnalyze) {
+      toast.error(
+        mode === "texte"
+          ? "Collez le texte complet de l'offre (60 caractères minimum)."
+          : "Indiquez un lien valide vers l'offre.",
+      );
+      return;
+    }
+    try {
+      await run.mutateAsync(k);
+    } catch {
+      /* déjà signalé par onError */
+    }
+  };
+
+
   return (
     <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
       <Card className="h-fit space-y-4 p-5">
@@ -180,7 +198,7 @@ function OffersTab() {
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
           </div>
         )}
-        <CreditActionButton actionKey="hr.job_analysis" pending={run.isPending} onConfirm={(k) => run.mutateAsync(k)}>
+        <CreditActionButton actionKey="hr.job_analysis" disabled={!canAnalyze} pending={run.isPending} onConfirm={analyze}>
           Analyser l'offre
         </CreditActionButton>
       </Card>
@@ -206,7 +224,7 @@ function OffersTab() {
                   variant="outline"
                   size="sm"
                   pending={run.isPending}
-                  onConfirm={(k) => run.mutateAsync(k)}
+                  onConfirm={analyze}
                 >
                   <RefreshCw className="h-4 w-4" /> Régénérer
                 </CreditActionButton>

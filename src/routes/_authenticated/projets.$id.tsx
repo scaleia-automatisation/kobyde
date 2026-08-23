@@ -112,7 +112,9 @@ function ProjectDetail() {
   return (
     <AppShell
       title={project.name}
-      subtitle={`${project.status} · budget ${eur2(project.budget)} · ${progress} % réalisé`}
+      subtitle={`${PROJECT_STATUS_LABEL[project.status] ?? project.status} · ${
+        PAYMENT_PLAN_LABEL[project.payment_plan ?? "unique"]
+      } · budget ${eur2(project.budget)} · ${progress} % réalisé`}
       action={
         <Button variant="ghost" className="gap-2" asChild>
           <Link to="/projets">
@@ -121,6 +123,12 @@ function ProjectDetail() {
         </Button>
       }
     >
+      {project.status === "en_attente" && (
+        <div className="surface mb-4 border-primary/40 bg-primary/5 p-4 text-sm">
+          Projet créé par Chloé après acceptation du devis. Il démarrera automatiquement dès la
+          réception du 1er paiement ({PAYMENT_PLAN_LABEL[project.payment_plan ?? "unique"]}).
+        </div>
+      )}
       <section className="surface p-4">
         <div className="h-3 overflow-hidden rounded-full bg-muted">
           <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
@@ -133,12 +141,13 @@ function ProjectDetail() {
             Du {frDate(project.start_date)} au {frDate(project.end_date)}
           </span>
         </div>
-        {project.status !== "termine" && (
+        {project.status !== "termine" && project.status !== "en_attente" && (
           <Button className="mt-4 gap-2" onClick={finish}>
             <CheckCircle2 className="size-4" /> Marquer le projet livré
           </Button>
         )}
       </section>
+
 
       <section className="mt-4 space-y-4">
         {(steps ?? []).map((step: any) => {

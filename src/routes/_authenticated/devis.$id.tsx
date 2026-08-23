@@ -25,16 +25,17 @@ import { PaymentRequestDialog, makeToken } from "@/components/payment-request-di
 import { supabase } from "@/integrations/supabase/client";
 import { useChildRows, useOrgId, useRow, useRows, eur2, frDate } from "@/lib/db";
 import {
-  DEFAULT_INSTALLMENTS,
   DISCOUNT_OPTIONS,
+  PAYMENT_PLANS,
   QUOTE_STATUS_LABEL,
   VALIDITY_OPTIONS,
   addDays,
   computeTotals,
   isoDate,
+  paymentPlanOf,
   round2,
 } from "@/lib/sales";
-import { generateFollowups } from "@/lib/sales.functions";
+import { generateFollowups, syncProjectFromQuote } from "@/lib/sales.functions";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

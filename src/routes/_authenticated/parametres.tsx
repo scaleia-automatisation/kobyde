@@ -1,13 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile, useRows } from "@/lib/db";
+import { useProfile } from "@/lib/db";
+import { useDeleteNotifications, useNotifications } from "@/lib/notifications";
 import { usePlan } from "@/lib/plans";
+
 
 export const Route = createFileRoute("/_authenticated/parametres")({
   head: () => ({
@@ -25,9 +28,9 @@ export const Route = createFileRoute("/_authenticated/parametres")({
 
 function Settings() {
   const { data: profile, refetch } = useProfile();
-  const { data: notifications } = useRows<{ id: string; title: string; body: string; is_read: boolean }>(
-    "notifications",
-  );
+  const { data: notifications } = useNotifications(50);
+  const dropNotifications = useDeleteNotifications();
+
   const navigate = useNavigate();
   const { plan } = usePlan();
   const org = profile?.organizations as { name?: string; credits?: number; plan?: string } | null;
@@ -95,7 +98,25 @@ function Settings() {
         </section>
 
         <section className="surface p-6 lg:col-span-2">
-          <h2 className="text-lg">Notifications</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg">Notifications</h2>
+            {(notifications ?? []).length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={dropNotifications.isPending}
+                onClick={() => {
+                  if (!window.confirm("Supprimer définitivement toutes les notifications ?")) return;
+                  dropNotifications.mutate("all", {
+                    onSuccess: () => toast.success("Notifications supprimées"),
+                    onError: (e: unknown) => toast.error((e as Error).message),
+                  });
+                }}
+              >
+                Tout supprimer
+              </Button>
+            )}
+          </div>
           <ul className="mt-4 space-y-2">
             {(notifications ?? []).length === 0 && (
               <li className="text-sm text-muted-foreground">Aucune notification.</li>
@@ -107,10 +128,20 @@ function Settings() {
                   <p className="text-sm text-muted-foreground">{n.body}</p>
                 </div>
                 {!n.is_read && <Badge>Nouveau</Badge>}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Supprimer la notification"
+                  disabled={dropNotifications.isPending}
+                  onClick={() => dropNotifications.mutate([n.id])}
+                >
+                  <X className="size-4 text-muted-foreground" />
+                </Button>
               </li>
             ))}
           </ul>
         </section>
+
       </div>
     </AppShell>
   );

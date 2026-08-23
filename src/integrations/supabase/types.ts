@@ -187,6 +187,116 @@ export type Database = {
           },
         ]
       }
+      api_pricing: {
+        Row: {
+          connector_key: string
+          created_at: string
+          currency: string
+          effective_from: string
+          id: string
+          is_active: boolean
+          model: string | null
+          note: string | null
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          connector_key: string
+          created_at?: string
+          currency?: string
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          note?: string | null
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          connector_key?: string
+          created_at?: string
+          currency?: string
+          effective_from?: string
+          id?: string
+          is_active?: boolean
+          model?: string | null
+          note?: string | null
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      api_usage_events: {
+        Row: {
+          action_type: string | null
+          agent_key: string | null
+          connector_key: string | null
+          created_at: string
+          credits: number
+          duration_ms: number | null
+          error: string | null
+          estimated_cost_eur: number
+          feature: string | null
+          id: string
+          model: string | null
+          org_id: string | null
+          quantity: number
+          real_cost_eur: number | null
+          status: string
+          unit: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          agent_key?: string | null
+          connector_key?: string | null
+          created_at?: string
+          credits?: number
+          duration_ms?: number | null
+          error?: string | null
+          estimated_cost_eur?: number
+          feature?: string | null
+          id?: string
+          model?: string | null
+          org_id?: string | null
+          quantity?: number
+          real_cost_eur?: number | null
+          status?: string
+          unit?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          agent_key?: string | null
+          connector_key?: string | null
+          created_at?: string
+          credits?: number
+          duration_ms?: number | null
+          error?: string | null
+          estimated_cost_eur?: number
+          feature?: string | null
+          id?: string
+          model?: string | null
+          org_id?: string | null
+          quantity?: number
+          real_cost_eur?: number | null
+          status?: string
+          unit?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -739,6 +849,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cost_budgets: {
+        Row: {
+          action_on_limit: string
+          amount_eur: number
+          connector_key: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          period: string
+          scope: string
+          scope_ref: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_on_limit?: string
+          amount_eur?: number
+          connector_key?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          period?: string
+          scope?: string
+          scope_ref?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_on_limit?: string
+          amount_eur?: number
+          connector_key?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          period?: string
+          scope?: string
+          scope_ref?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       credit_transactions: {
         Row: {
@@ -1576,45 +1725,101 @@ export type Database = {
       oauth_connections: {
         Row: {
           access_token: string | null
+          account_label: string | null
+          connector_key: string | null
           created_at: string
           expires_at: string | null
           id: string
+          last_used_at: string | null
           metadata: Json | null
+          org_id: string | null
           provider: string
           provider_email: string | null
           provider_user_id: string
           refresh_token: string | null
           revoked: boolean
+          scopes: string | null
+          status: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
           access_token?: string | null
+          account_label?: string | null
+          connector_key?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          last_used_at?: string | null
           metadata?: Json | null
+          org_id?: string | null
           provider?: string
           provider_email?: string | null
           provider_user_id: string
           refresh_token?: string | null
           revoked?: boolean
+          scopes?: string | null
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           access_token?: string | null
+          account_label?: string | null
+          connector_key?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
+          last_used_at?: string | null
           metadata?: Json | null
+          org_id?: string | null
           provider?: string
           provider_email?: string | null
           provider_user_id?: string
           refresh_token?: string | null
           revoked?: boolean
+          scopes?: string | null
+          status?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_connections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_states: {
+        Row: {
+          connector_key: string
+          created_at: string
+          expires_at: string
+          org_id: string | null
+          redirect_to: string | null
+          state: string
+          user_id: string
+        }
+        Insert: {
+          connector_key: string
+          created_at?: string
+          expires_at?: string
+          org_id?: string | null
+          redirect_to?: string | null
+          state: string
+          user_id: string
+        }
+        Update: {
+          connector_key?: string
+          created_at?: string
+          expires_at?: string
+          org_id?: string | null
+          redirect_to?: string | null
+          state?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2072,6 +2277,60 @@ export type Database = {
           email?: string | null
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      platform_connectors: {
+        Row: {
+          auth_type: string
+          category: string
+          config: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_enabled: boolean
+          key: string
+          last_error: string | null
+          last_test_at: string | null
+          name: string
+          secrets: Json
+          services: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auth_type?: string
+          category?: string
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          key: string
+          last_error?: string | null
+          last_test_at?: string | null
+          name: string
+          secrets?: Json
+          services?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_type?: string
+          category?: string
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          key?: string
+          last_error?: string | null
+          last_test_at?: string | null
+          name?: string
+          secrets?: Json
+          services?: Json
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

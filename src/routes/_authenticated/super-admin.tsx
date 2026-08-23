@@ -26,6 +26,8 @@ import {
   suspendPlatformUser,
 } from "@/lib/admin.functions";
 import { USER_EVENT_LABELS } from "@/lib/user-events";
+import { ConnectorsPanel } from "@/components/admin/connectors-panel";
+import { BudgetsPanel, CostsPanel, LogsPanel, PricingPanel } from "@/components/admin/costs-panel";
 
 export const Route = createFileRoute("/_authenticated/super-admin")({
   component: SuperAdminPage,
@@ -166,6 +168,11 @@ function SuperAdminPage() {
           <TabsTrigger value="funnel">Funnel SaaS</TabsTrigger>
           <TabsTrigger value="comportement">Comportement</TabsTrigger>
           <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
+          <TabsTrigger value="connecteurs">Connecteurs</TabsTrigger>
+          <TabsTrigger value="couts">Coûts API</TabsTrigger>
+          <TabsTrigger value="tarifs">Tarifs</TabsTrigger>
+          <TabsTrigger value="budgets">Budgets</TabsTrigger>
+          <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-8">
@@ -423,6 +430,25 @@ function SuperAdminPage() {
               </tbody>
             </table>
           </Card>
+        </TabsContent>
+        <TabsContent value="connecteurs">
+          <ConnectorsPanel />
+        </TabsContent>
+
+        <TabsContent value="couts">
+          <CostsPanel />
+        </TabsContent>
+
+        <TabsContent value="tarifs">
+          <PricingPanel />
+        </TabsContent>
+
+        <TabsContent value="budgets">
+          <BudgetsPanel />
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <LogsPanel />
         </TabsContent>
       </Tabs>
     </AppShell>

@@ -268,33 +268,19 @@ function QuoteDetail() {
 
   const toProject = async () => {
     if (!orgId || !quote) return;
-    const { data: project, error } = await (supabase as any)
-      .from("projects")
-      .insert({
-        org_id: orgId,
-        client_id: quote.client_id,
-        quote_id: id,
-        name: quote.title,
-        status: "en_cours",
-        progress: 0,
-        budget: Number(quote.total_ttc ?? 0),
-        start_date: isoDate(new Date()),
-      })
-      .select("id")
-      .single();
-    if (error) { toast.error(error.message); return; }
-    const steps = ["Analyse", "Maquette", "Développement", "Tests", "Mise en ligne"];
-    await (supabase as any).from("project_steps").insert(
-      steps.map((name, i) => ({
-        org_id: orgId,
-        project_id: project.id,
-        name,
-        status: i === 0 ? "en_cours" : "a_faire",
-        position: i,
-      })),
-    );
-    navigate({ to: "/projets/$id", params: { id: project.id } });
+    try {
+      const res = await syncProjectFromQuote({ data: { orgId, quoteId: id } });
+      await qc.invalidateQueries({ queryKey: ["rows", "projects"] });
+      if (!res.projectId) {
+        toast.error("Le devis doit d'abord être accepté.");
+        return;
+      }
+      navigate({ to: "/projets/$id", params: { id: res.projectId } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Projet non créé");
+    }
   };
+
 
   if (!quote) {
     return (

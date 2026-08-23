@@ -220,27 +220,44 @@ function QuoteDetail() {
       })
       .eq("id", id);
     await refetchQuote();
+    if (status === "accepte" && orgId) {
+      try {
+        await syncProjectFromQuote({ data: { orgId, quoteId: id } });
+        await qc.invalidateQueries({ queryKey: ["rows", "projects"] });
+        toast.success("Devis accepté — Chloé a créé le projet (démarrage au 1er paiement).");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Projet non créé");
+      }
+      return;
+    }
     toast.success(status === "accepte" ? "Devis accepté" : "Devis refusé");
   };
 
-  const createInstallments = async () => {
+  const applyPaymentPlan = async (planValue: string) => {
     if (!orgId) return;
+    const plan = paymentPlanOf(planValue);
+    await (supabase as any).from("quotes").update({ payment_plan: plan.value }).eq("id", id);
     await (supabase as any).from("quote_installments").delete().eq("quote_id", id);
-    const rows = DEFAULT_INSTALLMENTS.map((inst, i) => ({
-      org_id: orgId,
-      quote_id: id,
-      label: inst.label,
-      percentage: inst.percentage,
-      amount_ttc: round2((totals.totalTtc * inst.percentage) / 100),
-      position: i,
-      due_date: isoDate(addDays(i * 15)),
-      status: "a_payer",
-    }));
-    const { error } = await (supabase as any).from("quote_installments").insert(rows);
-    if (error) { toast.error(error.message); return; }
+    if (plan.value !== "unique") {
+      const rows = plan.schedule.map((inst, i) => ({
+        org_id: orgId,
+        quote_id: id,
+        label: inst.label,
+        percentage: inst.percentage,
+        amount_ttc: round2((totals.totalTtc * inst.percentage) / 100),
+        position: i,
+        due_date: isoDate(addDays(i * 15)),
+        status: "a_payer",
+      }));
+      const { error } = await (supabase as any).from("quote_installments").insert(rows);
+      if (error) { toast.error(error.message); return; }
+    }
+    await (supabase as any).from("projects").update({ payment_plan: plan.value }).eq("quote_id", id);
     await refetchInst();
-    toast.success("Échéancier créé");
+    await refetchQuote();
+    toast.success(`${plan.label} appliqué`);
   };
+
 
   const runFollowups = async (idempotencyKey: string) => {
     if (!orgId) return;

@@ -1395,11 +1395,14 @@ export type Database = {
           amount_ht: number
           amount_ttc: number
           client_id: string | null
+          content: string | null
           created_at: string
           due_date: string | null
           id: string
           installment_id: string | null
+          items: Json
           label: string | null
+          notes: string | null
           number: string
           org_id: string
           paid_at: string | null
@@ -1407,16 +1410,20 @@ export type Database = {
           quote_id: string | null
           status: string
           updated_at: string
+          vat_rate: number
         }
         Insert: {
           amount_ht?: number
           amount_ttc?: number
           client_id?: string | null
+          content?: string | null
           created_at?: string
           due_date?: string | null
           id?: string
           installment_id?: string | null
+          items?: Json
           label?: string | null
+          notes?: string | null
           number: string
           org_id: string
           paid_at?: string | null
@@ -1424,16 +1431,20 @@ export type Database = {
           quote_id?: string | null
           status?: string
           updated_at?: string
+          vat_rate?: number
         }
         Update: {
           amount_ht?: number
           amount_ttc?: number
           client_id?: string | null
+          content?: string | null
           created_at?: string
           due_date?: string | null
           id?: string
           installment_id?: string | null
+          items?: Json
           label?: string | null
+          notes?: string | null
           number?: string
           org_id?: string
           paid_at?: string | null
@@ -1441,6 +1452,7 @@ export type Database = {
           quote_id?: string | null
           status?: string
           updated_at?: string
+          vat_rate?: number
         }
         Relationships: [
           {

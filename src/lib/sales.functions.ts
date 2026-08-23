@@ -208,3 +208,17 @@ export const analyzeMeetingAudio = createServerFn({ method: "POST" })
       throw new Error(message);
     }
   });
+
+/** Chloé : crée le projet dès l'acceptation du devis, et le démarre au 1er paiement. */
+export const syncProjectFromQuote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ orgId: z.string().uuid(), quoteId: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.supabase, data.orgId, context.userId);
+    const { createProjectFromQuote, startProjectOnFirstPayment } = await import("./portal.server");
+    const projectId = await createProjectFromQuote(data.quoteId);
+    await startProjectOnFirstPayment(data.quoteId);
+    return { projectId };
+  });

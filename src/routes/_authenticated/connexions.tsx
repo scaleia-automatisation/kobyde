@@ -69,12 +69,40 @@ function ConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message]);
 
+  const saveFn = useServerFn(saveMyManualConnection);
+  const [dialogKey, setDialogKey] = useState<string | null>(null);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  const openDialog = (key: string) => {
+    setValues({});
+    setDialogKey(key);
+  };
+
   const connect = async (key: string) => {
     try {
       const { url } = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
       window.location.href = url;
+    } catch {
+      openDialog(key);
+    }
+  };
+
+  const def = dialogKey ? CONNECTOR_MAP.get(dialogKey) : undefined;
+  const dialogFields: ConnectorField[] = def ? [...(def.fields ?? []), ...(def.optionalFields ?? [])] : [];
+
+  const submitManual = async () => {
+    if (!dialogKey) return;
+    setSaving(true);
+    try {
+      await saveFn({ data: { connectorKey: dialogKey, values } });
+      toast.success("Compte connecté avec succès.");
+      setDialogKey(null);
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Connexion impossible.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -95,7 +123,7 @@ function ConnexionsPage() {
                   ) : c.available ? (
                     <Badge variant="secondary">Disponible</Badge>
                   ) : (
-                    <Badge variant="outline">Bientôt disponible</Badge>
+                    <Badge variant="outline">Configuration manuelle</Badge>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
@@ -117,24 +145,33 @@ function ConnexionsPage() {
 
             {c.connected && c.account && <p className="text-xs">Compte : {c.account}</p>}
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {c.connected ? (
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    await stopFn({ data: { connectorKey: c.key } });
-                    toast.success("Compte déconnecté.");
-                    void qc.invalidateQueries({ queryKey: ["my-connections"] });
-                  }}
-                >
-                  Déconnecter
-                </Button>
+                <>
+                  <Button variant="outline" onClick={() => openDialog(c.key)}>
+                    Modifier mes identifiants
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      await stopFn({ data: { connectorKey: c.key } });
+                      toast.success("Compte déconnecté.");
+                      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+                    }}
+                  >
+                    Déconnecter
+                  </Button>
+                </>
               ) : (
-                <Button disabled={!c.available} onClick={() => void connect(c.key)}>
-                  Connecter mon compte
-                </Button>
+                <>
+                  <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
+                  <Button variant="outline" onClick={() => openDialog(c.key)}>
+                    Saisir mes identifiants
+                  </Button>
+                </>
               )}
             </div>
+
           </Card>
         ))}
         {items.length === 0 && !list.isLoading && (

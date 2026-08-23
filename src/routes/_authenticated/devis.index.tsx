@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FileText, Plus, Sparkles, Wand2 } from "lucide-react";
+import { FileText, Mic, Package, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { CreditActionButton } from "@/components/credit-action";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrgId, useRows, eur2, frDate } from "@/lib/db";
 import { MEETING_SOURCES, QUOTE_STATUS_LABEL, addDays, isoDate, nextNumber } from "@/lib/sales";
-import { analyzeMeeting } from "@/lib/sales.functions";
+import { analyzeMeeting, analyzeMeetingAudio } from "@/lib/sales.functions";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/devis/")({
       {
         name: "description",
         content:
-          "Créez vos devis à la main ou laissez Michael les détecter automatiquement depuis un compte rendu de réunion.",
+          "Créez vos devis en quelques clics : depuis un audio, une transcription de réunion ou directement depuis votre catalogue.",
       },
       { property: "og:title", content: "Devis — Kobyde" },
       { property: "og:description", content: "Devis, versions, validation et envoi au client." },
@@ -42,17 +42,39 @@ export const Route = createFileRoute("/_authenticated/devis/")({
   component: DevisPage,
 });
 
+const readFile = (file: File) =>
+  new Promise<{ name: string; mime: string; base64: string }>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Lecture du fichier impossible."));
+    reader.onload = () =>
+      resolve({ name: file.name, mime: file.type || "", base64: String(reader.result ?? "").split(",").pop() ?? "" });
+    reader.readAsDataURL(file);
+  });
+
 function DevisPage() {
   const orgId = useOrgId();
   const navigate = useNavigate();
   const { data: quotes, isLoading, refetch } = useRows<any>("quotes");
   const { data: clients } = useRows<any>("clients");
+  const { data: products } = useRows<any>("products");
+
   const [manual, setManual] = useState(false);
   const [meeting, setMeeting] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
+  const [catalog, setCatalog] = useState(false);
+
   const [analysis, setAnalysis] = useState<any | null>(null);
   const [meetingClient, setMeetingClient] = useState("");
   const [transcript, setTranscript] = useState("");
   const [meetingTitle, setMeetingTitle] = useState("");
+
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioTitle, setAudioTitle] = useState("");
+  const [audioClient, setAudioClient] = useState("");
+
+  const [catalogClient, setCatalogClient] = useState("");
+  const [catalogTitle, setCatalogTitle] = useState("");
+  const [picked, setPicked] = useState<Record<string, number>>({});
 
   const clientName = (id: string | null) => {
     const c = (clients ?? []).find((x: any) => x.id === id);
@@ -97,6 +119,23 @@ function DevisPage() {
     setAnalysis(res);
   };
 
+  const runAudioAnalysis = async (idempotencyKey: string) => {
+    if (!orgId || !audioFile) return;
+    const res = await analyzeMeetingAudio({
+      data: {
+        orgId,
+        idempotencyKey,
+        title: audioTitle.trim() || "Réunion client (audio)",
+        clientId: audioClient || null,
+        audio: await readFile(audioFile),
+      },
+    });
+    setMeetingTitle(audioTitle.trim() || "Réunion client (audio)");
+    setMeetingClient(audioClient);
+    setTranscript(res.transcript ?? "");
+    setAnalysis(res);
+  };
+
   const createFromAnalysis = async () => {
     if (!orgId || !analysis) return;
     const retained = (analysis.besoins ?? []).filter((b: any) => b.retenu);
@@ -121,82 +160,188 @@ function DevisPage() {
 
     if (retained.length) {
       const { error: e2 } = await supabase.from("quote_items").insert(
-        retained.map((b: any) => ({
+        retained.map((b: any, i: number) => ({
           org_id: orgId,
           quote_id: quote.id,
           product_id: b.product_id ?? null,
           label: b.service,
-          description: b.justification ?? null,
           quantity: Number(b.quantite ?? 1),
           unit_price: Number(b.prix_ht ?? 0),
           vat_rate: Number(b.vat_rate ?? 20),
-          detection: b.detection ?? "Discuté",
+          position: i,
         })),
       );
       if (e2) toast.error(e2.message);
     }
     setMeeting(false);
+    setAudioOpen(false);
     setAnalysis(null);
     void refetch();
     navigate({ to: "/devis/$id", params: { id: quote.id } });
   };
+
+  const createFromCatalog = async () => {
+    if (!orgId) return;
+    const lines = Object.entries(picked).filter(([, qty]) => qty > 0);
+    if (!lines.length) { toast.error("Sélectionnez au moins un produit ou service."); return; }
+
+    const { data: quote, error } = await supabase
+      .from("quotes")
+      .insert({
+        org_id: orgId,
+        client_id: catalogClient || null,
+        number: nextNumber("DEV"),
+        title: catalogTitle.trim() || "Devis catalogue",
+        status: "brouillon",
+        validity_days: 30,
+        valid_until: isoDate(addDays(30)),
+        source: "manuel",
+      })
+      .select("id")
+      .single();
+    if (error) { toast.error(error.message); return; }
+
+    const { error: e2 } = await supabase.from("quote_items").insert(
+      lines.map(([id, qty], i) => {
+        const p = (products ?? []).find((x: any) => x.id === id);
+        return {
+          org_id: orgId,
+          quote_id: quote.id,
+          product_id: id,
+          label: p?.name ?? "Prestation",
+          quantity: qty,
+          unit_price: Number(p?.price_ht ?? p?.price ?? 0),
+          vat_rate: Number(p?.vat_rate ?? 20),
+          position: i,
+        };
+      }),
+    );
+    if (e2) toast.error(e2.message);
+
+    setCatalog(false);
+    setPicked({});
+    void refetch();
+    navigate({ to: "/devis/$id", params: { id: quote.id } });
+  };
+
+  const clientSelect = (id: string, value: string, onChange: (v: string) => void) => (
+    <select
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+    >
+      <option value="">— Choisir —</option>
+      {(clients ?? []).map((c: any) => (
+        <option key={c.id} value={c.id}>
+          {c.company_name || c.full_name}
+        </option>
+      ))}
+    </select>
+  );
 
   return (
     <AppShell
       title="Devis"
       subtitle="Michael transforme un besoin — ou un compte rendu de réunion — en devis prêt à envoyer."
       action={
-        <div className="flex gap-2">
-          <Button variant="secondary" className="gap-2" onClick={() => setMeeting(true)}>
-            <Sparkles className="size-4" /> <span className="hidden sm:inline">Depuis une réunion</span>
-          </Button>
-          <Button className="gap-2" onClick={() => setManual(true)}>
-            <Plus className="size-4" /> <span className="hidden sm:inline">Nouveau devis</span>
-          </Button>
-        </div>
+        <Button variant="secondary" className="gap-2" onClick={() => setManual(true)}>
+          <Plus className="size-4" /> <span className="hidden sm:inline">Devis vierge</span>
+        </Button>
       }
     >
-      {isLoading ? (
-        <div className="surface p-10 text-center text-muted-foreground">Chargement…</div>
-      ) : (quotes ?? []).length === 0 ? (
-        <div className="surface p-12 text-center">
-          <FileText className="mx-auto size-8 text-muted-foreground" />
-          <p className="font-display mt-3 text-xl">Aucun devis pour le moment</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Collez le compte rendu d'une réunion : Michael identifie ce qui a été validé et prépare le devis.
-          </p>
-          <Button className="mt-6 gap-2" onClick={() => setMeeting(true)}>
-            <Wand2 className="size-4" /> Analyser une réunion
-          </Button>
+      <section className="surface p-6 sm:p-8">
+        <h2 className="font-display text-2xl sm:text-3xl">Votre devis créé en quelques clics</h2>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          Choisissez votre point de départ : un enregistrement audio, une transcription écrite, ou directement
+          votre catalogue de produits et services.
+        </p>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <button
+            type="button"
+            onClick={() => setAudioOpen(true)}
+            className="surface flex items-start gap-3 p-4 text-left transition hover:shadow-md"
+          >
+            <Mic className="mt-0.5 size-5 text-primary" />
+            <span>
+              <span className="block font-medium">Insérer un audio</span>
+              <span className="block text-xs text-muted-foreground">
+                Transcription puis analyse de l'enregistrement.
+              </span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMeeting(true)}
+            className="surface flex items-start gap-3 p-4 text-left transition hover:shadow-md"
+          >
+            <Sparkles className="mt-0.5 size-5 text-primary" />
+            <span>
+              <span className="block font-medium">Insérer une transcription</span>
+              <span className="block text-xs text-muted-foreground">
+                Collez le compte rendu, Michael analyse les besoins.
+              </span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCatalog(true)}
+            className="surface flex items-start gap-3 p-4 text-left transition hover:shadow-md"
+          >
+            <Package className="mt-0.5 size-5 text-primary" />
+            <span>
+              <span className="block font-medium">À partir du catalogue</span>
+              <span className="block text-xs text-muted-foreground">
+                Choisissez les produits ou services et le client.
+              </span>
+            </span>
+          </button>
         </div>
-      ) : (
-        <div className="grid gap-3">
-          {(quotes ?? []).map((q: any) => (
-            <Link
-              key={q.id}
-              to="/devis/$id"
-              params={{ id: q.id }}
-              className="surface flex flex-wrap items-center justify-between gap-4 p-4 transition hover:shadow-md"
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-xs text-muted-foreground">{q.number}</span>
-                  <h3 className="font-display truncate text-lg">{q.title}</h3>
-                  <Badge variant="secondary">{QUOTE_STATUS_LABEL[q.status] ?? q.status}</Badge>
-                  {q.version > 1 && <Badge variant="outline">v{q.version}</Badge>}
+      </section>
+
+      <div className="mt-6">
+        {isLoading ? (
+          <div className="surface p-10 text-center text-muted-foreground">Chargement…</div>
+        ) : (quotes ?? []).length === 0 ? (
+          <div className="surface p-12 text-center">
+            <FileText className="mx-auto size-8 text-muted-foreground" />
+            <p className="font-display mt-3 text-xl">Aucun devis pour le moment</p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Démarrez avec l'un des trois parcours ci-dessus.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {(quotes ?? []).map((q: any) => (
+              <Link
+                key={q.id}
+                to="/devis/$id"
+                params={{ id: q.id }}
+                className="surface flex flex-wrap items-center justify-between gap-4 p-4 transition hover:shadow-md"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs text-muted-foreground">{q.number}</span>
+                    <h3 className="font-display truncate text-lg">{q.title}</h3>
+                    <Badge variant="secondary">{QUOTE_STATUS_LABEL[q.status] ?? q.status}</Badge>
+                    {q.version > 1 && <Badge variant="outline">v{q.version}</Badge>}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {clientName(q.client_id)} · valable jusqu'au {frDate(q.valid_until)}
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {clientName(q.client_id)} · valable jusqu'au {frDate(q.valid_until)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="font-display text-xl">{eur2(q.total_ttc)}</p>
-                <p className="text-xs text-muted-foreground">{eur2(q.total_ht)} HT</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+                <div className="text-right">
+                  <p className="font-display text-xl">{eur2(q.total_ttc)}</p>
+                  <p className="text-xs text-muted-foreground">{eur2(q.total_ht)} HT</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Devis manuel */}
       <Dialog open={manual} onOpenChange={setManual}>
@@ -232,7 +377,75 @@ function DevisPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Depuis une réunion */}
+      {/* Depuis un audio */}
+      <Dialog
+        open={audioOpen}
+        onOpenChange={(o) => {
+          setAudioOpen(o);
+          if (!o) setAnalysis(null);
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Devis depuis un audio</DialogTitle>
+            <DialogDescription>
+              Importez l'enregistrement de la réunion : il est transcrit, puis analysé pour préparer le devis.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="a_title">Titre de la réunion</Label>
+              <Input
+                id="a_title"
+                value={audioTitle}
+                onChange={(e) => setAudioTitle(e.target.value)}
+                placeholder="Point besoin — refonte du site"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="a_client">Client</Label>
+              {clientSelect("a_client", audioClient, setAudioClient)}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="a_file">Fichier audio</Label>
+              <Input
+                id="a_file"
+                type="file"
+                accept="audio/*"
+                onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)}
+              />
+              <p className="text-xs text-muted-foreground">Formats mp3, m4a, wav, ogg, webm — 20 Mo maximum.</p>
+            </div>
+
+            {analysis?.transcript && (
+              <div className="surface space-y-2 p-4">
+                <p className="font-display text-lg">Transcription</p>
+                <p className="max-h-40 overflow-y-auto whitespace-pre-wrap text-sm text-muted-foreground">
+                  {analysis.transcript}
+                </p>
+              </div>
+            )}
+            {analysis && <AnalysisCard analysis={analysis} />}
+          </div>
+
+          <DialogFooter className="gap-2">
+            {analysis ? (
+              <Button onClick={createFromAnalysis}>Créer le devis</Button>
+            ) : (
+              <CreditActionButton
+                actionKey="meeting.audio_analysis"
+                disabled={!audioFile}
+                onConfirm={runAudioAnalysis}
+              >
+                Analyser l'audio
+              </CreditActionButton>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Depuis une transcription */}
       <Dialog
         open={meeting}
         onOpenChange={(o) => {
@@ -242,7 +455,7 @@ function DevisPage() {
       >
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Devis depuis une réunion</DialogTitle>
+            <DialogTitle>Devis depuis une transcription</DialogTitle>
             <DialogDescription>
               Collez la transcription, le résumé ou le compte rendu ({MEETING_SOURCES.join(", ")}). Michael
               distingue ce qui est validé, discuté ou refusé — sans jamais inventer un prix.
@@ -261,19 +474,7 @@ function DevisPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="m_client">Client</Label>
-              <select
-                id="m_client"
-                value={meetingClient}
-                onChange={(e) => setMeetingClient(e.target.value)}
-                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
-              >
-                <option value="">— Choisir —</option>
-                {(clients ?? []).map((c: any) => (
-                  <option key={c.id} value={c.id}>
-                    {c.company_name || c.full_name}
-                  </option>
-                ))}
-              </select>
+              {clientSelect("m_client", meetingClient, setMeetingClient)}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="m_text">Compte rendu</Label>
@@ -286,28 +487,7 @@ function DevisPage() {
               />
             </div>
 
-            {analysis && (
-              <div className="surface space-y-3 p-4">
-                <p className="font-display text-lg">Ce que Michael a compris</p>
-                {analysis.resume && <p className="text-sm text-muted-foreground">{analysis.resume}</p>}
-                <ul className="grid gap-2">
-                  {(analysis.besoins ?? []).map((b: any, i: number) => (
-                    <li key={i} className="rounded-xl bg-muted/50 p-3 text-sm">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">{b.service}</span>
-                        <span className="flex items-center gap-2">
-                          <Badge variant="outline">{b.detection}</Badge>
-                          <span>{b.prix_ht > 0 ? eur2(b.prix_ht) : "Non trouvé"}</span>
-                        </span>
-                      </div>
-                      {b.justification && (
-                        <p className="mt-1 text-xs italic text-muted-foreground">« {b.justification} »</p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {analysis && <AnalysisCard analysis={analysis} />}
           </div>
 
           <DialogFooter className="gap-2">
@@ -319,12 +499,118 @@ function DevisPage() {
                 disabled={transcript.trim().length < 20}
                 onConfirm={runAnalysis}
               >
-                Analyser la réunion
+                Analyser la transcription
               </CreditActionButton>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Depuis le catalogue */}
+      <Dialog open={catalog} onOpenChange={setCatalog}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Devis à partir du catalogue</DialogTitle>
+            <DialogDescription>
+              Sélectionnez les produits ou services, ajustez les quantités, puis choisissez le client.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="c_title">Titre du devis</Label>
+              <Input
+                id="c_title"
+                value={catalogTitle}
+                onChange={(e) => setCatalogTitle(e.target.value)}
+                placeholder="Prestation de janvier"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="c_client">Client</Label>
+              {clientSelect("c_client", catalogClient, setCatalogClient)}
+            </div>
+
+            {(products ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Votre catalogue est vide. Ajoutez d'abord des produits ou services depuis la page Catalogue.
+              </p>
+            ) : (
+              <ul className="grid gap-2">
+                {(products ?? []).map((p: any) => {
+                  const qty = picked[p.id] ?? 0;
+                  return (
+                    <li key={p.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/50 p-3">
+                      <input
+                        type="checkbox"
+                        className="size-4"
+                        checked={qty > 0}
+                        onChange={(e) =>
+                          setPicked((prev) => ({
+                            ...prev,
+                            [p.id]: e.target.checked ? Number(p.default_quantity ?? 1) || 1 : 0,
+                          }))
+                        }
+                        aria-label={`Ajouter ${p.name}`}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {eur2(Number(p.price_ht ?? p.price ?? 0))} HT
+                          {p.unit ? ` · ${p.unit}` : ""}
+                        </p>
+                      </div>
+                      <Input
+                        type="number"
+                        min={1}
+                        step="1"
+                        className="h-9 w-20"
+                        value={qty || 1}
+                        disabled={qty === 0}
+                        onChange={(e) =>
+                          setPicked((prev) => ({ ...prev, [p.id]: Math.max(1, Number(e.target.value) || 1) }))
+                        }
+                        aria-label={`Quantité pour ${p.name}`}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={createFromCatalog} disabled={!Object.values(picked).some((q) => q > 0)}>
+              Créer le devis
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+  );
+}
+
+function AnalysisCard({ analysis }: { analysis: any }) {
+  return (
+    <div className="surface space-y-3 p-4">
+      <p className="font-display text-lg">Ce que Michael a compris</p>
+      {analysis.resume && <p className="text-sm text-muted-foreground">{analysis.resume}</p>}
+      <ul className="grid gap-2">
+        {(analysis.besoins ?? []).map((b: any, i: number) => (
+          <li key={i} className="rounded-xl bg-muted/50 p-3 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-medium">{b.service}</span>
+              <span className="flex items-center gap-2">
+                <Badge variant="outline">{b.detection}</Badge>
+                <span>{b.prix_ht > 0 ? eur2(b.prix_ht) : "Non trouvé"}</span>
+              </span>
+            </div>
+            {b.justification && (
+              <p className="mt-1 text-xs italic text-muted-foreground">« {b.justification} »</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

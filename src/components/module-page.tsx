@@ -111,6 +111,20 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
       title={config.title}
       subtitle={config.subtitle}
       action={
+        <div className="flex items-center gap-2">
+        {(rows ?? []).length > 0 && (
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              if (!window.confirm(`Supprimer définitivement tous les éléments de « ${config.title} » ?`)) return;
+              removeAll.mutate(undefined, { onSuccess: () => toast.success("Tout a été supprimé") });
+            }}
+          >
+            <Trash2 className="size-4" />
+            <span className="hidden sm:inline">Tout supprimer</span>
+          </Button>
+        )}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">

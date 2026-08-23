@@ -150,6 +150,13 @@ function JasonPage() {
 
   const set = <K extends keyof Params>(k: K, v: Params[K]) => setParams((p) => ({ ...p, [k]: v }));
 
+  const countryOptions = getCountries(params.continent).map((c) => c.name);
+  const selectedCountry = getCountry(params.continent, params.country);
+  const regionOptions = getRegions(params.continent, params.country).map((r) => r.name);
+  const departmentOptions = getDepartments(params.continent, params.country, params.region);
+  const regionLabel = selectedCountry?.regionLabel ?? "Région";
+  const departmentLabel = selectedCountry?.departmentLabel ?? "Département";
+
   const callPersona = useServerFn(generatePersona);
   const callSave = useServerFn(savePersona);
   const callFind = useServerFn(findProspects);

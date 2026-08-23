@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { analyzeMeetingAI, followupEmailsAI } from "./sales.server";
+import { analyzeMeetingAI, followupEmailsAI, transcribeMeetingAudioAI } from "./sales.server";
 import { completeCredits, refundCredits, reserveCredits } from "./credits.server";
 
 const assertMember = async (
@@ -141,6 +141,69 @@ export const generateFollowups = createServerFn({ method: "POST" })
       return { ok: true, count: rows.length };
     } catch (e) {
       const message = e instanceof Error ? e.message : "Échec de la préparation des relances";
+      await refundCredits(supabase, tx, message);
+      throw new Error(message);
+    }
+  });
+
+/** Chemin A : enregistrement audio → transcription → analyse → devis. */
+export const analyzeMeetingAudio = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        orgId: z.string().uuid(),
+        idempotencyKey: z.string().min(8).max(64),
+        title: z.string().trim().min(1).max(160),
+        clientId: z.string().uuid().nullable().optional(),
+        audio: z.object({
+          name: z.string().max(200),
+          mime: z.string().max(120).default(""),
+          base64: z.string().max(20_000_000),
+        }),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const supabase = context.supabase;
+    await assertMember(supabase, data.orgId, context.userId);
+
+    const tx = await reserveCredits(supabase, {
+      orgId: data.orgId,
+      actionKey: "meeting.audio_analysis",
+      idempotencyKey: data.idempotencyKey,
+    });
+
+    try {
+      const transcript = await transcribeMeetingAudioAI(data.audio);
+      const analysis = await analyzeMeetingAI(supabase, data.orgId, {
+        transcript,
+        source: "Audio",
+        title: data.title,
+      });
+
+      const { data: meeting, error } = await supabase
+        .from("meetings")
+        .insert({
+          org_id: data.orgId,
+          title: data.title,
+          client_id: data.clientId ?? null,
+          starts_at: new Date().toISOString(),
+          duration_min: 60,
+          source: "Audio",
+          transcript,
+          summary: analysis.resume,
+          report: analysis.compte_rendu,
+          analysis: analysis.besoins,
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+
+      await completeCredits(supabase, tx, analysis.resume);
+      return { meetingId: meeting.id as string, transcript, ...analysis };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Échec de l'analyse de l'audio";
       await refundCredits(supabase, tx, message);
       throw new Error(message);
     }

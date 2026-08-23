@@ -486,7 +486,12 @@ export async function testUserConnection(userId: string, connectorKey: string) {
   const token = row.access_token as string;
   const meta = (row.metadata ?? {}) as Record<string, any>;
   const values = (meta["values"] ?? {}) as Record<string, string>;
-  const accessToken = values["access_token"] ?? (meta["mode"] === "manual" && (values["client_secret"] || values["app_secret"]) ? "" : token);
+  const savedFields = ((meta["fields"] as string[] | undefined) ?? []);
+  const isAppCredential =
+    meta["mode"] === "manual" &&
+    !values["access_token"] &&
+    (Boolean(values["client_secret"] || values["app_secret"]) || savedFields.includes("client_secret") || savedFields.includes("app_secret"));
+  const accessToken = values["access_token"] ?? (isAppCredential ? "" : token);
   const finish = async (ok: boolean, message: string) => {
     await supabase
       .from("oauth_connections")

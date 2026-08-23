@@ -122,8 +122,18 @@ export async function runAgent(
   agent: { key: string; name: string; role: string },
   task: { title: string; detail: string },
   memory: unknown,
+  ctx?: { userId?: string | null },
 ): Promise<string> {
   const meta = AGENTS.find((a) => a.key === agent.key);
+
+  const { resolveAgentTools, toolPolicyPrompt } = await import("./agent-routing.server");
+  let policy = "";
+  try {
+    policy = toolPolicyPrompt(await resolveAgentTools(agent.key, { userId: ctx?.userId ?? null }));
+  } catch {
+    policy = "";
+  }
+
   const content = await chat(
     [
       {
@@ -131,7 +141,9 @@ export async function runAgent(
         content: `Tu es ${agent.name}, ${agent.role} chez Kobyde. ${meta?.description ?? ""}
 Tu exécutes la tâche confiée par Éric, le Directeur IA. Tu partages la mémoire centrale de l'entreprise.
 Réponds en français, 4 à 10 lignes maximum, format concret et actionnable (listes courtes, chiffres, noms réels de la mémoire).
-Utilise systématiquement la fiche entreprise ("fiche_entreprise") : nom, coordonnées, TVA, devise, langues, positionnement, valeurs, cible, produits, services, prix, conditions, équipe. Ne redemande jamais une information déjà connue. Si une information est réellement absente (voir "informations_manquantes") et indispensable, dis précisément ce qu'il faut renseigner dans la fiche entreprise. Pas de blabla, pas de markdown lourd.`,
+Utilise systématiquement la fiche entreprise ("fiche_entreprise") : nom, coordonnées, TVA, devise, langues, positionnement, valeurs, cible, produits, services, prix, conditions, équipe. Ne redemande jamais une information déjà connue. Si une information est réellement absente (voir "informations_manquantes") et indispensable, dis précisément ce qu'il faut renseigner dans la fiche entreprise. Pas de blabla, pas de markdown lourd.
+
+${policy}`,
       },
       {
         role: "user",
@@ -142,6 +154,7 @@ Utilise systématiquement la fiche entreprise ("fiche_entreprise") : nom, coordo
   );
   return content.trim() || "Aucun résultat produit.";
 }
+
 
 export async function runEric(prompt: string, memory: unknown): Promise<EricPlan> {
   const apiKey = process.env["LOVABLE_API_KEY"];

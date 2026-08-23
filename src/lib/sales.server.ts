@@ -142,3 +142,64 @@ Devis ${quote.number} — « ${quote.title} » pour ${quote.client}, montant ${q
     };
   });
 }
+
+export type UploadedAudio = { name: string; mime: string; base64: string };
+
+const AUDIO_FORMATS: Record<string, string> = {
+  webm: "webm", mp4: "m4a", "x-m4a": "m4a", m4a: "m4a", mpeg: "mp3",
+  mp3: "mp3", wav: "wav", "x-wav": "wav", ogg: "ogg", aac: "aac", flac: "flac",
+};
+
+function audioFormat(mime: string, name: string): string {
+  const sub = (mime.split("/")[1] ?? "").toLowerCase();
+  const ext = (name.split(".").pop() ?? "").toLowerCase();
+  return AUDIO_FORMATS[sub] ?? AUDIO_FORMATS[ext] ?? "mp3";
+}
+
+/** Transcription fidèle d'un enregistrement de réunion (aucune invention). */
+export async function transcribeMeetingAudioAI(audio: UploadedAudio): Promise<string> {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new Error("Clé IA indisponible.");
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Tu transcris fidèlement en français un enregistrement de réunion client. Tu n'inventes rien, tu n'ajoutes aucun commentaire. Réponds uniquement en JSON : {\"transcription\":\"...\"}",
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Transcris cet enregistrement, en indiquant les interlocuteurs si possible." },
+            {
+              type: "input_audio",
+              input_audio: { data: audio.base64.split(",").pop(), format: audioFormat(audio.mime, audio.name) },
+            },
+          ],
+        },
+      ],
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (res.status === 429) throw new Error("Trop de demandes d'un coup, réessayez dans un instant.");
+  if (res.status === 402) throw new Error("Crédits IA épuisés.");
+  if (!res.ok) throw new Error(`Erreur IA (${res.status})`);
+
+  const json = (await res.json()) as any;
+  const content: string = json?.choices?.[0]?.message?.content ?? "{}";
+  let parsed: any = {};
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    parsed = { transcription: content };
+  }
+  const t = String(parsed?.transcription ?? "").trim();
+  if (t.length < 20) throw new Error("L'audio n'a pas pu être transcrit (trop court ou inaudible).");
+  return t.slice(0, 40000);
+}

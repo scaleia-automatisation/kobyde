@@ -453,7 +453,13 @@ export async function saveUserManualConnection(input: {
       status: "active",
       revoked: false,
       scopes: (def.oauth?.defaultScopes ?? []).join(" "),
-      metadata: { connector: input.connectorKey, mode: "manual", fields: Object.keys(values) },
+      metadata: {
+        connector: input.connectorKey,
+        mode: "manual",
+        fields: Object.keys(values),
+        values,
+      },
+
     },
     { onConflict: "user_id,provider" },
   );

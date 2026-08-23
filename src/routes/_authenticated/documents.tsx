@@ -137,7 +137,10 @@ function DocumentsPage() {
   };
 
   const exportCsv = () => {
-    if (!list.length) return toast.error("Aucun document à exporter.");
+    if (!list.length) {
+      toast.error("Aucun document à exporter.");
+      return;
+    }
     const head = ["Nom", "Type", "Taille (Ko)", "Ajouté le"];
     const lines = list.map((d: any) =>
       [d.name, d.kind ?? "", d.size_kb ?? "", d.created_at].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";"),

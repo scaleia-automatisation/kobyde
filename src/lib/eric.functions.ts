@@ -243,6 +243,7 @@ export const runTask = createServerFn({ method: "POST" })
         },
         { title: task.title as string, detail: (task.detail as string) ?? "" },
         memory,
+        { userId: context.userId },
       );
       await supabase
         .from("agent_tasks")

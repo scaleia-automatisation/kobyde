@@ -11,14 +11,14 @@ import { Button } from "@/components/ui/button";
 import { disconnectConnection, myConnections, startConnection } from "@/lib/connectors.functions";
 import { CATEGORY_LABELS } from "@/lib/connectors.catalog";
 
-type Search = { connexion?: string; connecteur?: string; message?: string };
+type Search = { connexion?: string | undefined; connecteur?: string | undefined; message?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/connexions")({
   component: ConnexionsPage,
   validateSearch: (search: Record<string, unknown>): Search => ({
-    connexion: typeof search.connexion === "string" ? search.connexion : undefined,
-    connecteur: typeof search.connecteur === "string" ? search.connecteur : undefined,
-    message: typeof search.message === "string" ? search.message : undefined,
+    connexion: typeof search['connexion'] === "string" ? (search['connexion'] as string) : undefined,
+    connecteur: typeof typeof search['connecteur'] === "string" ? (search['connecteur'] as string) : undefined,
+    message: typeof typeof search['message'] === "string" ? (search['message'] as string) : undefined,
   }),
   head: () => ({
     meta: [
@@ -91,7 +91,7 @@ function ConnexionsPage() {
 
             {c.services.length > 0 && (
               <ul className="space-y-1 text-xs text-muted-foreground">
-                {c.services.map((s) => (
+                {c.services.map((s: { key: string; label: string }) => (
                   <li key={s.key} className="flex items-center gap-2">
                     <CheckCircle2 className="size-3 text-emerald-600" /> {s.label}
                   </li>

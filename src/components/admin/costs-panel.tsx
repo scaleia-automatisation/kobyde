@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -397,9 +398,9 @@ export function LogsPanel() {
     queryFn: () =>
       listFn({
         data: {
-          connectorKey: filters.connectorKey || undefined,
-          agentKey: filters.agentKey || undefined,
-          status: filters.status || undefined,
+          ...(filters.connectorKey ? { connectorKey: filters.connectorKey } : {}),
+          ...(filters.agentKey ? { agentKey: filters.agentKey } : {}),
+          ...(filters.status ? { status: filters.status } : {}),
         },
       }),
   });
@@ -440,7 +441,7 @@ export function LogsPanel() {
             </tr>
           </thead>
           <tbody>
-            {(list.data ?? []).map((e) => (
+            {(list.data ?? []).map((e: any) => (
               <tr key={e.id} className="border-b border-border/60 last:border-0">
                 <td className="p-3 text-xs text-muted-foreground">{dt(e.created_at)}</td>
                 <td className="p-3">{e.org_name ?? "—"}</td>

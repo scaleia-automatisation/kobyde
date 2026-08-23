@@ -45,6 +45,20 @@ export function useMarkNotifications() {
   });
 }
 
+export function useDeleteNotifications() {
+  const orgId = useOrgId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[] | "all") => {
+      let q = supabase.from("notifications").delete().eq("org_id", orgId!);
+      if (ids !== "all") q = q.in("id", ids);
+      const { error } = await q;
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications", orgId] }),
+  });
+}
+
 export const timeAgo = (iso: string) => {
   const diff = Math.max(0, Date.now() - new Date(iso).getTime());
   const min = Math.round(diff / 60000);

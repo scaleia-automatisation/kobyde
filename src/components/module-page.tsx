@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Inbox, Plus, Trash2 } from "lucide-react";
+import { Inbox, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -18,16 +18,18 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, LoadingState } from "@/components/ui/states";
-import { useCreateRow, useDeleteRow, useRows, euros } from "@/lib/db";
+import { useCreateRow, useDeleteAllRows, useDeleteRow, useRows, euros } from "@/lib/db";
 
 export type FieldDef = {
   name: string;
   label: string;
-  type?: "text" | "number" | "email" | "date" | "textarea" | "money";
+  type?: "text" | "number" | "email" | "date" | "textarea" | "money" | "select";
   required?: boolean;
   placeholder?: string;
   defaultValue?: string;
   inList?: boolean;
+  /** Choix proposés pour un champ « select » (une option « personnalisé » est ajoutée). */
+  options?: string[];
 };
 
 export type ModuleConfig = {
@@ -43,11 +45,41 @@ export type ModuleConfig = {
   detailLabel?: string;
 };
 
+/** Liste déroulante de choix courants + option « personnalisé ». */
+function SelectField({ field }: { field: FieldDef }) {
+  const options = field.options ?? [];
+  const [value, setValue] = useState(field.defaultValue ?? options[0] ?? "");
+  const custom = value === "__custom__";
+
+  return (
+    <div className="space-y-2">
+      <select
+        id={field.name}
+        name={custom ? undefined : field.name}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+        <option value="__custom__">Personnalisé — je saisis moi-même</option>
+      </select>
+      {custom && (
+        <Input name={field.name} required={field.required} placeholder={field.placeholder ?? "Votre choix"} />
+      )}
+    </div>
+  );
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function ModulePage({ config }: { config: ModuleConfig }) {
   const { data: rows, isLoading } = useRows(config.table);
   const create = useCreateRow(config.table);
   const remove = useDeleteRow(config.table);
+  const removeAll = useDeleteAllRows(config.table);
   const [open, setOpen] = useState(false);
   const listFields = config.fields.filter((f) => f.inList !== false).slice(0, 4);
 
@@ -80,6 +112,20 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
       title={config.title}
       subtitle={config.subtitle}
       action={
+        <div className="flex items-center gap-2">
+        {(rows ?? []).length > 0 && (
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              if (!window.confirm(`Supprimer définitivement tous les éléments de « ${config.title} » ?`)) return;
+              removeAll.mutate(undefined, { onSuccess: () => toast.success("Tout a été supprimé") });
+            }}
+          >
+            <Trash2 className="size-4" />
+            <span className="hidden sm:inline">Tout supprimer</span>
+          </Button>
+        )}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
@@ -100,6 +146,8 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                   <Label htmlFor={f.name}>{f.label}</Label>
                   {f.type === "textarea" ? (
                     <Textarea id={f.name} name={f.name} placeholder={f.placeholder} rows={3} />
+                  ) : f.type === "select" ? (
+                    <SelectField field={f} />
                   ) : (
                     <Input
                       id={f.name}
@@ -121,6 +169,7 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
       {isLoading ? (
@@ -176,7 +225,7 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                     remove.mutate(row.id, { onSuccess: () => toast.success("Supprimé") })
                   }
                 >
-                  <Trash2 className="size-4 text-muted-foreground" />
+                  <X className="size-4 text-muted-foreground" />
                 </Button>
               </div>
             </article>

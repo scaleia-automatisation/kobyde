@@ -3,7 +3,14 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { NOTIFICATION_KINDS } from "@/lib/automations";
-import { timeAgo, useMarkNotifications, useNotifications } from "@/lib/notifications";
+import { X } from "lucide-react";
+import { toast } from "sonner";
+import {
+  timeAgo,
+  useDeleteNotifications,
+  useMarkNotifications,
+  useNotifications,
+} from "@/lib/notifications";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
@@ -22,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/notifications")({
 function NotificationsPage() {
   const { data, isLoading } = useNotifications(200);
   const mark = useMarkNotifications();
+  const drop = useDeleteNotifications();
   const [filter, setFilter] = useState<string>("tout");
 
   const list = (data ?? []).filter((n) => filter === "tout" || n.kind === filter);
@@ -33,10 +41,24 @@ function NotificationsPage() {
       title="Notifications"
       subtitle="Ce que vos agents ont repéré pour vous."
       action={
-        unread > 0 ? (
-          <Button onClick={() => mark.mutate("all")} disabled={mark.isPending}>
-            Tout marquer comme lu
-          </Button>
+        (data ?? []).length > 0 ? (
+          <div className="flex items-center gap-2">
+            {unread > 0 && (
+              <Button variant="outline" onClick={() => mark.mutate("all")} disabled={mark.isPending}>
+                Tout marquer comme lu
+              </Button>
+            )}
+            <Button
+              variant="destructive"
+              disabled={drop.isPending}
+              onClick={() => {
+                if (!window.confirm("Supprimer définitivement toutes les notifications ?")) return;
+                drop.mutate("all", { onSuccess: () => toast.success("Notifications supprimées") });
+              }}
+            >
+              Tout supprimer
+            </Button>
+          </div>
         ) : null
       }
     >
@@ -78,11 +100,21 @@ function NotificationsPage() {
                 {n.body && <p className="text-sm text-muted-foreground">{n.body}</p>}
                 <p className="mt-1 text-xs text-muted-foreground">{timeAgo(n.created_at)}</p>
               </div>
-              {!n.is_read && (
-                <Button variant="ghost" size="sm" onClick={() => mark.mutate([n.id])}>
-                  Marquer lu
+              <div className="flex items-center gap-1">
+                {!n.is_read && (
+                  <Button variant="ghost" size="sm" onClick={() => mark.mutate([n.id])}>
+                    Marquer lu
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Supprimer la notification"
+                  onClick={() => drop.mutate([n.id])}
+                >
+                  <X className="size-4 text-muted-foreground" />
                 </Button>
-              )}
+              </div>
             </article>
           );
         })}

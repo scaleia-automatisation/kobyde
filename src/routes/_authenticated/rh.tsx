@@ -15,6 +15,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
+import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -863,14 +864,10 @@ function RgpdTab() {
 
 function HrPage() {
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold">RH et recrutement</h1>
-        <p className="text-muted-foreground">
-          Mariéme vous accompagne de l'offre à la décision : analyse, CV, score, entretiens, RGPD.
-        </p>
-      </header>
-
+    <AppShell
+      title="RH et recrutement"
+      subtitle="Mariéme vous accompagne de l'offre à la décision : analyse, CV, score, entretiens, RGPD."
+    >
       <Tabs defaultValue="offres">
         <TabsList>
           <TabsTrigger value="offres">Offres</TabsTrigger>
@@ -887,6 +884,6 @@ function HrPage() {
           <RgpdTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </AppShell>
   );
 }

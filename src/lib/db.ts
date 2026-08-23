@@ -103,6 +103,19 @@ export function useDeleteRow(table: string) {
   });
 }
 
+/** Supprime toutes les lignes d'une table pour l'organisation courante. */
+export function useDeleteAllRows(table: string) {
+  const orgId = useOrgId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.from(table as any) as any).delete().eq("org_id", orgId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["rows", table, orgId] }),
+  });
+}
+
 export const euros = (n: number | null | undefined) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(
     Number(n ?? 0),

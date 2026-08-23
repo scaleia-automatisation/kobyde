@@ -291,7 +291,7 @@ export async function buildAuthorizeUrl(input: {
     user_id: input.userId,
     org_id: input.orgId,
     connector_key: input.connectorKey,
-    redirect_to: `${base}/parametres`,
+    redirect_to: `${base}/connexions`,
   });
 
   const scopes = def.oauth.defaultScopes.join(def.oauth.scopeSeparator ?? " ");

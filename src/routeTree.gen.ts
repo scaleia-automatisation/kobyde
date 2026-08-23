@@ -23,6 +23,7 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAutomatisationsRouteImport } from './routes/_authenticated/automatisations'
 import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authenticated/bienvenue'
 import { Route as AuthenticatedCatalogueRouteImport } from './routes/_authenticated/catalogue'
+import { Route as AuthenticatedConnexionsRouteImport } from './routes/_authenticated/connexions'
 import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated/emails'
@@ -130,6 +131,11 @@ const AuthenticatedBienvenueRoute = AuthenticatedBienvenueRouteImport.update({
 const AuthenticatedCatalogueRoute = AuthenticatedCatalogueRouteImport.update({
   id: '/catalogue',
   path: '/catalogue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConnexionsRoute = AuthenticatedConnexionsRouteImport.update({
+  id: '/connexions',
+  path: '/connexions',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCreditsRoute = AuthenticatedCreditsRouteImport.update({
@@ -343,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
+  '/connexions': typeof AuthenticatedConnexionsRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -396,6 +403,7 @@ export interface FileRoutesByTo {
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/catalogue': typeof AuthenticatedCatalogueRoute
+  '/connexions': typeof AuthenticatedConnexionsRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -451,6 +459,7 @@ export interface FileRoutesById {
   '/_authenticated/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/_authenticated/bienvenue': typeof AuthenticatedBienvenueRoute
   '/_authenticated/catalogue': typeof AuthenticatedCatalogueRoute
+  '/_authenticated/connexions': typeof AuthenticatedConnexionsRoute
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
@@ -506,6 +515,7 @@ export interface FileRouteTypes {
     | '/automatisations'
     | '/bienvenue'
     | '/catalogue'
+    | '/connexions'
     | '/credits'
     | '/documents'
     | '/emails'
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/automatisations'
     | '/bienvenue'
     | '/catalogue'
+    | '/connexions'
     | '/credits'
     | '/documents'
     | '/emails'
@@ -613,6 +624,7 @@ export interface FileRouteTypes {
     | '/_authenticated/automatisations'
     | '/_authenticated/bienvenue'
     | '/_authenticated/catalogue'
+    | '/_authenticated/connexions'
     | '/_authenticated/credits'
     | '/_authenticated/documents'
     | '/_authenticated/emails'
@@ -773,6 +785,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogue'
       fullPath: '/catalogue'
       preLoaderRoute: typeof AuthenticatedCatalogueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/connexions': {
+      id: '/_authenticated/connexions'
+      path: '/connexions'
+      fullPath: '/connexions'
+      preLoaderRoute: typeof AuthenticatedConnexionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/credits': {
@@ -1050,6 +1069,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAutomatisationsRoute: typeof AuthenticatedAutomatisationsRoute
   AuthenticatedBienvenueRoute: typeof AuthenticatedBienvenueRoute
   AuthenticatedCatalogueRoute: typeof AuthenticatedCatalogueRoute
+  AuthenticatedConnexionsRoute: typeof AuthenticatedConnexionsRoute
   AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
@@ -1086,6 +1106,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAutomatisationsRoute: AuthenticatedAutomatisationsRoute,
   AuthenticatedBienvenueRoute: AuthenticatedBienvenueRoute,
   AuthenticatedCatalogueRoute: AuthenticatedCatalogueRoute,
+  AuthenticatedConnexionsRoute: AuthenticatedConnexionsRoute,
   AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,

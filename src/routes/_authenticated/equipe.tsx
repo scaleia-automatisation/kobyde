@@ -297,12 +297,32 @@ function TeamPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {meta && suggestionsFor(meta.key).length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  Suggestions — ce que {meta.name} fait en priorité
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestionsFor(meta.key).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setPromptText(s)}
+                      className="rounded-full border border-border bg-muted/50 px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Textarea
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
               rows={4}
               placeholder="Que doit faire cet agent ?"
             />
+
             <DialogFooter>
               <CreditActionButton
                 actionKey="agent.direct_message"

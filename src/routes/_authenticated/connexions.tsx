@@ -81,8 +81,12 @@ function ConnexionsPage() {
 
   const connect = async (key: string) => {
     try {
-      const { url } = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
-      window.location.href = url;
+      const res = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
+      if (res?.url) {
+        window.location.href = res.url;
+        return;
+      }
+      openDialog(key);
     } catch {
       openDialog(key);
     }

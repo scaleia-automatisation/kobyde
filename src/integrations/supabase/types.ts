@@ -2370,15 +2370,19 @@ export type Database = {
       }
       prospects: {
         Row: {
+          acquisition_channel: string | null
           angle: string | null
           channel: string | null
           city: string | null
           company_name: string | null
           created_at: string
           email: string | null
+          facebook: string | null
           followup_step: string | null
           full_name: string
           id: string
+          instagram: string | null
+          linkedin: string | null
           notes: string | null
           org_id: string
           personalized_message: string | null
@@ -2390,19 +2394,25 @@ export type Database = {
           source_url: string | null
           sources: Json
           status: string
+          tiktok: string | null
           updated_at: string
           website: string | null
+          youtube: string | null
         }
         Insert: {
+          acquisition_channel?: string | null
           angle?: string | null
           channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
+          facebook?: string | null
           followup_step?: string | null
           full_name: string
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
           notes?: string | null
           org_id: string
           personalized_message?: string | null
@@ -2414,19 +2424,25 @@ export type Database = {
           source_url?: string | null
           sources?: Json
           status?: string
+          tiktok?: string | null
           updated_at?: string
           website?: string | null
+          youtube?: string | null
         }
         Update: {
+          acquisition_channel?: string | null
           angle?: string | null
           channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string
           email?: string | null
+          facebook?: string | null
           followup_step?: string | null
           full_name?: string
           id?: string
+          instagram?: string | null
+          linkedin?: string | null
           notes?: string | null
           org_id?: string
           personalized_message?: string | null
@@ -2438,8 +2454,10 @@ export type Database = {
           source_url?: string | null
           sources?: Json
           status?: string
+          tiktok?: string | null
           updated_at?: string
           website?: string | null
+          youtube?: string | null
         }
         Relationships: [
           {

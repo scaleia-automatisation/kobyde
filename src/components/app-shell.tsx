@@ -100,6 +100,7 @@ export const NAV_GROUPS = [
       { to: "/credits", label: "Crédits IA", icon: Coins },
       { to: "/plans", label: "Formules", icon: BadgeEuro },
       { to: "/entreprise", label: "Fiche entreprise", icon: Building2 },
+      { to: "/connexions", label: "Mes connexions", icon: Link2 },
       { to: "/parametres", label: "Paramètres", icon: Settings },
     ],
   },

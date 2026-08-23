@@ -529,6 +529,14 @@ export async function testUserConnection(userId: string, connectorKey: string) {
       );
     }
 
+    // Ancienne connexion enregistrée avant le stockage des champs : identifiants incomplets.
+    if (!accessToken && ((meta["fields"] as string[] | undefined) ?? []).includes("client_secret")) {
+      return finish(
+        false,
+        "Identifiants incomplets : ré-enregistrez votre client_id et client_secret via « Connecter mon compte » pour activer le test.",
+      );
+    }
+
     if (connectorKey === "meta") {
       const r = await fetch(`https://graph.facebook.com/v20.0/me?access_token=${encodeURIComponent(accessToken)}`);
       return finish(r.ok, r.ok ? "Connexion Meta valide." : `Meta a répondu ${r.status}.`);
@@ -551,24 +559,24 @@ export async function testUserConnection(userId: string, connectorKey: string) {
 
     if (connectorKey === "microsoft" || connectorKey === "outlook") {
       const r = await fetch("https://graph.microsoft.com/v1.0/me", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       return finish(r.ok, r.ok ? "Connexion Microsoft valide." : `Microsoft a répondu ${r.status}.`);
     }
     if (connectorKey === "slack") {
       const r = await fetch("https://slack.com/api/auth.test", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       return finish(Boolean(j.ok), j.ok ? "Connexion Slack valide." : `Slack : ${j.error ?? "échec"}.`);
     }
     if (connectorKey === "stripe") {
-      const r = await fetch("https://api.stripe.com/v1/balance", { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch("https://api.stripe.com/v1/balance", { headers: { Authorization: `Bearer ${accessToken}` } });
       return finish(r.ok, r.ok ? "Connexion Stripe valide." : `Stripe a répondu ${r.status}.`);
     }
     if (connectorKey === "notion") {
       const r = await fetch("https://api.notion.com/v1/users/me", {
-        headers: { Authorization: `Bearer ${token}`, "Notion-Version": "2022-06-28" },
+        headers: { Authorization: `Bearer ${accessToken}`, "Notion-Version": "2022-06-28" },
       });
       return finish(r.ok, r.ok ? "Connexion Notion valide." : `Notion a répondu ${r.status}.`);
     }

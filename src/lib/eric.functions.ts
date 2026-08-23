@@ -168,6 +168,7 @@ export const askAgent = createServerFn({ method: "POST" })
         { key: agent.key as string, name: agent.name as string, role: agent.role_title as string },
         { title: data.prompt.slice(0, 120), detail: data.prompt },
         memory,
+        { userId: context.userId },
       );
       await supabase
         .from("agent_tasks")

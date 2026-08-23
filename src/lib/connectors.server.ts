@@ -460,3 +460,75 @@ export async function saveUserManualConnection(input: {
   if (error) throw new Error(error.message);
   return { ok: true };
 }
+
+/* ------------------------------------------- Test de la connexion utilisateur */
+
+export async function testUserConnection(userId: string, connectorKey: string) {
+  const def = CONNECTOR_MAP.get(connectorKey);
+  const supabase = await db();
+  const { data: row } = await supabase
+    .from("oauth_connections")
+    .select("access_token, metadata, revoked, status")
+    .eq("user_id", userId)
+    .eq("provider", connectorKey)
+    .maybeSingle();
+
+  if (!row || row.revoked || !row.access_token) {
+    return { ok: false, message: "Aucun identifiant enregistré pour ce connecteur." };
+  }
+
+  const token = row.access_token as string;
+  const finish = async (ok: boolean, message: string) => {
+    await supabase
+      .from("oauth_connections")
+      .update({ status: ok ? "active" : "error", last_error: ok ? null : message })
+      .eq("user_id", userId)
+      .eq("provider", connectorKey);
+    return { ok, message };
+  };
+
+  try {
+    if (connectorKey === "meta") {
+      const r = await fetch(`https://graph.facebook.com/v20.0/me?access_token=${encodeURIComponent(token)}`);
+      return finish(r.ok, r.ok ? "Connexion Meta valide." : `Meta a répondu ${r.status}.`);
+    }
+    if (connectorKey === "google" || connectorKey === "google_ads" || connectorKey === "youtube") {
+      const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return finish(r.ok, r.ok ? "Connexion Google valide." : `Google a répondu ${r.status}.`);
+    }
+    if (connectorKey === "linkedin") {
+      const r = await fetch("https://api.linkedin.com/v2/userinfo", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return finish(r.ok, r.ok ? "Connexion LinkedIn valide." : `LinkedIn a répondu ${r.status}.`);
+    }
+    if (connectorKey === "microsoft" || connectorKey === "outlook") {
+      const r = await fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return finish(r.ok, r.ok ? "Connexion Microsoft valide." : `Microsoft a répondu ${r.status}.`);
+    }
+    if (connectorKey === "slack") {
+      const r = await fetch("https://slack.com/api/auth.test", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      return finish(Boolean(j.ok), j.ok ? "Connexion Slack valide." : `Slack : ${j.error ?? "échec"}.`);
+    }
+    if (connectorKey === "stripe") {
+      const r = await fetch("https://api.stripe.com/v1/balance", { headers: { Authorization: `Bearer ${token}` } });
+      return finish(r.ok, r.ok ? "Connexion Stripe valide." : `Stripe a répondu ${r.status}.`);
+    }
+    if (connectorKey === "notion") {
+      const r = await fetch("https://api.notion.com/v1/users/me", {
+        headers: { Authorization: `Bearer ${token}`, "Notion-Version": "2022-06-28" },
+      });
+      return finish(r.ok, r.ok ? "Connexion Notion valide." : `Notion a répondu ${r.status}.`);
+    }
+    return finish(true, `Identifiants ${def?.name ?? connectorKey} enregistrés (test automatique indisponible).`);
+  } catch (e) {
+    return finish(false, e instanceof Error ? e.message : "Erreur de connexion.");
+  }
+}

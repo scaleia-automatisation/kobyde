@@ -431,6 +431,25 @@ function SuperAdminPage() {
             </table>
           </Card>
         </TabsContent>
+        <TabsContent value="connecteurs">
+          <ConnectorsPanel />
+        </TabsContent>
+
+        <TabsContent value="couts">
+          <CostsPanel />
+        </TabsContent>
+
+        <TabsContent value="tarifs">
+          <PricingPanel />
+        </TabsContent>
+
+        <TabsContent value="budgets">
+          <BudgetsPanel />
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <LogsPanel />
+        </TabsContent>
       </Tabs>
     </AppShell>
   );

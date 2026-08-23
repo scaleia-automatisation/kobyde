@@ -252,3 +252,28 @@ export const disconnectConnection = createServerFn({ method: "POST" })
     const { disconnectUserConnection } = await import("./connectors.server");
     return disconnectUserConnection(context.userId, data.connectorKey);
   });
+
+export const saveMyManualConnection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { connectorKey: string; values: Record<string, string> }) =>
+    z
+      .object({
+        connectorKey: z.string().min(1).max(64),
+        values: z.record(z.string(), z.string()),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await (context.supabase as any)
+      .from("profiles")
+      .select("current_org_id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const { saveUserManualConnection } = await import("./connectors.server");
+    return saveUserManualConnection({
+      userId: context.userId,
+      orgId: profile?.current_org_id ?? null,
+      connectorKey: data.connectorKey,
+      values: data.values,
+    });
+  });

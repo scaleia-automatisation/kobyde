@@ -3,11 +3,13 @@ import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useCreditHistory, useCredits } from "@/lib/credits";
+import { useCreditHistory, useCredits, useDeleteCreditTransaction, useDeleteAllCreditTransactions } from "@/lib/credits";
 import { usePlan } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { CREDIT_ACTIONS, creditAction, creditLabel } from "@/lib/credit-catalog";
+import { X, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/credits")({
   component: CreditsPage,
@@ -44,6 +46,8 @@ function CreditsPage() {
   const { balance, total } = useCredits();
   const { plan, creditsUsed, renewsAt } = usePlan();
   const { data: history } = useCreditHistory(200);
+  const remove = useDeleteCreditTransaction();
+  const removeAll = useDeleteAllCreditTransactions();
 
   const groups = Array.from(new Set(CREDIT_ACTIONS.map((a) => a.group)));
 
@@ -87,7 +91,22 @@ function CreditsPage() {
         </Card>
 
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Historique des transactions</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">Historique des transactions</h2>
+            {(history ?? []).length > 0 && (
+              <button
+                type="button"
+                className="agent-suggestion-chip"
+                onClick={() => {
+                  if (!window.confirm("Supprimer définitivement toutes les transactions ?")) return;
+                  removeAll.mutate(undefined, { onSuccess: () => toast.success("Toutes les transactions ont été supprimées") });
+                }}
+              >
+                <Trash2 className="mr-1.5 inline size-4" />
+                <span className="hidden sm:inline">Tout supprimer</span>
+              </button>
+            )}
+          </div>
           <Card className="divide-y divide-border">
             {(history ?? []).length === 0 && (
               <p className="p-6 text-sm text-muted-foreground">Aucune transaction pour le moment.</p>
@@ -113,6 +132,16 @@ function CreditsPage() {
                     {t.amount > 0 ? "+" : ""}
                     {t.amount}
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Supprimer"
+                    onClick={() =>
+                      remove.mutate(t.id, { onSuccess: () => toast.success("Transaction supprimée") })
+                    }
+                  >
+                    <X className="size-4 text-muted-foreground" />
+                  </Button>
                 </div>
               );
             })}

@@ -180,9 +180,9 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
           title="Rien ici pour l'instant"
           description={config.emptyText}
           action={
-            <Button className="gap-2" onClick={() => setOpen(true)}>
-              <Plus className="size-4" /> {config.addLabel}
-            </Button>
+            <button type="button" className="agent-suggestion-chip" onClick={() => setOpen(true)}>
+              <Plus className="mr-1.5 inline size-4" /> {config.addLabel}
+            </button>
           }
         />
       ) : (

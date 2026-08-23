@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { ArrowRight, Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
+import { suggestionsFor } from "@/lib/agent-suggestions";
+
 import { useOrgId, useRows } from "@/lib/db";
 import { askAgent } from "@/lib/eric.functions";
 import { CreditActionButton } from "@/components/credit-action";

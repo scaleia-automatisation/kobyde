@@ -31,6 +31,7 @@ import { Route as AuthenticatedEntrepriseRouteImport } from './routes/_authentic
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEricRouteImport } from './routes/_authenticated/eric'
 import { Route as AuthenticatedEthanRouteImport } from './routes/_authenticated/ethan'
+import { Route as AuthenticatedFacturesRouteImport } from './routes/_authenticated/factures'
 import { Route as AuthenticatedFunnelRouteImport } from './routes/_authenticated/funnel'
 import { Route as AuthenticatedJasonRouteImport } from './routes/_authenticated/jason'
 import { Route as AuthenticatedLamineRouteImport } from './routes/_authenticated/lamine'
@@ -171,6 +172,11 @@ const AuthenticatedEricRoute = AuthenticatedEricRouteImport.update({
 const AuthenticatedEthanRoute = AuthenticatedEthanRouteImport.update({
   id: '/ethan',
   path: '/ethan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFacturesRoute = AuthenticatedFacturesRouteImport.update({
+  id: '/factures',
+  path: '/factures',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFunnelRoute = AuthenticatedFunnelRouteImport.update({
@@ -357,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
   '/ethan': typeof AuthenticatedEthanRoute
+  '/factures': typeof AuthenticatedFacturesRoute
   '/funnel': typeof AuthenticatedFunnelRoute
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
@@ -411,6 +418,7 @@ export interface FileRoutesByTo {
   '/equipe': typeof AuthenticatedEquipeRoute
   '/eric': typeof AuthenticatedEricRoute
   '/ethan': typeof AuthenticatedEthanRoute
+  '/factures': typeof AuthenticatedFacturesRoute
   '/funnel': typeof AuthenticatedFunnelRoute
   '/jason': typeof AuthenticatedJasonRoute
   '/lamine': typeof AuthenticatedLamineRoute
@@ -467,6 +475,7 @@ export interface FileRoutesById {
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/eric': typeof AuthenticatedEricRoute
   '/_authenticated/ethan': typeof AuthenticatedEthanRoute
+  '/_authenticated/factures': typeof AuthenticatedFacturesRoute
   '/_authenticated/funnel': typeof AuthenticatedFunnelRoute
   '/_authenticated/jason': typeof AuthenticatedJasonRoute
   '/_authenticated/lamine': typeof AuthenticatedLamineRoute
@@ -523,6 +532,7 @@ export interface FileRouteTypes {
     | '/equipe'
     | '/eric'
     | '/ethan'
+    | '/factures'
     | '/funnel'
     | '/jason'
     | '/lamine'
@@ -577,6 +587,7 @@ export interface FileRouteTypes {
     | '/equipe'
     | '/eric'
     | '/ethan'
+    | '/factures'
     | '/funnel'
     | '/jason'
     | '/lamine'
@@ -632,6 +643,7 @@ export interface FileRouteTypes {
     | '/_authenticated/equipe'
     | '/_authenticated/eric'
     | '/_authenticated/ethan'
+    | '/_authenticated/factures'
     | '/_authenticated/funnel'
     | '/_authenticated/jason'
     | '/_authenticated/lamine'
@@ -841,6 +853,13 @@ declare module '@tanstack/react-router' {
       path: '/ethan'
       fullPath: '/ethan'
       preLoaderRoute: typeof AuthenticatedEthanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/factures': {
+      id: '/_authenticated/factures'
+      path: '/factures'
+      fullPath: '/factures'
+      preLoaderRoute: typeof AuthenticatedFacturesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/funnel': {
@@ -1077,6 +1096,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedEricRoute: typeof AuthenticatedEricRoute
   AuthenticatedEthanRoute: typeof AuthenticatedEthanRoute
+  AuthenticatedFacturesRoute: typeof AuthenticatedFacturesRoute
   AuthenticatedFunnelRoute: typeof AuthenticatedFunnelRoute
   AuthenticatedJasonRoute: typeof AuthenticatedJasonRoute
   AuthenticatedLamineRoute: typeof AuthenticatedLamineRoute
@@ -1114,6 +1134,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedEricRoute: AuthenticatedEricRoute,
   AuthenticatedEthanRoute: AuthenticatedEthanRoute,
+  AuthenticatedFacturesRoute: AuthenticatedFacturesRoute,
   AuthenticatedFunnelRoute: AuthenticatedFunnelRoute,
   AuthenticatedJasonRoute: AuthenticatedJasonRoute,
   AuthenticatedLamineRoute: AuthenticatedLamineRoute,

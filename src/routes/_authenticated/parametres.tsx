@@ -95,7 +95,25 @@ function Settings() {
         </section>
 
         <section className="surface p-6 lg:col-span-2">
-          <h2 className="text-lg">Notifications</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg">Notifications</h2>
+            {(notifications ?? []).length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={dropNotifications.isPending}
+                onClick={() => {
+                  if (!window.confirm("Supprimer définitivement toutes les notifications ?")) return;
+                  dropNotifications.mutate("all", {
+                    onSuccess: () => toast.success("Notifications supprimées"),
+                    onError: (e: unknown) => toast.error((e as Error).message),
+                  });
+                }}
+              >
+                Tout supprimer
+              </Button>
+            )}
+          </div>
           <ul className="mt-4 space-y-2">
             {(notifications ?? []).length === 0 && (
               <li className="text-sm text-muted-foreground">Aucune notification.</li>
@@ -107,10 +125,20 @@ function Settings() {
                   <p className="text-sm text-muted-foreground">{n.body}</p>
                 </div>
                 {!n.is_read && <Badge>Nouveau</Badge>}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Supprimer la notification"
+                  disabled={dropNotifications.isPending}
+                  onClick={() => dropNotifications.mutate([n.id])}
+                >
+                  <X className="size-4 text-muted-foreground" />
+                </Button>
               </li>
             ))}
           </ul>
         </section>
+
       </div>
     </AppShell>
   );

@@ -28,9 +28,9 @@ export const Route = createFileRoute("/_authenticated/parametres")({
 
 function Settings() {
   const { data: profile, refetch } = useProfile();
-  const { data: notifications } = useRows<{ id: string; title: string; body: string; is_read: boolean }>(
-    "notifications",
-  );
+  const { data: notifications } = useNotifications(50);
+  const dropNotifications = useDeleteNotifications();
+
   const navigate = useNavigate();
   const { plan } = usePlan();
   const org = profile?.organizations as { name?: string; credits?: number; plan?: string } | null;

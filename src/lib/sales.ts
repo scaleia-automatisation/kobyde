@@ -52,6 +52,52 @@ export const DEFAULT_INSTALLMENTS = [
   { label: "Solde — 40 %", percentage: 40 },
 ];
 
+/** Modes de paiement d'un devis / projet : une fois, 2 fois ou 3 fois. */
+export const PAYMENT_PLANS = [
+  {
+    value: "unique",
+    label: "Paiement unique",
+    hint: "Le client règle la totalité en une seule fois.",
+    schedule: [{ label: "Paiement intégral", percentage: 100 }],
+  },
+  {
+    value: "2x",
+    label: "Paiement en 2 fois",
+    hint: "50 % à la commande, 50 % à la livraison.",
+    schedule: [
+      { label: "Acompte — 50 %", percentage: 50 },
+      { label: "Solde — 50 %", percentage: 50 },
+    ],
+  },
+  {
+    value: "3x",
+    label: "Paiement en 3 fois",
+    hint: "30 % à la commande, 30 % à mi-parcours, 40 % à la livraison.",
+    schedule: [
+      { label: "Acompte — 30 %", percentage: 30 },
+      { label: "Intermédiaire — 30 %", percentage: 30 },
+      { label: "Solde — 40 %", percentage: 40 },
+    ],
+  },
+] as const;
+
+export type PaymentPlan = (typeof PAYMENT_PLANS)[number]["value"];
+
+export const paymentPlanOf = (value?: string | null) =>
+  PAYMENT_PLANS.find((p) => p.value === value) ?? PAYMENT_PLANS[0];
+
+export const PAYMENT_PLAN_LABEL: Record<string, string> = Object.fromEntries(
+  PAYMENT_PLANS.map((p) => [p.value, p.label]),
+);
+
+export const PROJECT_STATUS_LABEL: Record<string, string> = {
+  en_attente: "En attente du 1er paiement",
+  en_cours: "En cours",
+  en_pause: "En pause",
+  termine: "Terminé",
+};
+
+
 export type QuoteLine = {
   id?: string;
   label: string;

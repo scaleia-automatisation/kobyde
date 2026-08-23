@@ -2248,6 +2248,7 @@ export type Database = {
           manager: string | null
           name: string
           org_id: string
+          payment_plan: string
           progress: number
           quote_id: string | null
           start_date: string | null
@@ -2266,6 +2267,7 @@ export type Database = {
           manager?: string | null
           name: string
           org_id: string
+          payment_plan?: string
           progress?: number
           quote_id?: string | null
           start_date?: string | null
@@ -2284,6 +2286,7 @@ export type Database = {
           manager?: string | null
           name?: string
           org_id?: string
+          payment_plan?: string
           progress?: number
           quote_id?: string | null
           start_date?: string | null
@@ -2736,6 +2739,7 @@ export type Database = {
           notes: string | null
           number: string
           org_id: string
+          payment_plan: string
           refused_at: string | null
           sent_at: string | null
           source: string
@@ -2764,6 +2768,7 @@ export type Database = {
           notes?: string | null
           number: string
           org_id: string
+          payment_plan?: string
           refused_at?: string | null
           sent_at?: string | null
           source?: string
@@ -2792,6 +2797,7 @@ export type Database = {
           notes?: string | null
           number?: string
           org_id?: string
+          payment_plan?: string
           refused_at?: string | null
           sent_at?: string | null
           source?: string

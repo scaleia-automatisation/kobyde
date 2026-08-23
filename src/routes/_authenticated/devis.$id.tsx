@@ -25,16 +25,17 @@ import { PaymentRequestDialog, makeToken } from "@/components/payment-request-di
 import { supabase } from "@/integrations/supabase/client";
 import { useChildRows, useOrgId, useRow, useRows, eur2, frDate } from "@/lib/db";
 import {
-  DEFAULT_INSTALLMENTS,
   DISCOUNT_OPTIONS,
+  PAYMENT_PLANS,
   QUOTE_STATUS_LABEL,
   VALIDITY_OPTIONS,
   addDays,
   computeTotals,
   isoDate,
+  paymentPlanOf,
   round2,
 } from "@/lib/sales";
-import { generateFollowups } from "@/lib/sales.functions";
+import { generateFollowups, syncProjectFromQuote } from "@/lib/sales.functions";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -219,27 +220,44 @@ function QuoteDetail() {
       })
       .eq("id", id);
     await refetchQuote();
+    if (status === "accepte" && orgId) {
+      try {
+        await syncProjectFromQuote({ data: { orgId, quoteId: id } });
+        await qc.invalidateQueries({ queryKey: ["rows", "projects"] });
+        toast.success("Devis accepté — Chloé a créé le projet (démarrage au 1er paiement).");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Projet non créé");
+      }
+      return;
+    }
     toast.success(status === "accepte" ? "Devis accepté" : "Devis refusé");
   };
 
-  const createInstallments = async () => {
+  const applyPaymentPlan = async (planValue: string) => {
     if (!orgId) return;
+    const plan = paymentPlanOf(planValue);
+    await (supabase as any).from("quotes").update({ payment_plan: plan.value }).eq("id", id);
     await (supabase as any).from("quote_installments").delete().eq("quote_id", id);
-    const rows = DEFAULT_INSTALLMENTS.map((inst, i) => ({
-      org_id: orgId,
-      quote_id: id,
-      label: inst.label,
-      percentage: inst.percentage,
-      amount_ttc: round2((totals.totalTtc * inst.percentage) / 100),
-      position: i,
-      due_date: isoDate(addDays(i * 15)),
-      status: "a_payer",
-    }));
-    const { error } = await (supabase as any).from("quote_installments").insert(rows);
-    if (error) { toast.error(error.message); return; }
+    if (plan.value !== "unique") {
+      const rows = plan.schedule.map((inst, i) => ({
+        org_id: orgId,
+        quote_id: id,
+        label: inst.label,
+        percentage: inst.percentage,
+        amount_ttc: round2((totals.totalTtc * inst.percentage) / 100),
+        position: i,
+        due_date: isoDate(addDays(i * 15)),
+        status: "a_payer",
+      }));
+      const { error } = await (supabase as any).from("quote_installments").insert(rows);
+      if (error) { toast.error(error.message); return; }
+    }
+    await (supabase as any).from("projects").update({ payment_plan: plan.value }).eq("quote_id", id);
     await refetchInst();
-    toast.success("Échéancier créé");
+    await refetchQuote();
+    toast.success(`${plan.label} appliqué`);
   };
+
 
   const runFollowups = async (idempotencyKey: string) => {
     if (!orgId) return;
@@ -250,33 +268,19 @@ function QuoteDetail() {
 
   const toProject = async () => {
     if (!orgId || !quote) return;
-    const { data: project, error } = await (supabase as any)
-      .from("projects")
-      .insert({
-        org_id: orgId,
-        client_id: quote.client_id,
-        quote_id: id,
-        name: quote.title,
-        status: "en_cours",
-        progress: 0,
-        budget: Number(quote.total_ttc ?? 0),
-        start_date: isoDate(new Date()),
-      })
-      .select("id")
-      .single();
-    if (error) { toast.error(error.message); return; }
-    const steps = ["Analyse", "Maquette", "Développement", "Tests", "Mise en ligne"];
-    await (supabase as any).from("project_steps").insert(
-      steps.map((name, i) => ({
-        org_id: orgId,
-        project_id: project.id,
-        name,
-        status: i === 0 ? "en_cours" : "a_faire",
-        position: i,
-      })),
-    );
-    navigate({ to: "/projets/$id", params: { id: project.id } });
+    try {
+      const res = await syncProjectFromQuote({ data: { orgId, quoteId: id } });
+      await qc.invalidateQueries({ queryKey: ["rows", "projects"] });
+      if (!res.projectId) {
+        toast.error("Le devis doit d'abord être accepté.");
+        return;
+      }
+      navigate({ to: "/projets/$id", params: { id: res.projectId } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Projet non créé");
+    }
   };
+
 
   if (!quote) {
     return (
@@ -414,27 +418,44 @@ function QuoteDetail() {
           {/* Echeances */}
           <section className="surface p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-lg">Paiements et échéances</h2>
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={createInstallments}>
-                  Échéancier 30/40/30
-                </Button>
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => {
-                    setPayDefaults({ label: `Paiement — ${quote.title}`, ht: totals.totalHt });
-                    setPayOpen(true);
-                  }}
-                >
-                  <CreditCard className="size-4" /> Demande de paiement
-                </Button>
-              </div>
+              <h2 className="font-display text-lg">Mode de paiement et échéances</h2>
+              <Button
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  setPayDefaults({ label: `Paiement — ${quote.title}`, ht: totals.totalHt });
+                  setPayOpen(true);
+                }}
+              >
+                <CreditCard className="size-4" /> Demande de paiement
+              </Button>
             </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {PAYMENT_PLANS.map((plan) => {
+                const active = (quote.payment_plan ?? "unique") === plan.value;
+                return (
+                  <button
+                    key={plan.value}
+                    type="button"
+                    onClick={() => applyPaymentPlan(plan.value)}
+                    className={`rounded-xl border p-3 text-left transition ${
+                      active ? "border-primary bg-primary/10" : "border-border hover:bg-muted/60"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{plan.label}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{plan.hint}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Le projet est créé dès l'acceptation du devis et démarre au 1er paiement reçu.
+            </p>
             <div className="mt-3 grid gap-2">
               {(installments ?? []).length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Paiement en une fois, ou créez un échéancier (acompte, intermédiaire, solde).
+                  Paiement unique : le client règle la totalité en une fois.
+
                 </p>
               )}
               {(installments ?? []).map((inst: any) => (

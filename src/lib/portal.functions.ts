@@ -21,7 +21,7 @@ export const portalRespondQuote = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const { resolvePortal, admin, maybeCreateProject, logEvent } = await import("./portal.server");
+    const { resolvePortal, admin, createProjectFromQuote, logEvent } = await import("./portal.server");
     const access = await resolvePortal(data.token);
     const db = await admin();
 
@@ -55,7 +55,7 @@ export const portalRespondQuote = createServerFn({ method: "POST" })
       { clientId: access.client_id, entityType: "quote", entityId: data.quoteId },
     );
 
-    if (data.action === "accepte") await maybeCreateProject(data.quoteId);
+    if (data.action === "accepte") await createProjectFromQuote(data.quoteId);
     return { ok: true };
   });
 

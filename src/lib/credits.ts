@@ -63,6 +63,7 @@ export function useDeleteAllCreditTransactions() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
+      if (!orgId) throw new Error("Organisation non identifiée");
       const { error } = await supabase.from("credit_transactions").delete().eq("org_id", orgId);
       if (error) throw error;
     },

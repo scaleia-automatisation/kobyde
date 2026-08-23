@@ -198,7 +198,7 @@ function OffersTab() {
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
           </div>
         )}
-        <CreditActionButton actionKey="hr.job_analysis" pending={run.isPending} onConfirm={(k) => run.mutateAsync(k)}>
+        <CreditActionButton actionKey="hr.job_analysis" disabled={!canAnalyze} pending={run.isPending} onConfirm={analyze}>
           Analyser l'offre
         </CreditActionButton>
       </Card>
@@ -224,7 +224,7 @@ function OffersTab() {
                   variant="outline"
                   size="sm"
                   pending={run.isPending}
-                  onConfirm={(k) => run.mutateAsync(k)}
+                  onConfirm={analyze}
                 >
                   <RefreshCw className="h-4 w-4" /> Régénérer
                 </CreditActionButton>

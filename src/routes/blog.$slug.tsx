@@ -28,6 +28,22 @@ export const Route = createFileRoute("/blog/$slug")({
             ]
           : []),
       ],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: post.title,
+            description: desc,
+            author: { "@type": "Person", name: post.author ?? "Équipe Kobyde" },
+            publisher: { "@type": "Organization", name: "Kobyde" },
+            ...(post.published_at ? { datePublished: post.published_at } : {}),
+            ...(post.cover_url ? { image: post.cover_url } : {}),
+            mainEntityOfPage: `https://kobyde.com/blog/${post.slug}`,
+          }),
+        },
+      ],
     };
   },
   errorComponent: () => <Missing text="Article momentanément indisponible." />,

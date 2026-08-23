@@ -455,6 +455,7 @@ function Landing() {
 
       {/* CE QUE FAIT KOBYDE */}
       <section className="mx-auto max-w-6xl px-5 pb-4">
+        <h2 className="mb-6 text-center text-3xl">Ce que Kobyde fait pour votre entreprise</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {[
             {

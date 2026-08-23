@@ -17,6 +17,7 @@ import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as DataDeletionRequestRouteImport } from './routes/data-deletion-request'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAideRouteImport } from './routes/_authenticated/aide'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAutomatisationsRouteImport } from './routes/_authenticated/automatisations'
@@ -96,6 +97,11 @@ const DataDeletionRequestRoute = DataDeletionRequestRouteImport.update({
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
   id: '/mentions-legales',
   path: '/mentions-legales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAideRoute = AuthenticatedAideRouteImport.update({
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/data-deletion': typeof DataDeletionRoute
   '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
@@ -368,6 +375,7 @@ export interface FileRoutesByTo {
   '/data-deletion': typeof DataDeletionRoute
   '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/data-deletion': typeof DataDeletionRoute
   '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/aide': typeof AuthenticatedAideRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/automatisations': typeof AuthenticatedAutomatisationsRoute
@@ -472,6 +481,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/data-deletion-request'
     | '/mentions-legales'
+    | '/sitemap.xml'
     | '/aide'
     | '/analytics'
     | '/automatisations'
@@ -522,6 +532,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/data-deletion-request'
     | '/mentions-legales'
+    | '/sitemap.xml'
     | '/aide'
     | '/analytics'
     | '/automatisations'
@@ -573,6 +584,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/data-deletion-request'
     | '/mentions-legales'
+    | '/sitemap.xml'
     | '/_authenticated/aide'
     | '/_authenticated/analytics'
     | '/_authenticated/automatisations'
@@ -625,6 +637,7 @@ export interface RootRouteChildren {
   DataDeletionRoute: typeof DataDeletionRoute
   DataDeletionRequestRoute: typeof DataDeletionRequestRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   BlogSlugRoute: typeof BlogSlugRoute
   EntretienTokenRoute: typeof EntretienTokenRoute
   EspaceTokenRoute: typeof EspaceTokenRoute
@@ -692,6 +705,13 @@ declare module '@tanstack/react-router' {
       path: '/mentions-legales'
       fullPath: '/mentions-legales'
       preLoaderRoute: typeof MentionsLegalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/aide': {
@@ -1066,6 +1086,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataDeletionRoute: DataDeletionRoute,
   DataDeletionRequestRoute: DataDeletionRequestRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   BlogSlugRoute: BlogSlugRoute,
   EntretienTokenRoute: EntretienTokenRoute,
   EspaceTokenRoute: EspaceTokenRoute,

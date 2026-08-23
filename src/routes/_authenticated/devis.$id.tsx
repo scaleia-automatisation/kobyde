@@ -432,27 +432,44 @@ function QuoteDetail() {
           {/* Echeances */}
           <section className="surface p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-lg">Paiements et échéances</h2>
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={createInstallments}>
-                  Échéancier 30/40/30
-                </Button>
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => {
-                    setPayDefaults({ label: `Paiement — ${quote.title}`, ht: totals.totalHt });
-                    setPayOpen(true);
-                  }}
-                >
-                  <CreditCard className="size-4" /> Demande de paiement
-                </Button>
-              </div>
+              <h2 className="font-display text-lg">Mode de paiement et échéances</h2>
+              <Button
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  setPayDefaults({ label: `Paiement — ${quote.title}`, ht: totals.totalHt });
+                  setPayOpen(true);
+                }}
+              >
+                <CreditCard className="size-4" /> Demande de paiement
+              </Button>
             </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {PAYMENT_PLANS.map((plan) => {
+                const active = (quote.payment_plan ?? "unique") === plan.value;
+                return (
+                  <button
+                    key={plan.value}
+                    type="button"
+                    onClick={() => applyPaymentPlan(plan.value)}
+                    className={`rounded-xl border p-3 text-left transition ${
+                      active ? "border-primary bg-primary/10" : "border-border hover:bg-muted/60"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold">{plan.label}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{plan.hint}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Le projet est créé dès l'acceptation du devis et démarre au 1er paiement reçu.
+            </p>
             <div className="mt-3 grid gap-2">
               {(installments ?? []).length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Paiement en une fois, ou créez un échéancier (acompte, intermédiaire, solde).
+                  Paiement unique : le client règle la totalité en une fois.
+
                 </p>
               )}
               {(installments ?? []).map((inst: any) => (

@@ -237,12 +237,18 @@ export const startConnection = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     const { buildAuthorizeUrl } = await import("./connectors.server");
-    return buildAuthorizeUrl({
-      connectorKey: data.connectorKey,
-      userId: context.userId,
-      orgId: profile?.current_org_id ?? null,
-      ...(data.origin ? { origin: data.origin } : {}),
-    });
+    try {
+      const res = await buildAuthorizeUrl({
+        connectorKey: data.connectorKey,
+        userId: context.userId,
+        orgId: profile?.current_org_id ?? null,
+        ...(data.origin ? { origin: data.origin } : {}),
+      });
+      return { url: res.url as string | null, error: null as string | null };
+    } catch (e) {
+      // Pas d'OAuth disponible (connecteur non activé, incomplet…) : l'UI bascule sur la saisie manuelle.
+      return { url: null, error: e instanceof Error ? e.message : "Connexion OAuth indisponible." };
+    }
   });
 
 export const disconnectConnection = createServerFn({ method: "POST" })

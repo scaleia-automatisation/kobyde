@@ -23,11 +23,13 @@ import { useCreateRow, useDeleteRow, useRows, euros } from "@/lib/db";
 export type FieldDef = {
   name: string;
   label: string;
-  type?: "text" | "number" | "email" | "date" | "textarea" | "money";
+  type?: "text" | "number" | "email" | "date" | "textarea" | "money" | "select";
   required?: boolean;
   placeholder?: string;
   defaultValue?: string;
   inList?: boolean;
+  /** Choix proposés pour un champ « select » (une option « personnalisé » est ajoutée). */
+  options?: string[];
 };
 
 export type ModuleConfig = {

@@ -35,7 +35,7 @@ export const adminSaveConnector = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertPlatformAdmin(context.supabase);
     const { saveConnector } = await import("./connectors.server");
-    return saveConnector(datadata as any);
+    return saveConnector(data as any);
   });
 
 export const adminToggleConnector = createServerFn({ method: "POST" })
@@ -80,7 +80,7 @@ export const adminCreateCustomConnector = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertPlatformAdmin(context.supabase);
     const { createCustomConnector } = await import("./connectors.server");
-    return createCustomConnector(datadata as any);
+    return createCustomConnector(data as any);
   });
 
 export const adminDeleteConnector = createServerFn({ method: "POST" })
@@ -139,7 +139,7 @@ export const adminUpsertPricing = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertPlatformAdmin(context.supabase);
     const { upsertPricing } = await import("./usage.server");
-    return upsertPricing(datadata as any);
+    return upsertPricing(data as any);
   });
 
 export const adminDeletePricing = createServerFn({ method: "POST" })
@@ -166,7 +166,7 @@ export const adminListLogs = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertPlatformAdmin(context.supabase);
     const { listUsageLogs } = await import("./usage.server");
-    return listUsageLogs(datadata as any);
+    return listUsageLogs(data as any);
   });
 
 export const adminListBudgets = createServerFn({ method: "POST" })
@@ -204,7 +204,7 @@ export const adminUpsertBudget = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertPlatformAdmin(context.supabase);
     const { upsertBudget } = await import("./usage.server");
-    return upsertBudget(datadata as any);
+    return upsertBudget(data as any);
   });
 
 export const adminDeleteBudget = createServerFn({ method: "POST" })

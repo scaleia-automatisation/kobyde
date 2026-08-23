@@ -45,7 +45,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
   );
 }
 
-function Table({ title, rows }: { title: string; rows: { key: string; name?: string; requests: number; cost: number; avgCost: number; credits: number }[] }) {
+function Table({ title, rows }: { title: string; rows: any[] }) {
   return (
     <Card className="overflow-x-auto p-0">
       <p className="border-b border-border p-3 text-sm font-medium">{title}</p>
@@ -108,7 +108,7 @@ export function CostsPanel() {
       {o.budgets.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold">Budgets</h3>
-          {o.budgets.map((b) => (
+          {o.budgets.map((b: any) => (
             <Card key={b.id} className="p-4">
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span className="font-medium">
@@ -148,7 +148,7 @@ export function PricingPanel() {
       upsertFn({
         data: {
           connectorKey: form.connectorKey.trim(),
-          model: form.model.trim() || undefined,
+          ...(form.model.trim() ? { model: form.model.trim() } : {}),
           unit: form.unit,
           unitPrice: Number(form.unitPrice),
         },
@@ -269,7 +269,7 @@ export function BudgetsPanel() {
       upsertFn({
         data: {
           scope: form.scope,
-          connectorKey: form.connectorKey.trim() || undefined,
+          ...(form.connectorKey.trim() ? { connectorKey: form.connectorKey.trim() } : {}),
           period: form.period,
           amountEur: Number(form.amountEur),
           actionOnLimit: form.actionOnLimit,

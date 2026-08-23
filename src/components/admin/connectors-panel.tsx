@@ -113,7 +113,7 @@ function ConnectorCard({ connector, onChanged }: { connector: Connector; onChang
             <div key={field.key} className="space-y-1">
               <Label className="text-xs">
                 {field.label}
-                {field.required === false || connector.optionalFields.some((o) => o.key === field.key) ? (
+                {field.required === false || connector.optionalFields.some((o: { key: string }) => o.key === field.key) ? (
                   <span className="ml-1 text-muted-foreground">(facultatif)</span>
                 ) : null}
               </Label>
@@ -132,7 +132,7 @@ function ConnectorCard({ connector, onChanged }: { connector: Connector; onChang
           <div className="space-y-2">
             <p className="text-xs font-medium">Services activés</p>
             <div className="flex flex-wrap gap-3">
-              {connector.servicesCatalog.map((s) => (
+              {connector.servicesCatalog.map((s: { key: string; label: string }) => (
                 <label key={s.key} className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={services.includes(s.key)}

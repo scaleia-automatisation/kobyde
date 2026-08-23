@@ -17,8 +17,8 @@ export const Route = createFileRoute("/_authenticated/connexions")({
   component: ConnexionsPage,
   validateSearch: (search: Record<string, unknown>): Search => ({
     connexion: typeof search['connexion'] === "string" ? (search['connexion'] as string) : undefined,
-    connecteur: typeof typeof search['connecteur'] === "string" ? (search['connecteur'] as string) : undefined,
-    message: typeof typeof search['message'] === "string" ? (search['message'] as string) : undefined,
+    connecteur: typeof search['connecteur'] === "string" ? (search['connecteur'] as string) : undefined,
+    message: typeof search['message'] === "string" ? (search['message'] as string) : undefined,
   }),
   head: () => ({
     meta: [

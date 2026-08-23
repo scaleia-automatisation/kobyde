@@ -45,6 +45,35 @@ export type ModuleConfig = {
   detailLabel?: string;
 };
 
+/** Liste déroulante de choix courants + option « personnalisé ». */
+function SelectField({ field }: { field: FieldDef }) {
+  const options = field.options ?? [];
+  const [value, setValue] = useState(field.defaultValue ?? options[0] ?? "");
+  const custom = value === "__custom__";
+
+  return (
+    <div className="space-y-2">
+      <select
+        id={field.name}
+        name={custom ? undefined : field.name}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+        <option value="__custom__">Personnalisé — je saisis moi-même</option>
+      </select>
+      {custom && (
+        <Input name={field.name} required={field.required} placeholder={field.placeholder ?? "Votre choix"} />
+      )}
+    </div>
+  );
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function ModulePage({ config }: { config: ModuleConfig }) {
   const { data: rows, isLoading } = useRows(config.table);

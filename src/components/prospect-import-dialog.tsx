@@ -63,8 +63,9 @@ export function ProspectImportDialog() {
     }
     const payload = valid.map((r) => ({
       ...r,
-      full_name: r.full_name || r.company_name || r.email || r.phone || "Sans nom",
-      acquisition_channel: r.acquisition_channel || channel,
+      full_name: r["full_name"] || r["company_name"] || r["email"] || r["phone"] || "Sans nom",
+      acquisition_channel: r["acquisition_channel"] || channel,
+
       source: "Import",
       org_id: orgId,
     }));

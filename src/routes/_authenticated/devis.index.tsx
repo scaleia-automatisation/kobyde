@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FileText, Mic, Package, Plus, Sparkles } from "lucide-react";
+import { FileText, Mic, Package, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreditActionButton } from "@/components/credit-action";
 import { supabase } from "@/integrations/supabase/client";
-import { useOrgId, useRows, eur2, frDate } from "@/lib/db";
+import { useDeleteAllRows, useDeleteRow, useOrgId, useRows, eur2, frDate } from "@/lib/db";
 import { MEETING_SOURCES, QUOTE_STATUS_LABEL, addDays, isoDate, nextNumber } from "@/lib/sales";
 import { analyzeMeeting, analyzeMeetingAudio } from "@/lib/sales.functions";
 
@@ -55,6 +55,8 @@ function DevisPage() {
   const orgId = useOrgId();
   const navigate = useNavigate();
   const { data: quotes, isLoading, refetch } = useRows<any>("quotes");
+  const removeQuote = useDeleteRow("quotes");
+  const removeAllQuotes = useDeleteAllRows("quotes");
   const { data: clients } = useRows<any>("clients");
   const { data: products } = useRows<any>("products");
 
@@ -245,9 +247,23 @@ function DevisPage() {
       title="Devis"
       subtitle="Michael transforme un besoin — ou un compte rendu de réunion — en devis prêt à envoyer."
       action={
-        <Button variant="secondary" className="gap-2" onClick={() => setManual(true)}>
-          <Plus className="size-4" /> <span className="hidden sm:inline">Devis vierge</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {(quotes ?? []).length > 0 && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => {
+                if (!window.confirm("Supprimer définitivement tous les devis ?")) return;
+                removeAllQuotes.mutate(undefined, { onSuccess: () => toast.success("Tous les devis ont été supprimés") });
+              }}
+            >
+              <Trash2 className="size-4" /> <span className="hidden sm:inline">Tout supprimer</span>
+            </Button>
+          )}
+          <Button variant="secondary" className="gap-2" onClick={() => setManual(true)}>
+            <Plus className="size-4" /> <span className="hidden sm:inline">Devis vierge</span>
+          </Button>
+        </div>
       }
     >
       <section className="surface p-6 sm:p-8">
@@ -261,7 +277,7 @@ function DevisPage() {
           <button
             type="button"
             onClick={() => setAudioOpen(true)}
-            className="surface flex items-start gap-3 p-4 text-left transition hover:shadow-md"
+            className="agent-suggestion-chip flex items-start gap-3 p-4 text-left"
           >
             <Mic className="mt-0.5 size-5 text-primary" />
             <span>
@@ -275,7 +291,7 @@ function DevisPage() {
           <button
             type="button"
             onClick={() => setMeeting(true)}
-            className="surface flex items-start gap-3 p-4 text-left transition hover:shadow-md"
+            className="agent-suggestion-chip flex items-start gap-3 p-4 text-left"
           >
             <Sparkles className="mt-0.5 size-5 text-primary" />
             <span>
@@ -289,7 +305,7 @@ function DevisPage() {
           <button
             type="button"
             onClick={() => setCatalog(true)}
-            className="surface flex items-start gap-3 p-4 text-left transition hover:shadow-md"
+            className="agent-suggestion-chip flex items-start gap-3 p-4 text-left"
           >
             <Package className="mt-0.5 size-5 text-primary" />
             <span>

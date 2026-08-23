@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, Plug, Trash2 } from "lucide-react";
+import { AlertTriangle, Copy, Plug, Settings2, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -48,158 +56,211 @@ function UrlRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ConnectorCard({ connector, onChanged }: { connector: Connector; onChanged: () => void }) {
+function ConnectorRow({ connector, onChanged }: { connector: Connector; onChanged: () => void }) {
   const save = useServerFn(adminSaveConnector);
   const test = useServerFn(adminTestConnector);
   const toggle = useServerFn(adminToggleConnector);
   const remove = useServerFn(adminDeleteConnector);
 
+  const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const [services, setServices] = useState<string[]>(connector.services ?? []);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(connector.lastError ?? null);
 
-  const statusBadge =
-    connector.status === "erreur" ? (
-      <Badge variant="destructive">Erreur</Badge>
-    ) : connector.status === "configure" ? (
-      <Badge className="bg-emerald-500/15 text-emerald-600">Configuré</Badge>
-    ) : (
-      <Badge variant="secondary">Non configuré</Badge>
-    );
+  const ok = connector.status === "configure" && !connector.lastError;
+  const failed = connector.status === "erreur" || Boolean(connector.lastError);
+
+  const dot = failed ? "bg-destructive" : ok ? "bg-emerald-500" : "bg-muted-foreground/40";
+  const statusBadge = failed ? (
+    <Badge variant="destructive">Erreur</Badge>
+  ) : ok ? (
+    <Badge className="bg-emerald-500/15 text-emerald-600">Connecté</Badge>
+  ) : (
+    <Badge variant="secondary">Non configuré</Badge>
+  );
+
+  const runTest = async () => {
+    const r = await test({ data: { key: connector.key } });
+    if (r.ok) {
+      setError(null);
+      toast.success(r.message);
+    } else {
+      setError(r.message);
+      toast.error(r.message);
+    }
+    onChanged();
+    return r.ok;
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
       await save({ data: { key: connector.key, values, services } });
-      toast.success("Connecteur enregistré.");
       setValues({});
-      onChanged();
+      const success = await runTest();
+      if (success) setOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Enregistrement impossible.");
+      const message = err instanceof Error ? err.message : "Enregistrement impossible.";
+      setError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
     }
   };
 
+  const onToggle = async (v: boolean) => {
+    if (v && connector.status !== "configure") {
+      setOpen(true);
+      return;
+    }
+    try {
+      await toggle({ data: { key: connector.key, enabled: v } });
+      if (v) await runTest();
+      else onChanged();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Activation impossible.";
+      setError(message);
+      toast.error(message);
+    }
+  };
+
+  const isCustom =
+    !CATEGORY_LABELS[connector.category as keyof typeof CATEGORY_LABELS] || connector.category === "custom";
+
   return (
-    <Card className="space-y-4 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
+    <>
+      <Card className="flex flex-wrap items-center gap-4 p-4">
+        <span className={`size-2.5 shrink-0 rounded-full ${dot}`} aria-hidden />
+        <div className="min-w-[220px] flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <Plug className="size-4 text-muted-foreground" />
             <h3 className="font-medium">{connector.name}</h3>
             {statusBadge}
+            <span className="text-xs text-muted-foreground">
+              {CATEGORY_LABELS[connector.category as keyof typeof CATEGORY_LABELS] ?? connector.category}
+            </span>
           </div>
-          <p className="mt-1 max-w-xl text-sm text-muted-foreground">{connector.description}</p>
+          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{connector.description}</p>
+          {failed && error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{connector.isEnabled ? "Activé" : "Désactivé"}</span>
-          <Switch
-            checked={connector.isEnabled}
-            onCheckedChange={async (v) => {
-              await toggle({ data: { key: connector.key, enabled: v } });
-              onChanged();
-            }}
-          />
+        <div className="flex items-center gap-3">
+          <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>
+            <Settings2 className="mr-1 size-4" /> Configurer
+          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{connector.isEnabled ? "Activé" : "Désactivé"}</span>
+            <Switch checked={connector.isEnabled} onCheckedChange={(v) => void onToggle(v)} />
+          </div>
         </div>
-      </div>
+      </Card>
 
-      {connector.lastError && <p className="text-xs text-destructive">Dernière erreur : {connector.lastError}</p>}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {connector.name} {statusBadge}
+            </DialogTitle>
+            <DialogDescription>{connector.description}</DialogDescription>
+          </DialogHeader>
 
-      <form className="space-y-4" onSubmit={submit}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {[...connector.fields, ...connector.optionalFields].map((field) => (
-            <div key={field.key} className="space-y-1">
-              <Label className="text-xs">
-                {field.label}
-                {field.required === false || connector.optionalFields.some((o: { key: string }) => o.key === field.key) ? (
-                  <span className="ml-1 text-muted-foreground">(facultatif)</span>
-                ) : null}
-              </Label>
-              <Input
-                type="text"
-                autoComplete="off"
-                placeholder={connector.values[field.key] || "—"}
-                value={values[field.key] ?? ""}
-                onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
-              />
-            </div>
-          ))}
-        </div>
+          {failed && error && (
+            <Alert variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertTitle>La connexion a échoué</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        {connector.servicesCatalog.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-medium">Services activés</p>
-            <div className="flex flex-wrap gap-3">
-              {connector.servicesCatalog.map((s: { key: string; label: string }) => (
-                <label key={s.key} className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={services.includes(s.key)}
-                    onCheckedChange={(v) =>
-                      setServices((list) => (v ? [...new Set([...list, s.key])] : list.filter((x) => x !== s.key)))
-                    }
+          <form className="space-y-4" onSubmit={submit}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[...connector.fields, ...connector.optionalFields].map((field) => (
+                <div key={field.key} className="space-y-1">
+                  <Label className="text-xs">
+                    {field.label}
+                    {field.required === false ||
+                    connector.optionalFields.some((o: { key: string }) => o.key === field.key) ? (
+                      <span className="ml-1 text-muted-foreground">(facultatif)</span>
+                    ) : null}
+                  </Label>
+                  <Input
+                    type="text"
+                    autoComplete="off"
+                    placeholder={connector.values[field.key] || "—"}
+                    value={values[field.key] ?? ""}
+                    onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
                   />
-                  {s.label}
-                </label>
+                </div>
               ))}
             </div>
-          </div>
-        )}
 
-        {(connector.userConnect || connector.authType === "oauth") && (
-          <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Redirect URI</p>
-            <UrlRow label="Production" value={connector.urls.redirectProd} />
-            <UrlRow label="Développement" value={connector.urls.redirectDev} />
-          </div>
-        )}
+            {connector.servicesCatalog.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium">Services activés</p>
+                <div className="flex flex-wrap gap-3">
+                  {connector.servicesCatalog.map((s: { key: string; label: string }) => (
+                    <label key={s.key} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={services.includes(s.key)}
+                        onCheckedChange={(v) =>
+                          setServices((list) => (v ? [...new Set([...list, s.key])] : list.filter((x) => x !== s.key)))
+                        }
+                      />
+                      {s.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {connector.webhook && (
-          <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Webhook URL</p>
-            <UrlRow label="Production" value={connector.urls.webhookProd} />
-            <UrlRow label="Développement" value={connector.urls.webhookDev} />
-          </div>
-        )}
+            {(connector.userConnect || connector.authType === "oauth") && (
+              <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Redirect URI</p>
+                <UrlRow label="Production" value={connector.urls.redirectProd} />
+                <UrlRow label="Développement" value={connector.urls.redirectDev} />
+              </div>
+            )}
 
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" disabled={busy}>
-            Enregistrer
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              const r = await test({ data: { key: connector.key } });
-              r.ok ? toast.success(r.message) : toast.error(r.message);
-              onChanged();
-            }}
-          >
-            Tester la connexion
-          </Button>
-          {connector.lastTestAt && (
-            <span className="self-center text-xs text-muted-foreground">
-              Dernier test : {new Date(connector.lastTestAt).toLocaleString("fr-FR")}
-            </span>
-          )}
-          {!CATEGORY_LABELS[connector.category as keyof typeof CATEGORY_LABELS] ||
-          connector.category === "custom" ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-destructive"
-              onClick={async () => {
-                await remove({ data: { key: connector.key } });
-                onChanged();
-              }}
-            >
-              <Trash2 className="mr-1 size-4" /> Supprimer
-            </Button>
-          ) : null}
-        </div>
-      </form>
-    </Card>
+            {connector.webhook && (
+              <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Webhook URL</p>
+                <UrlRow label="Production" value={connector.urls.webhookProd} />
+                <UrlRow label="Développement" value={connector.urls.webhookDev} />
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={busy}>
+                Enregistrer et connecter
+              </Button>
+              <Button type="button" variant="outline" onClick={() => void runTest()}>
+                Tester la connexion
+              </Button>
+              {connector.lastTestAt && (
+                <span className="self-center text-xs text-muted-foreground">
+                  Dernier test : {new Date(connector.lastTestAt).toLocaleString("fr-FR")}
+                </span>
+              )}
+              {isCustom ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive"
+                  onClick={async () => {
+                    await remove({ data: { key: connector.key } });
+                    setOpen(false);
+                    onChanged();
+                  }}
+                >
+                  <Trash2 className="mr-1 size-4" /> Supprimer
+                </Button>
+              ) : null}
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -291,9 +352,9 @@ export function ConnectorsPanel() {
       </div>
 
       {list.isLoading && <Card className="p-6 text-sm text-muted-foreground">Chargement…</Card>}
-      <div className="grid gap-4">
+      <div className="flex flex-col gap-3">
         {items.map((c) => (
-          <ConnectorCard key={c.key} connector={c} onChanged={refresh} />
+          <ConnectorRow key={c.key} connector={c} onChanged={refresh} />
         ))}
       </div>
     </div>

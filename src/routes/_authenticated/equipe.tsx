@@ -310,7 +310,7 @@ function TeamPage() {
                       key={s}
                       type="button"
                       onClick={() => setPromptText(s)}
-                      className="rounded-full border border-border bg-muted/50 px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10"
+                      className="agent-suggestion-chip"
                     >
                       {s}
                     </button>

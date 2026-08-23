@@ -184,27 +184,25 @@ export async function confirmPayment(
     kind: "success",
   });
 
-  if (pr.quote_id) await maybeCreateProject(pr.quote_id);
+  if (pr.quote_id) {
+    await createProjectFromQuote(pr.quote_id);
+    await startProjectOnFirstPayment(pr.quote_id);
+  }
 
   return { alreadyPaid: false, paymentId: payment?.id ?? null, invoice: number };
 }
 
-/** Devis accepté + premier paiement reçu → création automatique du projet. */
-export async function maybeCreateProject(quoteId: string) {
+/**
+ * Chloé crée le projet dès que le devis est accepté.
+ * Le projet reste « en attente du 1er paiement » tant qu'aucun règlement n'est reçu.
+ */
+export async function createProjectFromQuote(quoteId: string) {
   const db = await admin();
   const { data: quote } = await db.from("quotes").select("*").eq("id", quoteId).maybeSingle();
   if (!quote || quote.status !== "accepte") return null;
 
   const { data: existing } = await db.from("projects").select("id").eq("quote_id", quoteId).maybeSingle();
   if (existing) return existing.id as string;
-
-  const { data: paid } = await db
-    .from("payment_requests")
-    .select("id")
-    .eq("quote_id", quoteId)
-    .eq("status", "payee")
-    .limit(1);
-  if (!paid || paid.length === 0) return null;
 
   const { data: items } = await db.from("quote_items").select("label,quantity,subservices").eq("quote_id", quoteId);
   const { data: project } = await db
@@ -217,10 +215,11 @@ export async function maybeCreateProject(quoteId: string) {
       description: (items ?? [])
         .map((i: any) => `• ${i.label} (x${i.quantity})`)
         .join("\n"),
-      status: "en_cours",
+      status: "en_attente",
+      payment_plan: quote.payment_plan ?? "unique",
       progress: 0,
       budget: Number(quote.total_ttc ?? 0),
-      start_date: new Date().toISOString().slice(0, 10),
+      start_date: null,
     })
     .select("id")
     .single();
@@ -232,19 +231,63 @@ export async function maybeCreateProject(quoteId: string) {
         org_id: quote.org_id,
         project_id: project.id,
         name,
-        status: i === 0 ? "en_cours" : "a_faire",
+        status: "a_faire",
         position: i,
       })),
     );
     await db.from("notifications").insert({
       org_id: quote.org_id,
-      title: "Projet créé automatiquement",
-      body: `Le devis ${quote.number} est accepté et payé : le projet « ${quote.title} » a été créé.`,
+      title: "Projet créé par Chloé",
+      body: `Le devis ${quote.number} est accepté : le projet « ${quote.title} » est créé. Il démarrera dès le 1er paiement reçu.`,
       kind: "info",
     });
   }
   return project?.id ?? null;
 }
+
+/** Démarre le projet lorsque le premier paiement du devis est encaissé. */
+export async function startProjectOnFirstPayment(quoteId: string) {
+  const db = await admin();
+  const { data: paid } = await db
+    .from("payment_requests")
+    .select("id")
+    .eq("quote_id", quoteId)
+    .eq("status", "payee")
+    .limit(1);
+  if (!paid || paid.length === 0) return null;
+
+  const { data: project } = await db
+    .from("projects")
+    .select("id,org_id,name,status")
+    .eq("quote_id", quoteId)
+    .maybeSingle();
+  if (!project || project.status !== "en_attente") return project?.id ?? null;
+
+  await db
+    .from("projects")
+    .update({ status: "en_cours", start_date: new Date().toISOString().slice(0, 10) })
+    .eq("id", project.id);
+  await db
+    .from("project_steps")
+    .update({ status: "en_cours" })
+    .eq("project_id", project.id)
+    .eq("position", 0);
+  await db.from("notifications").insert({
+    org_id: project.org_id,
+    title: "Projet démarré 🚀",
+    body: `Premier paiement reçu : le projet « ${project.name} » passe en cours.`,
+    kind: "success",
+  });
+  return project.id as string;
+}
+
+/** @deprecated conservé pour compatibilité : crée puis démarre si un paiement existe. */
+export async function maybeCreateProject(quoteId: string) {
+  const id = await createProjectFromQuote(quoteId);
+  await startProjectOnFirstPayment(quoteId);
+  return id;
+}
+
 
 /** Lien de paiement Stripe (si la clé est configurée), sinon paiement manuel. */
 export async function createStripeCheckout(requestId: string, origin: string) {

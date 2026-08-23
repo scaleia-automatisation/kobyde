@@ -116,8 +116,11 @@ function PortalPage() {
         <div className="mx-auto max-w-5xl">
           <p className="text-sm text-muted-foreground">{d.org?.name}</p>
           <h1 className="font-display mt-1 text-4xl">
-            Bonjour {d.client?.full_name?.split(" ")[0] ?? ""}
+            Votre espace client
           </h1>
+          <p className="mt-2 text-lg font-medium">
+            Bonjour {d.client?.full_name?.split(" ")[0] ?? ""}
+          </p>
           <p className="mt-2 max-w-xl text-muted-foreground">
             Vos devis, vos projets, vos factures et vos documents — au même endroit, sans compte à créer.
           </p>

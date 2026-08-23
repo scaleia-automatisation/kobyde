@@ -1,5 +1,5 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -8,8 +8,24 @@ import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { disconnectConnection, myConnections, startConnection } from "@/lib/connectors.functions";
-import { CATEGORY_LABELS } from "@/lib/connectors.catalog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  disconnectConnection,
+  myConnections,
+  saveMyManualConnection,
+  startConnection,
+} from "@/lib/connectors.functions";
+import { CATEGORY_LABELS, CONNECTOR_MAP, type ConnectorField } from "@/lib/connectors.catalog";
+
 
 type Search = { connexion?: string | undefined; connecteur?: string | undefined; message?: string | undefined };
 
@@ -53,12 +69,40 @@ function ConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message]);
 
+  const saveFn = useServerFn(saveMyManualConnection);
+  const [dialogKey, setDialogKey] = useState<string | null>(null);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
+  const openDialog = (key: string) => {
+    setValues({});
+    setDialogKey(key);
+  };
+
   const connect = async (key: string) => {
     try {
       const { url } = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
       window.location.href = url;
+    } catch {
+      openDialog(key);
+    }
+  };
+
+  const def = dialogKey ? CONNECTOR_MAP.get(dialogKey) : undefined;
+  const dialogFields: ConnectorField[] = def ? [...(def.fields ?? []), ...(def.optionalFields ?? [])] : [];
+
+  const submitManual = async () => {
+    if (!dialogKey) return;
+    setSaving(true);
+    try {
+      await saveFn({ data: { connectorKey: dialogKey, values } });
+      toast.success("Compte connecté avec succès.");
+      setDialogKey(null);
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Connexion impossible.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -79,7 +123,7 @@ function ConnexionsPage() {
                   ) : c.available ? (
                     <Badge variant="secondary">Disponible</Badge>
                   ) : (
-                    <Badge variant="outline">Bientôt disponible</Badge>
+                    <Badge variant="outline">Configuration manuelle</Badge>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
@@ -101,24 +145,33 @@ function ConnexionsPage() {
 
             {c.connected && c.account && <p className="text-xs">Compte : {c.account}</p>}
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {c.connected ? (
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    await stopFn({ data: { connectorKey: c.key } });
-                    toast.success("Compte déconnecté.");
-                    void qc.invalidateQueries({ queryKey: ["my-connections"] });
-                  }}
-                >
-                  Déconnecter
-                </Button>
+                <>
+                  <Button variant="outline" onClick={() => openDialog(c.key)}>
+                    Modifier mes identifiants
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      await stopFn({ data: { connectorKey: c.key } });
+                      toast.success("Compte déconnecté.");
+                      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+                    }}
+                  >
+                    Déconnecter
+                  </Button>
+                </>
               ) : (
-                <Button disabled={!c.available} onClick={() => void connect(c.key)}>
-                  Connecter mon compte
-                </Button>
+                <>
+                  <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
+                  <Button variant="outline" onClick={() => openDialog(c.key)}>
+                    Saisir mes identifiants
+                  </Button>
+                </>
               )}
             </div>
+
           </Card>
         ))}
         {items.length === 0 && !list.isLoading && (
@@ -127,6 +180,55 @@ function ConnexionsPage() {
           </Card>
         )}
       </div>
+
+      <Dialog open={dialogKey !== null} onOpenChange={(o) => !o && setDialogKey(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{def?.name ?? "Connexion"}</DialogTitle>
+            <DialogDescription>
+              Renseignez les informations demandées par la plateforme (clé API, jeton, client ID, secret…).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+            {dialogFields.map((fd) => (
+              <div key={fd.key} className="space-y-1.5">
+                <Label htmlFor={`f-${fd.key}`}>
+                  {fd.label}
+                  {fd.required !== false && <span className="text-destructive"> *</span>}
+                </Label>
+                <Input
+                  id={`f-${fd.key}`}
+                  type={fd.secret ? "password" : "text"}
+                  autoComplete="off"
+                  placeholder={fd.placeholder ?? ""}
+                  value={values[fd.key] ?? ""}
+                  onChange={(e) => setValues((v) => ({ ...v, [fd.key]: e.target.value }))}
+                />
+              </div>
+            ))}
+            <div className="space-y-1.5">
+              <Label htmlFor="f-account_label">Nom du compte (facultatif)</Label>
+              <Input
+                id="f-account_label"
+                value={values["account_label"] ?? ""}
+                onChange={(e) => setValues((v) => ({ ...v, account_label: e.target.value }))}
+                placeholder="ex. contact@monentreprise.fr"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogKey(null)}>
+              Annuler
+            </Button>
+            <Button disabled={saving} onClick={() => void submitManual()}>
+              {saving ? "Enregistrement…" : "Enregistrer et connecter"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+
   );
 }

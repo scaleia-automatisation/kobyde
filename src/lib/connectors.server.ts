@@ -414,3 +414,49 @@ export async function disconnectUserConnection(userId: string, connectorKey: str
     .eq("provider", connectorKey);
   return { ok: true };
 }
+
+/* --------------------------------------------- Connexion manuelle (jetons saisis) */
+
+export async function saveUserManualConnection(input: {
+  userId: string;
+  orgId: string | null;
+  connectorKey: string;
+  values: Record<string, string>;
+}) {
+  const def = CONNECTOR_MAP.get(input.connectorKey);
+  if (!def) throw new Error("Connecteur inconnu.");
+
+  const values = Object.fromEntries(
+    Object.entries(input.values).map(([k, v]) => [k, (v ?? "").trim()]).filter(([, v]) => v !== ""),
+  ) as Record<string, string>;
+
+  const missing = (def.fields ?? [])
+    .filter((fd) => fd.required !== false && !values[fd.key])
+    .map((fd) => fd.label);
+  if (missing.length) throw new Error(`Champs obligatoires manquants : ${missing.join(", ")}.`);
+
+  const token =
+    values["access_token"] ?? values["api_key"] ?? values["api_token"] ?? values["client_secret"] ??
+    values["app_secret"] ?? Object.values(values)[0] ?? "";
+  const label = values["account_label"] ?? values["email"] ?? null;
+
+  const supabase = await db();
+  const { error } = await supabase.from("oauth_connections").upsert(
+    {
+      user_id: input.userId,
+      org_id: input.orgId,
+      provider: input.connectorKey,
+      connector_key: input.connectorKey,
+      provider_user_id: input.userId,
+      access_token: token,
+      account_label: label,
+      status: "active",
+      revoked: false,
+      scopes: (def.oauth?.defaultScopes ?? []).join(" "),
+      metadata: { connector: input.connectorKey, mode: "manual", fields: Object.keys(values) },
+    },
+    { onConflict: "user_id,provider" },
+  );
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}

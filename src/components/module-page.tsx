@@ -102,6 +102,8 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                   <Label htmlFor={f.name}>{f.label}</Label>
                   {f.type === "textarea" ? (
                     <Textarea id={f.name} name={f.name} placeholder={f.placeholder} rows={3} />
+                  ) : f.type === "select" ? (
+                    <SelectField field={f} />
                   ) : (
                     <Input
                       id={f.name}

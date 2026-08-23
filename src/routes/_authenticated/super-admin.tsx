@@ -26,6 +26,8 @@ import {
   suspendPlatformUser,
 } from "@/lib/admin.functions";
 import { USER_EVENT_LABELS } from "@/lib/user-events";
+import { ConnectorsPanel } from "@/components/admin/connectors-panel";
+import { BudgetsPanel, CostsPanel, LogsPanel, PricingPanel } from "@/components/admin/costs-panel";
 
 export const Route = createFileRoute("/_authenticated/super-admin")({
   component: SuperAdminPage,

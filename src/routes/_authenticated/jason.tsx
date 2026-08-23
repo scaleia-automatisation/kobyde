@@ -24,6 +24,7 @@ import { toReadableText } from "@/lib/generation-text";
 import { useOrgId } from "@/lib/db";
 import { CHANNELS, NOT_FOUND, TOOLS, WORKFLOW_STEPS, searchActionKey } from "@/lib/prospection";
 import { findProspects, generatePersona, savePersona } from "@/lib/prospection.functions";
+import { CONTINENTS, getCountries, getCountry, getDepartments, getRegions } from "@/lib/geo";
 
 export const Route = createFileRoute("/_authenticated/jason")({
   component: JasonPage,
@@ -93,6 +94,45 @@ function Field({
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-xs text-muted-foreground">{label}</Label>
       <Input id={id} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
+const ANY = "__all__";
+
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+  placeholder,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Select
+        value={value || ANY}
+        onValueChange={(v) => onChange(v === ANY ? "" : v)}
+        disabled={disabled || options.length === 0}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent className="max-h-72">
+          <SelectItem value={ANY}>{placeholder}</SelectItem>
+          {options.map((o) => (
+            <SelectItem key={o} value={o}>{o}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -170,10 +210,49 @@ function JasonPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="Cible" value={params.target} onChange={(v) => set("target", v)} placeholder="Restaurants indépendants" />
             <Field label="Produit / service" value={params.offer} onChange={(v) => set("offer", v)} placeholder="Création de site web" />
-            <Field label="Continent" value={params.continent} onChange={(v) => set("continent", v)} placeholder="Europe" />
-            <Field label="Pays" value={params.country} onChange={(v) => set("country", v)} placeholder="France" />
-            <Field label="Région" value={params.region} onChange={(v) => set("region", v)} placeholder="Île-de-France" />
-            <Field label="Département" value={params.department} onChange={(v) => set("department", v)} placeholder="Paris (75)" />
+            <SelectField
+              label="Continent"
+              value={params.continent}
+              placeholder="Tous les continents"
+              options={[...CONTINENTS]}
+              onChange={(v) =>
+                setParams((p) => ({ ...p, continent: v, country: "", region: "", department: "" }))
+              }
+            />
+            <SelectField
+              label="Pays"
+              value={params.country}
+              placeholder={params.continent ? "Tous les pays" : "Choisissez un continent"}
+              options={countryOptions}
+              onChange={(v) => setParams((p) => ({ ...p, country: v, region: "", department: "" }))}
+            />
+            {regionOptions.length > 0 ? (
+              <SelectField
+                label={regionLabel}
+                value={params.region}
+                placeholder={`Toutes les ${regionLabel.toLowerCase()}s`}
+                options={regionOptions}
+                onChange={(v) => setParams((p) => ({ ...p, region: v, department: "" }))}
+              />
+            ) : (
+              <Field label="Région" value={params.region} onChange={(v) => set("region", v)} placeholder="Région (saisie libre)" />
+            )}
+            {departmentOptions.length > 0 ? (
+              <SelectField
+                label={departmentLabel}
+                value={params.department}
+                placeholder={`Tous les ${departmentLabel.toLowerCase()}s`}
+                options={departmentOptions}
+                onChange={(v) => set("department", v)}
+              />
+            ) : (
+              <Field
+                label="Département"
+                value={params.department}
+                onChange={(v) => set("department", v)}
+                placeholder={params.region ? "Département (saisie libre)" : "Choisissez d'abord une région"}
+              />
+            )}
             <Field label="Ville" value={params.city} onChange={(v) => set("city", v)} placeholder="Paris" />
             <Field label="Quartier" value={params.district} onChange={(v) => set("district", v)} placeholder="Le Marais" />
 

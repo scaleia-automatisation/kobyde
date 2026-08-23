@@ -168,6 +168,7 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
       {isLoading ? (

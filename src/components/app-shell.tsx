@@ -377,9 +377,14 @@ export function AppShell({
               >
                 <ArrowLeft />
               </Button>
-              <Button asChild variant="outline" size="icon" aria-label="Retour au tableau de bord">
-                <Link to="/tableau-de-bord">
-                  <Home />
+              <Button
+                asChild
+                variant="outline"
+                className="gap-2 text-[0.8125rem] font-medium"
+              >
+                <Link to="/tableau-de-bord" aria-label="Retour au tableau de bord">
+                  <Home className="size-4" aria-hidden />
+                  <span className="hidden sm:inline">Tableau de bord</span>
                 </Link>
               </Button>
             </div>

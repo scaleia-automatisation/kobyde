@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useChildRows, useOrgId, useRow, eur2, frDate } from "@/lib/db";
+import { PAYMENT_PLAN_LABEL, PROJECT_STATUS_LABEL } from "@/lib/sales";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

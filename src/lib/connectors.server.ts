@@ -453,7 +453,13 @@ export async function saveUserManualConnection(input: {
       status: "active",
       revoked: false,
       scopes: (def.oauth?.defaultScopes ?? []).join(" "),
-      metadata: { connector: input.connectorKey, mode: "manual", fields: Object.keys(values) },
+      metadata: {
+        connector: input.connectorKey,
+        mode: "manual",
+        fields: Object.keys(values),
+        values,
+      },
+
     },
     { onConflict: "user_id,provider" },
   );
@@ -478,12 +484,15 @@ export async function testUserConnection(userId: string, connectorKey: string) {
   }
 
   const token = row.access_token as string;
+  const meta = (row.metadata ?? {}) as Record<string, any>;
+  const values = (meta["values"] ?? {}) as Record<string, string>;
+  const accessToken = values["access_token"] ?? (meta["mode"] === "manual" && (values["client_secret"] || values["app_secret"]) ? "" : token);
   const finish = async (ok: boolean, message: string) => {
     await supabase
       .from("oauth_connections")
       .update({
         status: ok ? "active" : "error",
-        metadata: { ...((row.metadata ?? {}) as Record<string, unknown>), last_test_at: new Date().toISOString(), last_error: ok ? null : message },
+        metadata: { ...meta, last_test_at: new Date().toISOString(), last_error: ok ? null : message },
       })
       .eq("user_id", userId)
       .eq("provider", connectorKey);
@@ -491,22 +500,55 @@ export async function testUserConnection(userId: string, connectorKey: string) {
   };
 
   try {
+    // Identifiants d'application OAuth (client_id + client_secret) : on valide l'app, pas un jeton utilisateur.
+    if (!accessToken && values["client_id"] && values["client_secret"]) {
+      if (connectorKey === "google" || connectorKey === "google_ads" || connectorKey === "youtube" || connectorKey === "google_business") {
+        const r = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: values["client_id"]!,
+            client_secret: values["client_secret"]!,
+            grant_type: "refresh_token",
+            refresh_token: "kobyde-connection-test",
+          }),
+        });
+        const j = (await r.json().catch(() => ({}))) as { error?: string; error_description?: string };
+        if (j.error === "invalid_client") {
+          return finish(false, "Identifiants Google refusés : client_id ou client_secret invalide.");
+        }
+        // invalid_grant = l'app est reconnue par Google, seul le faux refresh_token est rejeté.
+        return finish(
+          true,
+          "Identifiants d'application Google valides. Autorisez maintenant votre compte via « Connecter mon compte » pour accéder aux données.",
+        );
+      }
+      return finish(
+        true,
+        `Identifiants d'application ${def?.name ?? connectorKey} enregistrés. Lancez l'autorisation OAuth pour accéder aux données.`,
+      );
+    }
+
     if (connectorKey === "meta") {
-      const r = await fetch(`https://graph.facebook.com/v20.0/me?access_token=${encodeURIComponent(token)}`);
+      const r = await fetch(`https://graph.facebook.com/v20.0/me?access_token=${encodeURIComponent(accessToken)}`);
       return finish(r.ok, r.ok ? "Connexion Meta valide." : `Meta a répondu ${r.status}.`);
     }
     if (connectorKey === "google" || connectorKey === "google_ads" || connectorKey === "youtube") {
       const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      return finish(r.ok, r.ok ? "Connexion Google valide." : `Google a répondu ${r.status}.`);
+      return finish(
+        r.ok,
+        r.ok ? "Connexion Google valide." : `Google a répondu ${r.status} : le jeton d'accès est invalide ou expiré.`,
+      );
     }
     if (connectorKey === "linkedin") {
       const r = await fetch("https://api.linkedin.com/v2/userinfo", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       return finish(r.ok, r.ok ? "Connexion LinkedIn valide." : `LinkedIn a répondu ${r.status}.`);
     }
+
     if (connectorKey === "microsoft" || connectorKey === "outlook") {
       const r = await fetch("https://graph.microsoft.com/v1.0/me", {
         headers: { Authorization: `Bearer ${token}` },

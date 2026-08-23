@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Inbox, Plus, Trash2 } from "lucide-react";
+import { Inbox, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, LoadingState } from "@/components/ui/states";
-import { useCreateRow, useDeleteRow, useRows, euros } from "@/lib/db";
+import { useCreateRow, useDeleteAllRows, useDeleteRow, useRows, euros } from "@/lib/db";
 
 export type FieldDef = {
   name: string;
@@ -79,6 +79,7 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
   const { data: rows, isLoading } = useRows(config.table);
   const create = useCreateRow(config.table);
   const remove = useDeleteRow(config.table);
+  const removeAll = useDeleteAllRows(config.table);
   const [open, setOpen] = useState(false);
   const listFields = config.fields.filter((f) => f.inList !== false).slice(0, 4);
 
@@ -224,7 +225,7 @@ export function ModulePage({ config }: { config: ModuleConfig }) {
                     remove.mutate(row.id, { onSuccess: () => toast.success("Supprimé") })
                   }
                 >
-                  <Trash2 className="size-4 text-muted-foreground" />
+                  <X className="size-4 text-muted-foreground" />
                 </Button>
               </div>
             </article>

@@ -481,7 +481,10 @@ export async function testUserConnection(userId: string, connectorKey: string) {
   const finish = async (ok: boolean, message: string) => {
     await supabase
       .from("oauth_connections")
-      .update({ status: ok ? "active" : "error", last_error: ok ? null : message })
+      .update({
+        status: ok ? "active" : "error",
+        metadata: { ...((row.metadata ?? {}) as Record<string, unknown>), last_test_at: new Date().toISOString(), last_error: ok ? null : message },
+      })
       .eq("user_id", userId)
       .eq("provider", connectorKey);
     return { ok, message };

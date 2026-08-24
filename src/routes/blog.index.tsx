@@ -49,7 +49,15 @@ function BlogIndex() {
       )}
       <div className="grid gap-5 md:grid-cols-2">
         {posts.map((p) => (
-          <article key={p.id} className="surface p-6">
+          <article key={p.id} className="surface overflow-hidden p-6">
+            {p.cover_url && (
+              <img
+                src={p.cover_url}
+                alt={p.title}
+                loading="lazy"
+                className="mb-4 aspect-[16/9] w-full rounded-xl object-cover"
+              />
+            )}
             <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">{p.category}</span>
             <h2 className="mt-3 text-xl font-semibold">
               <Link to="/blog/$slug" params={{ slug: p.slug }} className="hover:underline">

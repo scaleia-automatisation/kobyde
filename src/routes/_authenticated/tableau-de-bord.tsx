@@ -129,7 +129,7 @@ function Dashboard() {
   const tachesOuvertes = T.filter((t) => t.status !== "termine" && t.status !== "fait");
   const firstName = (profile?.full_name ?? "").split(" ")[0] || "vous";
 
-  const recos: { title: string; desc: string; cta: string; to: string }[] = [];
+  const recos: { title: string; desc: string; cta: string; to: string; search?: Record<string, unknown> }[] = [];
   if (devisEnAttente.length > 0)
     recos.push({
       title: `${devisEnAttente.length} devis attendent une relance`,
@@ -164,6 +164,7 @@ function Dashboard() {
       desc: "Demandez à Éric de lancer une recherche de prospects.",
       cta: "Parler à Éric",
       to: "/eric",
+      search: { agent: undefined },
     });
   if (C.length === 0)
     recos.push({
@@ -226,7 +227,7 @@ function Dashboard() {
       subtitle="Voici le résumé de votre activité aujourd'hui."
       action={
         <Button asChild className="gap-2">
-          <Link to="/eric">
+          <Link to="/eric" search={{ agent: undefined }}>
             <Sparkles className="size-4" />
             <span className="hidden sm:inline">Demander à Éric</span>
           </Link>
@@ -302,7 +303,7 @@ function Dashboard() {
                     variant={i === 0 ? "default" : "ghost"}
                     className="gap-1"
                   >
-                    <Link to={r.to}>
+                    <Link to={r.to} {...(r.search ? { search: r.search } : {})}>
                       {r.cta} <ArrowRight className="size-4" />
                     </Link>
                   </Button>

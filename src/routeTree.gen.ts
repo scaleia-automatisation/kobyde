@@ -52,6 +52,7 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
+import { Route as AuthenticatedAgentNameRouteImport } from './routes/_authenticated/agent.$name'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
 import { Route as AuthenticatedClientsIdRouteImport } from './routes/_authenticated/clients.$id'
 import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authenticated/devis.index'
@@ -281,6 +282,11 @@ const PayerTokenRoute = PayerTokenRouteImport.update({
   path: '/payer/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAgentNameRoute = AuthenticatedAgentNameRouteImport.update({
+  id: '/agent/$name',
+  path: '/agent/$name',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedClientsIndexRoute =
   AuthenticatedClientsIndexRouteImport.update({
     id: '/clients/',
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/blog/': typeof BlogIndexRoute
+  '/agent/$name': typeof AuthenticatedAgentNameRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -439,6 +446,7 @@ export interface FileRoutesByTo {
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/blog': typeof BlogIndexRoute
+  '/agent/$name': typeof AuthenticatedAgentNameRoute
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -496,6 +504,7 @@ export interface FileRoutesById {
   '/espace/$token': typeof EspaceTokenRoute
   '/payer/$token': typeof PayerTokenRoute
   '/blog/': typeof BlogIndexRoute
+  '/_authenticated/agent/$name': typeof AuthenticatedAgentNameRoute
   '/_authenticated/clients/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
   '/_authenticated/projets/$id': typeof AuthenticatedProjetsIdRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/espace/$token'
     | '/payer/$token'
     | '/blog/'
+    | '/agent/$name'
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/espace/$token'
     | '/payer/$token'
     | '/blog'
+    | '/agent/$name'
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/espace/$token'
     | '/payer/$token'
     | '/blog/'
+    | '/_authenticated/agent/$name'
     | '/_authenticated/clients/$id'
     | '/_authenticated/devis/$id'
     | '/_authenticated/projets/$id'
@@ -1002,6 +1014,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayerTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/agent/$name': {
+      id: '/_authenticated/agent/$name'
+      path: '/agent/$name'
+      fullPath: '/agent/$name'
+      preLoaderRoute: typeof AuthenticatedAgentNameRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/clients/': {
       id: '/_authenticated/clients/'
       path: '/clients'
@@ -1112,6 +1131,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
   AuthenticatedTachesRoute: typeof AuthenticatedTachesRoute
+  AuthenticatedAgentNameRoute: typeof AuthenticatedAgentNameRoute
   AuthenticatedClientsIdRoute: typeof AuthenticatedClientsIdRoute
   AuthenticatedDevisIdRoute: typeof AuthenticatedDevisIdRoute
   AuthenticatedProjetsIdRoute: typeof AuthenticatedProjetsIdRoute
@@ -1150,6 +1170,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
   AuthenticatedTachesRoute: AuthenticatedTachesRoute,
+  AuthenticatedAgentNameRoute: AuthenticatedAgentNameRoute,
   AuthenticatedClientsIdRoute: AuthenticatedClientsIdRoute,
   AuthenticatedDevisIdRoute: AuthenticatedDevisIdRoute,
   AuthenticatedProjetsIdRoute: AuthenticatedProjetsIdRoute,

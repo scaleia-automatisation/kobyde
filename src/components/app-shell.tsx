@@ -151,7 +151,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="space-y-5">
       {groups.map((group) => (
         <div key={group.label}>
-          <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
+          <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-black">
             {group.label}
           </p>
           <div className="space-y-0.5">
@@ -165,11 +165,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[0.8125rem] font-medium transition-colors duration-150",
+                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[0.8125rem] font-bold text-black transition-colors duration-150",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                     active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+                      ? "bg-sidebar-accent text-black"
+                      : "hover:bg-sidebar-accent/50 hover:text-black",
                   )}
                 >
                   {isAgent ? (
@@ -301,27 +301,28 @@ function CommandMenu({
       <CommandInput placeholder="Rechercher une page, un agent, une action…" />
       <CommandList>
         <CommandEmpty>Aucun résultat.</CommandEmpty>
-        {groups.map((group) => (
-          <CommandGroup key={group.label} heading={group.label}>
-            {group.items.map((item) => (
-              <CommandItem
-                key={item.to}
-                value={`${group.label} ${item.label}`}
-                onSelect={() => {
-                  onOpenChange(false);
-                  navigate({ to: item.to });
-                }}
-              >
-                {"agent" in item ? (
-                  <span className="mr-2 text-base">{item.agent.emoji}</span>
-                ) : (
-                  <item.icon className="mr-2 size-4 text-muted-foreground" />
-                )}
-                {item.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        ))}
+          {groups.map((group) => (
+            <CommandGroup key={group.label} heading={group.label}>
+              {group.items.map((item) => (
+                <CommandItem
+                  key={item.to}
+                  value={`${group.label} ${item.label}`}
+                  onSelect={() => {
+                    onOpenChange(false);
+                    navigate({ to: item.to });
+                  }}
+                  className="font-bold text-black"
+                >
+                  {"agent" in item ? (
+                    <span className="mr-2 text-base">{item.agent.emoji}</span>
+                  ) : (
+                    <item.icon className="mr-2 size-4 text-black" />
+                  )}
+                  {item.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
       </CommandList>
     </CommandDialog>
   );
@@ -453,8 +454,8 @@ export function AppShell({
           <Link
             key={item.to}
             to={item.to}
-            className="flex flex-col items-center gap-1 py-2.5 text-[10px] text-muted-foreground transition-colors"
-            activeProps={{ className: "text-foreground" }}
+            className="flex flex-col items-center gap-1 py-2.5 text-[10px] font-bold text-black transition-colors"
+            activeProps={{ className: "text-black" }}
           >
             <item.icon className="size-5" />
             <span className="max-w-full truncate px-1">{item.label.split(" — ")[0]}</span>

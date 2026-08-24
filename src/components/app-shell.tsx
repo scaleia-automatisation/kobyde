@@ -165,11 +165,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   onClick={onNavigate}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[0.8125rem] font-medium transition-colors duration-150",
+                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[0.8125rem] font-bold text-black transition-colors duration-150",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
                     active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+                      ? "bg-sidebar-accent text-black"
+                      : "hover:bg-sidebar-accent/50 hover:text-black",
                   )}
                 >
                   {isAgent ? (

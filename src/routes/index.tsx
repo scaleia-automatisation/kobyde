@@ -501,7 +501,7 @@ function Landing() {
       </section>
 
       {/* TARIFS */}
-      <section id="tarifs" className="aurora-bg py-24">
+      <section id="tarifs" className="py-24">
         <div className="mx-auto max-w-6xl px-5">
           <h2 className="text-center text-3xl">Des formules simples, sans engagement</h2>
           <p className="mt-3 text-center text-muted-foreground">
@@ -525,17 +525,17 @@ function Landing() {
                 <p className="mt-3 font-display text-3xl">
                   {p.price} €<span className="text-base text-muted-foreground"> / mois</span>
                 </p>
-                <p className="mt-1 text-sm font-bold text-accent">{p.credits} crédits IA / mois</p>
+                <p className="mt-1 text-sm font-bold text-primary">{p.credits} crédits IA / mois</p>
                 <p className="mt-2 text-sm text-muted-foreground">{p.tagline}</p>
                 <ul className="mt-5 flex-1 space-y-2.5 text-left text-sm">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
-                      <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
+                      <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                       <span className="font-semibold text-foreground">{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button asChild size="cta" variant="cta" className="mt-7">
+                <Button asChild size="cta" variant="default" className="mt-7">
                   <Link to="/auth" search={{ mode: "signup" }}>
                     {`Choisir ${p.name}`}
                   </Link>

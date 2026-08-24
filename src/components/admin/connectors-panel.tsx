@@ -68,14 +68,18 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(connector.lastError ?? null);
 
-  const ok = connector.status === "configure" && !connector.lastError;
-  const failed = connector.status === "erreur" || Boolean(connector.lastError);
+  // Une fois configuré, le connecteur reste connecté tant que l'admin ne le déconnecte pas.
+  const ok = connector.status === "configure";
+  const failed = !ok && (connector.status === "erreur" || Boolean(connector.lastError));
+  const warn = ok && Boolean(error ?? connector.lastError);
 
   const dot = failed ? "bg-destructive" : ok ? "bg-emerald-500" : "bg-muted-foreground/40";
   const statusBadge = failed ? (
     <Badge variant="destructive">Erreur</Badge>
   ) : ok ? (
-    <Badge className="bg-emerald-500/15 text-emerald-600">Connecté</Badge>
+    <Badge className="bg-emerald-500/15 text-emerald-600">
+      {connector.isEnabled ? "Connecté — actif" : "Connecté — désactivé"}
+    </Badge>
   ) : (
     <Badge variant="secondary">Non configuré</Badge>
   );
@@ -143,7 +147,11 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
             </span>
           </div>
           <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{connector.description}</p>
-          {failed && error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+          {error && (
+            <p className={`mt-1 text-xs ${failed ? "text-destructive" : "text-amber-600"}`}>
+              {failed ? error : `Dernier test en échec : ${error} — la connexion reste active.`}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>
@@ -165,11 +173,14 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
             <DialogDescription>{connector.description}</DialogDescription>
           </DialogHeader>
 
-          {failed && error && (
-            <Alert variant="destructive">
+          {error && (
+            <Alert variant={failed ? "destructive" : "default"}>
               <AlertTriangle className="size-4" />
-              <AlertTitle>La connexion a échoué</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertTitle>{failed ? "La connexion a échoué" : "Dernier test en échec"}</AlertTitle>
+              <AlertDescription>
+                {error}
+                {warn ? " — le connecteur reste connecté tant que vous ne le déconnectez pas." : ""}
+              </AlertDescription>
             </Alert>
           )}
 

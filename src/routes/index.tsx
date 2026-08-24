@@ -3,17 +3,13 @@ import { useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
-  Clock4,
   FileText,
-  HeartPulse,
   MessageSquare,
-  Moon,
   Rocket,
   Search,
   ShieldCheck,
   Sparkles,
   Star,
-  Wallet,
 } from "lucide-react";
 import { AGENTS } from "@/lib/agents";
 import { PAID_PLANS } from "@/lib/plans";

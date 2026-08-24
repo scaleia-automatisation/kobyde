@@ -43,7 +43,7 @@ export const Route = createFileRoute("/blog/$slug")({
             author: { "@type": "Person", name: post.author ?? "Équipe Kobyde" },
             publisher: { "@type": "Organization", name: "Kobyde" },
             ...(post.published_at ? { datePublished: post.published_at } : {}),
-            ...(post.cover_url ? { image: post.cover_url } : {}),
+            ...(abs(post.cover_url) ? { image: abs(post.cover_url) } : {}),
             mainEntityOfPage: `https://kobyde.com/blog/${post.slug}`,
           }),
         },

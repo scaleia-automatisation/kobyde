@@ -11,7 +11,7 @@ function inline(text: string, keyPrefix: string): React.ReactNode[] {
   while ((m = re.exec(text))) {
     if (m.index > last) nodes.push(text.slice(last, m.index));
     if (m[1]) {
-      const href = m[3];
+      const href = m[3] ?? "#";
       nodes.push(
         <a
           key={`${keyPrefix}-${i}`}
@@ -19,19 +19,19 @@ function inline(text: string, keyPrefix: string): React.ReactNode[] {
           className="text-primary underline underline-offset-2"
           {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         >
-          {m[2]}
+          {m[2] ?? ""}
         </a>,
       );
     } else if (m[4]) {
       nodes.push(
         <strong key={`${keyPrefix}-${i}`} className="font-semibold text-foreground">
-          {m[5]}
+          {m[5] ?? ""}
         </strong>,
       );
     } else {
       nodes.push(
         <code key={`${keyPrefix}-${i}`} className="rounded bg-muted px-1.5 py-0.5 text-[0.9em]">
-          {m[7]}
+          {m[7] ?? ""}
         </code>,
       );
     }
@@ -52,12 +52,12 @@ const cells = (l: string) =>
     .map((c) => c.trim());
 
 export function Markdown({ content }: { content: string }) {
-  const lines = content.split("\n");
+  const lines: string[] = content.split("\n");
   const out: React.ReactNode[] = [];
   let i = 0;
 
   while (i < lines.length) {
-    const line = lines[i];
+    const line = lines[i] ?? "";
     const t = line.trim();
 
     if (!t) {
@@ -81,7 +81,7 @@ export function Markdown({ content }: { content: string }) {
     // Titres
     const h = t.match(/^(#{2,4})\s+(.*)$/);
     if (h) {
-      const level = h[1].length;
+      const level = (h[1] ?? "##").length;
       const cls =
         level === 2
           ? "mt-12 text-2xl font-bold md:text-3xl"
@@ -89,7 +89,7 @@ export function Markdown({ content }: { content: string }) {
             ? "mt-8 text-xl font-semibold md:text-2xl"
             : "mt-6 text-lg font-semibold";
       out.push(
-        React.createElement(`h${level}`, { key: i, className: cls }, inline(h[2], `h${i}`)),
+        React.createElement(`h${level}`, { key: i, className: cls }, inline(h[2] ?? "", `h${i}`)),
       );
       i++;
       continue;
@@ -103,7 +103,7 @@ export function Markdown({ content }: { content: string }) {
 
     if (t.startsWith("> ")) {
       const buf: string[] = [];
-      while (i < lines.length && lines[i].trim().startsWith("> ")) buf.push(lines[i].trim().slice(2)), i++;
+      while (i < lines.length && (lines[i] ?? "").trim().startsWith("> ")) { buf.push((lines[i] ?? "").trim().slice(2)); i++; }
       out.push(
         <blockquote key={i} className="my-6 border-l-4 border-primary pl-4 text-lg italic text-muted-foreground">
           {inline(buf.join(" "), `q${i}`)}
@@ -113,11 +113,11 @@ export function Markdown({ content }: { content: string }) {
     }
 
     // Tableau
-    if (isTableRow(t) && i + 1 < lines.length && /^\|[\s:|-]+\|?$/.test(lines[i + 1].trim())) {
+    if (isTableRow(t) && i + 1 < lines.length && /^\|[\s:|-]+\|?$/.test((lines[i + 1] ?? "").trim())) {
       const header = cells(t);
       i += 2;
       const rows: string[][] = [];
-      while (i < lines.length && isTableRow(lines[i])) rows.push(cells(lines[i])), i++;
+      while (i < lines.length && isTableRow(lines[i] ?? "")) { rows.push(cells(lines[i] ?? "")); i++; }
       out.push(
         <div key={`t${i}`} className="my-8 overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
@@ -152,8 +152,8 @@ export function Markdown({ content }: { content: string }) {
     if (bullet.test(t)) {
       const ordered = /^\d+\./.test(t);
       const items: string[] = [];
-      while (i < lines.length && bullet.test(lines[i].trim())) {
-        items.push(lines[i].trim().replace(bullet, ""));
+      while (i < lines.length && bullet.test((lines[i] ?? "").trim())) {
+        items.push((lines[i] ?? "").trim().replace(bullet, ""));
         i++;
       }
       const cls = "my-5 space-y-2 pl-6 text-muted-foreground " + (ordered ? "list-decimal" : "list-disc");
@@ -179,13 +179,13 @@ export function Markdown({ content }: { content: string }) {
     const buf: string[] = [];
     while (
       i < lines.length &&
-      lines[i].trim() &&
-      !/^(#{2,4})\s/.test(lines[i].trim()) &&
-      !bullet.test(lines[i].trim()) &&
-      !isTableRow(lines[i]) &&
-      !lines[i].trim().startsWith("![")
+      (lines[i] ?? "").trim() &&
+      !/^(#{2,4})\s/.test((lines[i] ?? "").trim()) &&
+      !bullet.test((lines[i] ?? "").trim()) &&
+      !isTableRow(lines[i] ?? "") &&
+      !(lines[i] ?? "").trim().startsWith("![")
     ) {
-      buf.push(lines[i].trim());
+      buf.push((lines[i] ?? "").trim());
       i++;
     }
     out.push(

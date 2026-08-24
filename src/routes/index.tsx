@@ -177,51 +177,25 @@ const FAQ = [
 ];
 
 function IntegrationButtons() {
-  const [active, setActive] = useState<string | null>(null);
-
   return (
     <>
-      {OUTILS.map((tool) => {
-        const isActive = active === tool.name;
-        return (
-          <button
-            key={tool.name}
-            type="button"
-            onClick={() => setActive(isActive ? null : tool.name)}
-            className={`
-              group relative flex flex-col items-center justify-center gap-3 rounded-2xl border px-5 py-4
-              text-center font-semibold transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg hover:text-white
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-              ${
-                isActive
-                  ? `border-transparent bg-gradient-to-br ${tool.color} text-white shadow-xl ${tool.shadow} ring-2 ${tool.ring} focus-visible:ring-offset-background`
-                  : `border-border bg-card text-foreground hover:border-transparent hover:bg-gradient-to-br ${tool.color}`
-              }
-            `}
-            aria-pressed={isActive}
-          >
-            <span
-              className={`
-                grid size-20 place-items-center rounded-2xl transition-colors duration-200
-                ${isActive ? "bg-white/20" : "bg-muted group-hover:bg-white/10"}
-              `}
-            >
-              <img
-                src={tool.logoSrc}
-                alt={`Logo ${tool.name}`}
-                width={80}
-                height={80}
-                loading="lazy"
-                className="size-16 object-contain transition-transform duration-200 group-hover:scale-105"
-              />
-            </span>
-            <span className="font-display text-lg">{tool.name}</span>
-          </button>
-        );
-      })}
+      {OUTILS.map((tool) => (
+        <div key={tool.name} className="flex flex-col items-center gap-2">
+          <img
+            src={tool.logoSrc}
+            alt={`Logo ${tool.name}`}
+            width={48}
+            height={48}
+            loading="lazy"
+            className="size-12 object-contain opacity-90"
+          />
+          <span className="text-sm font-medium text-foreground">{tool.name}</span>
+        </div>
+      ))}
     </>
   );
 }
+
 
 function Landing() {
   const lead = AGENTS.find((a) => a.key === "directeur") ?? AGENTS[0]!;

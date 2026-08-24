@@ -1,5 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { getPublishedPost } from "@/lib/blog.functions";
+import { Markdown } from "@/components/markdown";
+
+const SITE = "https://kobyde.com";
+const abs = (u: string | null) => (!u ? null : u.startsWith("http") ? u : `${SITE}${u}`);
 
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {

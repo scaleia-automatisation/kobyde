@@ -56,9 +56,9 @@ import { cn } from "@/lib/utils";
 
 export const NAV_GROUPS = [
   {
-    label: "Pilotage",
+    label: "VOS AGENTS ",
     items: [
-      { to: "/eric", label: "Éric — Directeur IA", icon: Sparkles },
+      { to: "/eric", label: "Éric — Ceo Directeur ia", icon: Sparkles },
       { to: "/tableau-de-bord", label: "Accueil", icon: Home },
       { to: "/equipe", label: "Mon équipe IA", icon: Bot },
       { to: "/taches", label: "Tâches des agents", icon: ListChecks },

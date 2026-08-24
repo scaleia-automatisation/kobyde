@@ -151,7 +151,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
     <nav className="space-y-5">
       {groups.map((group) => (
         <div key={group.label}>
-          <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
+          <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-black">
             {group.label}
           </p>
           <div className="space-y-0.5">

@@ -1742,6 +1742,7 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
+          is_active: boolean
           last_used_at: string | null
           metadata: Json | null
           org_id: string | null
@@ -1762,6 +1763,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          is_active?: boolean
           last_used_at?: string | null
           metadata?: Json | null
           org_id?: string | null
@@ -1782,6 +1784,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          is_active?: boolean
           last_used_at?: string | null
           metadata?: Json | null
           org_id?: string | null

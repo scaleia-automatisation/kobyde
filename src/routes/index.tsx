@@ -572,16 +572,16 @@ function Landing() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="aurora-bg py-20">
+      <section className="py-20">
         <div className="mx-auto max-w-3xl px-5 text-center">
-          <h2 className="hero-title text-[clamp(1.75rem,4vw,3rem)] font-black italic leading-tight">
+          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-bold leading-tight text-foreground">
             Recrutez vos 10 agents IA dès aujourd'hui
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
             Moins de 1,30 € par jour pour une équipe qui prospecte, vend, relance, analyse et livre —
             sans jamais s'arrêter.
           </p>
-          <Button asChild size="cta" variant="cta" className="mt-8 gap-2">
+          <Button asChild size="cta" variant="default" className="mt-8 gap-2">
             <Link to="/auth" search={{ mode: "signup" }}>
               Créer mon équipe IA <ArrowRight className="size-4" />
             </Link>

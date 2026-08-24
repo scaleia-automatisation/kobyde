@@ -278,14 +278,15 @@ function Landing() {
       </section>
 
       {/* BANDEAU OUTILS */}
-      <section id="outils" className="border-y border-border bg-card/40 py-10">
-        <p className="text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
+      <section id="outils" className="border-y border-border py-12">
+        <p className="text-center text-base font-bold text-foreground">
           Connecté à vos outils du quotidien
         </p>
-        <div className="mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-center gap-3 px-5">
+        <div className="mx-auto mt-8 flex max-w-4xl flex-wrap items-start justify-center gap-x-10 gap-y-8 px-5">
           <IntegrationButtons />
         </div>
       </section>
+
 
       {/* AGENTS */}
       <section id="agents" className="mx-auto max-w-6xl px-5 py-16">

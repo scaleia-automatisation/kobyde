@@ -291,28 +291,6 @@ function Landing() {
             <span className="block">pour moins de 1,30 € par jour.</span>
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
-            Ils trouvent des clients, écrivent vos devis, relancent vos factures, suivent vos projets et
-            analysent vos chiffres. Vous, vous décidez.
-          </p>
-
-          <div className="mx-auto mt-8 flex flex-nowrap justify-center gap-3">
-            {[
-              { icon: Clock4, text: "Travaille 24h/24 et 7j/7" },
-              { icon: Moon, text: "Zéro pause Zéro congés" },
-              { icon: HeartPulse, text: "Zéro arrêt maladie" },
-              { icon: Wallet, text: "Zéro charge salariale" },
-            ].map((b) => (
-              <div
-                key={b.text}
-                className="aurora-chip glow-chip flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-base font-medium text-white shadow-soft backdrop-blur"
-              >
-                <b.icon className="size-5 text-white" />
-                {b.text}
-              </div>
-            ))}
-          </div>
-
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Button asChild size="cta" variant="cta" className="gap-2">
               <Link to="/auth" search={{ mode: "signup" }}>

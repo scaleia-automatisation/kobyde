@@ -25,10 +25,10 @@ export const Route = createFileRoute("/blog/$slug")({
         { property: "og:description", content: desc },
         { property: "og:type", content: "article" },
         { name: "twitter:card", content: "summary_large_image" },
-        ...(post.cover_url?.startsWith("https://")
+        ...(abs(post.cover_url)
           ? [
-              { property: "og:image", content: post.cover_url },
-              { name: "twitter:image", content: post.cover_url },
+              { property: "og:image", content: abs(post.cover_url)! },
+              { name: "twitter:image", content: abs(post.cover_url)! },
             ]
           : []),
       ],

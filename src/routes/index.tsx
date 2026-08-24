@@ -271,9 +271,9 @@ function Landing() {
       </header>
 
       {/* HERO */}
-      <section className="aurora-bg">
+      <section>
         <div className="mx-auto max-w-7xl px-5 pb-20 pt-14 text-center">
-          <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
+          <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground">
             <span className="flex items-center gap-0.5 text-accent">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="size-3.5 fill-current" />
@@ -281,14 +281,14 @@ function Landing() {
             </span>
             Noté 4,9/5 par les entrepreneurs qui pilotent avec Kobyde
           </span>
-          <h1 className="hero-title mx-auto mt-6 max-w-full text-[clamp(1.75rem,5.2vw,4.25rem)] leading-[1.08] font-black italic tracking-tight whitespace-nowrap">
+          <h1 className="mx-auto mt-6 max-w-full text-[clamp(1.75rem,5.2vw,4.25rem)] leading-[1.08] font-bold tracking-tight whitespace-nowrap text-foreground">
             <span className="block">Une équipe complète</span>
             <span className="block">d'agents IA pour votre entreprise,</span>
             <span className="block">pour moins de 1,30 € par jour.</span>
           </h1>
 
           <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Button asChild size="cta" variant="cta" className="gap-2">
+            <Button asChild size="cta" variant="default" className="gap-2">
               <Link to="/auth" search={{ mode: "signup" }}>
                 Créer mon équipe IA <ArrowRight className="size-4" />
               </Link>
@@ -319,7 +319,7 @@ function Landing() {
           Votre équipe
         </p>
         <h2 className="mt-3 text-center text-3xl">Des agents IA à votre entière disposition</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center font-display text-xl font-medium italic leading-relaxed md:text-2xl bg-gradient-to-r from-aurora-1 via-aurora-2 to-aurora-3 bg-clip-text text-transparent">
+        <p className="mx-auto mt-4 max-w-2xl text-center font-display text-xl font-medium leading-relaxed md:text-2xl text-foreground">
           Une équipe d'employés IA interconnectés qui travaille 24h/24 et 7j/7 en parfaite collaboration.
         </p>
         {(() => {
@@ -501,7 +501,7 @@ function Landing() {
       </section>
 
       {/* TARIFS */}
-      <section id="tarifs" className="aurora-bg py-24">
+      <section id="tarifs" className="py-24">
         <div className="mx-auto max-w-6xl px-5">
           <h2 className="text-center text-3xl">Des formules simples, sans engagement</h2>
           <p className="mt-3 text-center text-muted-foreground">
@@ -525,17 +525,17 @@ function Landing() {
                 <p className="mt-3 font-display text-3xl">
                   {p.price} €<span className="text-base text-muted-foreground"> / mois</span>
                 </p>
-                <p className="mt-1 text-sm font-bold text-accent">{p.credits} crédits IA / mois</p>
+                <p className="mt-1 text-sm font-bold text-primary">{p.credits} crédits IA / mois</p>
                 <p className="mt-2 text-sm text-muted-foreground">{p.tagline}</p>
                 <ul className="mt-5 flex-1 space-y-2.5 text-left text-sm">
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
-                      <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
+                      <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                       <span className="font-semibold text-foreground">{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button asChild size="cta" variant="cta" className="mt-7">
+                <Button asChild size="cta" variant="default" className="mt-7">
                   <Link to="/auth" search={{ mode: "signup" }}>
                     {`Choisir ${p.name}`}
                   </Link>
@@ -572,16 +572,16 @@ function Landing() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="aurora-bg py-20">
+      <section className="py-20">
         <div className="mx-auto max-w-3xl px-5 text-center">
-          <h2 className="hero-title text-[clamp(1.75rem,4vw,3rem)] font-black italic leading-tight">
+          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-bold leading-tight text-foreground">
             Recrutez vos 10 agents IA dès aujourd'hui
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
             Moins de 1,30 € par jour pour une équipe qui prospecte, vend, relance, analyse et livre —
             sans jamais s'arrêter.
           </p>
-          <Button asChild size="cta" variant="cta" className="mt-8 gap-2">
+          <Button asChild size="cta" variant="default" className="mt-8 gap-2">
             <Link to="/auth" search={{ mode: "signup" }}>
               Créer mon équipe IA <ArrowRight className="size-4" />
             </Link>

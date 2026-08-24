@@ -368,6 +368,7 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
       scopes: def.oauth.defaultScopes.join(" "),
       status: "active",
       revoked: false,
+      is_active: true,
       metadata: { connector: connectorKey },
     },
     { onConflict: "user_id,provider" },
@@ -422,7 +423,7 @@ export async function disconnectUserConnection(userId: string, connectorKey: str
   const supabase = await db();
   await supabase
     .from("oauth_connections")
-    .update({ revoked: true, status: "revoked", access_token: null, refresh_token: null })
+    .update({ revoked: true, status: "revoked", is_active: false, access_token: null, refresh_token: null })
     .eq("user_id", userId)
     .eq("provider", connectorKey);
   return { ok: true };
@@ -465,6 +466,7 @@ export async function saveUserManualConnection(input: {
       account_label: label,
       status: "active",
       revoked: false,
+      is_active: true,
       scopes: (def.oauth?.defaultScopes ?? []).join(" "),
       metadata: {
         connector: input.connectorKey,

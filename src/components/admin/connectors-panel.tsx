@@ -147,7 +147,11 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
             </span>
           </div>
           <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{connector.description}</p>
-          {failed && error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+          {error && (
+            <p className={`mt-1 text-xs ${failed ? "text-destructive" : "text-amber-600"}`}>
+              {failed ? error : `Dernier test en échec : ${error} — la connexion reste active.`}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>

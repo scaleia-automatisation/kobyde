@@ -259,6 +259,16 @@ export const disconnectConnection = createServerFn({ method: "POST" })
     return disconnectUserConnection(context.userId, data.connectorKey);
   });
 
+export const toggleMyConnection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { connectorKey: string; active: boolean }) =>
+    z.object({ connectorKey: z.string().min(1).max(64), active: z.boolean() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { setUserConnectionActive } = await import("./connectors.server");
+    return setUserConnectionActive(context.userId, data.connectorKey, data.active);
+  });
+
 export const saveMyManualConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { connectorKey: string; values: Record<string, string> }) =>

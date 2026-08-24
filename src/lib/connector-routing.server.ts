@@ -44,11 +44,11 @@ async function userHasAccount(userId: string, connectorKey: string) {
   const supabase = await db();
   const { data } = await supabase
     .from("oauth_connections")
-    .select("id,revoked,status")
+    .select("id,revoked,status,is_active")
     .eq("user_id", userId)
     .eq("provider", connectorKey)
     .maybeSingle();
-  return Boolean(data && !data.revoked && data.status === "active");
+  return Boolean(data && !data.revoked && data.is_active !== false);
 }
 
 /**
@@ -66,7 +66,7 @@ export async function resolveConnector(capability: Capability, ctx: { userId?: s
     }
     if (route.needsUserAccount) {
       if (!ctx.userId || !(await userHasAccount(ctx.userId, route.connector))) {
-        checked.push({ connector: route.connector, reason: "compte utilisateur non connecté" });
+        checked.push({ connector: route.connector, reason: "compte utilisateur non connecté ou connecteur désactivé" });
         continue;
       }
     }

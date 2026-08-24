@@ -380,7 +380,7 @@ export async function listUserConnections(userId: string) {
   const supabase = await db();
   const { data } = await supabase
     .from("oauth_connections")
-    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,created_at,last_used_at")
+    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at")
     .eq("user_id", userId);
   const rows = new Map<string, any>((data ?? []).map((r: any) => [r.connector_key ?? r.provider, r]));
 
@@ -395,7 +395,9 @@ export async function listUserConnections(userId: string) {
         description: c.description,
         category: c.category,
         available: c.isEnabled && c.status === "configure",
-        connected: Boolean(row && !row.revoked && row.status === "active"),
+        connected: Boolean(row && !row.revoked),
+        isActive: row ? row.is_active !== false : false,
+        lastError: (row?.metadata as any)?.last_error ?? null,
         account: row?.account_label ?? row?.provider_email ?? null,
         scopes: row?.scopes ?? "",
         expiresAt: row?.expires_at ?? null,
@@ -403,6 +405,17 @@ export async function listUserConnections(userId: string) {
         services: c.servicesCatalog,
       };
     });
+}
+
+export async function setUserConnectionActive(userId: string, connectorKey: string, active: boolean) {
+  const supabase = await db();
+  const { error } = await supabase
+    .from("oauth_connections")
+    .update({ is_active: active })
+    .eq("user_id", userId)
+    .eq("provider", connectorKey);
+  if (error) throw new Error(error.message);
+  return { ok: true, isActive: active };
 }
 
 export async function disconnectUserConnection(userId: string, connectorKey: string) {

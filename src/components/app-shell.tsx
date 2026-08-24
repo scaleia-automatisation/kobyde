@@ -453,8 +453,8 @@ export function AppShell({
           <Link
             key={item.to}
             to={item.to}
-            className="flex flex-col items-center gap-1 py-2.5 text-[10px] text-muted-foreground transition-colors"
-            activeProps={{ className: "text-foreground" }}
+            className="flex flex-col items-center gap-1 py-2.5 text-[10px] font-bold text-black transition-colors"
+            activeProps={{ className: "text-black" }}
           >
             <item.icon className="size-5" />
             <span className="max-w-full truncate px-1">{item.label.split(" — ")[0]}</span>

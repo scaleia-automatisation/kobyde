@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
   saveMyManualConnection,
   startConnection,
   testMyConnection,
+  toggleMyConnection,
 } from "@/lib/connectors.functions";
 import { CATEGORY_LABELS, CONNECTOR_MAP, type ConnectorField } from "@/lib/connectors.catalog";
 
@@ -62,6 +64,7 @@ function ConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const testFn = useServerFn(testMyConnection);
+  const toggleFn = useServerFn(toggleMyConnection);
   const [testing, setTesting] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
   const qc = useQueryClient();
@@ -93,6 +96,16 @@ function ConnexionsPage() {
       openDialog(key);
     } catch {
       openDialog(key);
+    }
+  };
+
+  const toggleActive = async (key: string, active: boolean) => {
+    try {
+      await toggleFn({ data: { connectorKey: key, active } });
+      toast.success(active ? "Connecteur activé : vos agents peuvent l'utiliser." : "Connecteur désactivé : vos agents ne l'utiliseront plus.");
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Modification impossible.");
     }
   };
 
@@ -144,7 +157,15 @@ function ConnexionsPage() {
                   <Link2 className="size-4 text-muted-foreground" />
                   <h3 className="font-medium">{c.name}</h3>
                   {c.connected ? (
-                    <Badge className="bg-emerald-500/15 text-emerald-600">Connecté</Badge>
+                    <Badge
+                      className={
+                        c.isActive
+                          ? "bg-emerald-500/15 text-emerald-600"
+                          : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {c.isActive ? "Connecté — actif" : "Connecté — désactivé"}
+                    </Badge>
                   ) : c.available ? (
                     <Badge variant="secondary">Disponible</Badge>
                   ) : (
@@ -156,6 +177,18 @@ function ConnexionsPage() {
                   {CATEGORY_LABELS[c.category as keyof typeof CATEGORY_LABELS] ?? c.category}
                 </p>
               </div>
+              {c.connected && (
+                <div className="flex shrink-0 items-center gap-2">
+                  <Label htmlFor={`toggle-${c.key}`} className="text-xs text-muted-foreground">
+                    {c.isActive ? "Activé" : "Désactivé"}
+                  </Label>
+                  <Switch
+                    id={`toggle-${c.key}`}
+                    checked={c.isActive}
+                    onCheckedChange={(v) => void toggleActive(c.key, v)}
+                  />
+                </div>
+              )}
             </div>
 
             {c.services.length > 0 && (

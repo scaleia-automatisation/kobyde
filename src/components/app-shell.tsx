@@ -301,27 +301,28 @@ function CommandMenu({
       <CommandInput placeholder="Rechercher une page, un agent, une action…" />
       <CommandList>
         <CommandEmpty>Aucun résultat.</CommandEmpty>
-        {groups.map((group) => (
-          <CommandGroup key={group.label} heading={group.label}>
-            {group.items.map((item) => (
-              <CommandItem
-                key={item.to}
-                value={`${group.label} ${item.label}`}
-                onSelect={() => {
-                  onOpenChange(false);
-                  navigate({ to: item.to });
-                }}
-              >
-                {"agent" in item ? (
-                  <span className="mr-2 text-base">{item.agent.emoji}</span>
-                ) : (
-                  <item.icon className="mr-2 size-4 text-muted-foreground" />
-                )}
-                {item.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        ))}
+          {groups.map((group) => (
+            <CommandGroup key={group.label} heading={group.label}>
+              {group.items.map((item) => (
+                <CommandItem
+                  key={item.to}
+                  value={`${group.label} ${item.label}`}
+                  onSelect={() => {
+                    onOpenChange(false);
+                    navigate({ to: item.to });
+                  }}
+                  className="font-bold text-black"
+                >
+                  {"agent" in item ? (
+                    <span className="mr-2 text-base">{item.agent.emoji}</span>
+                  ) : (
+                    <item.icon className="mr-2 size-4 text-black" />
+                  )}
+                  {item.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
       </CommandList>
     </CommandDialog>
   );

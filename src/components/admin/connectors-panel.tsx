@@ -68,14 +68,18 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(connector.lastError ?? null);
 
-  const ok = connector.status === "configure" && !connector.lastError;
-  const failed = connector.status === "erreur" || Boolean(connector.lastError);
+  // Une fois configuré, le connecteur reste connecté tant que l'admin ne le déconnecte pas.
+  const ok = connector.status === "configure";
+  const failed = !ok && (connector.status === "erreur" || Boolean(connector.lastError));
+  const warn = ok && Boolean(error ?? connector.lastError);
 
   const dot = failed ? "bg-destructive" : ok ? "bg-emerald-500" : "bg-muted-foreground/40";
   const statusBadge = failed ? (
     <Badge variant="destructive">Erreur</Badge>
   ) : ok ? (
-    <Badge className="bg-emerald-500/15 text-emerald-600">Connecté</Badge>
+    <Badge className="bg-emerald-500/15 text-emerald-600">
+      {connector.isEnabled ? "Connecté — actif" : "Connecté — désactivé"}
+    </Badge>
   ) : (
     <Badge variant="secondary">Non configuré</Badge>
   );

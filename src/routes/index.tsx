@@ -271,9 +271,9 @@ function Landing() {
       </header>
 
       {/* HERO */}
-      <section className="aurora-bg">
+      <section>
         <div className="mx-auto max-w-7xl px-5 pb-20 pt-14 text-center">
-          <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card/80 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
+          <span className="inline-flex items-center gap-2 glow-chip rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground">
             <span className="flex items-center gap-0.5 text-accent">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="size-3.5 fill-current" />
@@ -281,14 +281,14 @@ function Landing() {
             </span>
             Noté 4,9/5 par les entrepreneurs qui pilotent avec Kobyde
           </span>
-          <h1 className="hero-title mx-auto mt-6 max-w-full text-[clamp(1.75rem,5.2vw,4.25rem)] leading-[1.08] font-black italic tracking-tight whitespace-nowrap">
+          <h1 className="mx-auto mt-6 max-w-full text-[clamp(1.75rem,5.2vw,4.25rem)] leading-[1.08] font-bold tracking-tight whitespace-nowrap text-foreground">
             <span className="block">Une équipe complète</span>
             <span className="block">d'agents IA pour votre entreprise,</span>
             <span className="block">pour moins de 1,30 € par jour.</span>
           </h1>
 
           <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Button asChild size="cta" variant="cta" className="gap-2">
+            <Button asChild size="cta" variant="default" className="gap-2">
               <Link to="/auth" search={{ mode: "signup" }}>
                 Créer mon équipe IA <ArrowRight className="size-4" />
               </Link>

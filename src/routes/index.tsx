@@ -319,7 +319,7 @@ function Landing() {
           Votre équipe
         </p>
         <h2 className="mt-3 text-center text-3xl">Des agents IA à votre entière disposition</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center font-display text-xl font-medium italic leading-relaxed md:text-2xl bg-gradient-to-r from-aurora-1 via-aurora-2 to-aurora-3 bg-clip-text text-transparent">
+        <p className="mx-auto mt-4 max-w-2xl text-center font-display text-xl font-medium leading-relaxed md:text-2xl text-foreground">
           Une équipe d'employés IA interconnectés qui travaille 24h/24 et 7j/7 en parfaite collaboration.
         </p>
         {(() => {

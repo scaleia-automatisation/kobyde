@@ -55,7 +55,9 @@ const publicRow = (def: ConnectorDef, row: any) => {
     services: (row?.services ?? def.services?.map((s) => s.key) ?? []) as string[],
     values: masked,
     isEnabled: Boolean(row?.is_enabled),
-    status: row?.last_error ? "erreur" : requiredOk ? "configure" : "non_configure",
+    // La connexion reste active tant que l'admin ne la déconnecte pas :
+    // un test en échec n'invalide plus le connecteur configuré.
+    status: requiredOk ? "configure" : row?.last_error ? "erreur" : "non_configure",
     lastTestAt: row?.last_test_at ?? null,
     lastError: row?.last_error ?? null,
     urls: connectorUrls(def.key),

@@ -212,7 +212,7 @@ function TeamPage() {
               </div>
               <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground">{LEAD_AGENT.description}</p>
               <Button className="mt-5 gap-2" asChild>
-                <Link to="/eric">
+                <Link to="/eric" search={{ agent: undefined }}>
                   Parler à {LEAD_AGENT.name} <ArrowRight className="size-4" />
                 </Link>
               </Button>

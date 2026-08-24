@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2, RefreshCw, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
 import { AiProgress } from "@/components/ui/states";
+import { cn } from "@/lib/utils";
 
 /** États de génération lisibles plutôt qu'un simple « Loading… ». */
 const ERIC_STEPS = [
@@ -45,8 +47,13 @@ function EricProgress() {
   );
 }
 
+const ericSearchSchema = z.object({
+  agent: z.string().optional().catch(undefined),
+});
+
 export const Route = createFileRoute("/_authenticated/eric")({
   component: EricPage,
+  validateSearch: (search) => ericSearchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Éric, votre directeur IA — Kobyde" },
@@ -77,6 +84,9 @@ const EXAMPLES = [
 type Plan = Awaited<ReturnType<typeof askEric>>;
 
 function EricPage() {
+  const search = useSearch({ from: "/_authenticated/eric" });
+  const selectedAgent = agentByKey(search.agent ?? "directeur");
+  const isLead = selectedAgent.key === LEAD_AGENT.key;
   const orgId = useOrgId();
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -143,18 +153,31 @@ function EricPage() {
   };
 
   return (
-    <AppShell title="Éric — Directeur IA" subtitle="L'orchestrateur central de votre équipe">
+    <AppShell
+      title={`${selectedAgent.name} — ${selectedAgent.role}`}
+      subtitle={
+        isLead
+          ? "L'orchestrateur central de votre équipe"
+          : `Parlez à ${selectedAgent.name}, votre agent ${selectedAgent.role.toLowerCase()}`
+      }
+    >
       <div className="mx-auto w-full max-w-3xl space-y-8">
         <div className="text-center">
-          <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-amber-100 text-3xl ring-1 ring-amber-200">
-            {LEAD_AGENT.emoji}
+          <div
+            className={cn(
+              "mx-auto mb-4 grid size-14 place-items-center rounded-2xl text-3xl ring-1",
+              selectedAgent.ring.replace("text-", "bg-").replace("ring-", "ring-"),
+            )}
+          >
+            {selectedAgent.emoji}
           </div>
           <h2 className="font-display text-3xl font-bold tracking-tight lg:text-4xl">
             Que voulez-vous faire ?
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Éric comprend votre demande, consulte la mémoire de l'entreprise et confie le travail
-            aux bons agents.
+            {isLead
+              ? "Éric comprend votre demande, consulte la mémoire de l'entreprise et confie le travail aux bons agents."
+              : selectedAgent.description}
           </p>
         </div>
 

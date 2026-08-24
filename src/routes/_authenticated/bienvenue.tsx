@@ -152,7 +152,7 @@ function OnboardingPage() {
       if (step === 6) {
         await saveOrg({ onboarding_completed: true });
         void trackUserEvent("onboarding_completed");
-        navigate({ to: "/eric", replace: true });
+        navigate({ to: "/eric", search: { agent: undefined }, replace: true });
         return;
       }
       setStep((s) => Math.min(s + 1, STEPS.length - 1));

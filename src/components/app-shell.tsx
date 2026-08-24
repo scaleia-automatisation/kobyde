@@ -5,13 +5,11 @@ import {
   Bell,
   BarChart3,
   Bot,
-
   Briefcase,
   Building2,
   CircleHelp,
   Coins,
   CreditCard,
-  Receipt,
   FileText,
   Filter,
   FolderKanban,
@@ -23,7 +21,9 @@ import {
   Mail,
   Megaphone,
   Menu,
+  MessageCircle,
   Package,
+  Receipt,
   Search,
   Settings,
   ShieldCheck,
@@ -53,13 +53,25 @@ import {
 } from "@/components/ui/command";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { AGENTS } from "@/lib/agents";
+import type { AgentMeta } from "@/lib/agents";
 
-export const NAV_GROUPS = [
+type NavItem =
+  | { to: string; label: string; icon: React.ComponentType<{ className?: string }> }
+  | { to: string; label: string; agent: AgentMeta };
+
+const AGENT_NAV_ITEMS: { to: string; label: string; agent: AgentMeta }[] = AGENTS.map((agent) => ({
+  to: agent.key === "directeur" ? "/eric" : `/agent/${agent.key}`,
+  label: `${agent.name} — ${agent.role}`,
+  agent,
+}));
+
+export const NAV_GROUPS: { label: string; adminOnly?: boolean; items: NavItem[] }[] = [
   {
     label: "VOS AGENTS ",
     items: [
-      { to: "/eric", label: "Éric — Ceo Directeur ia", icon: Sparkles },
       { to: "/tableau-de-bord", label: "Accueil", icon: Home },
+      ...AGENT_NAV_ITEMS,
       { to: "/equipe", label: "Mon équipe IA", icon: Bot },
       { to: "/taches", label: "Tâches des agents", icon: ListChecks },
     ],
@@ -67,7 +79,6 @@ export const NAV_GROUPS = [
   {
     label: "Commercial",
     items: [
-      { to: "/jason", label: "Jason — Prospection", icon: Search },
       { to: "/prospects", label: "Prospects", icon: Target },
       { to: "/clients", label: "Clients", icon: Users },
       { to: "/devis", label: "Devis", icon: FileText },
@@ -80,9 +91,7 @@ export const NAV_GROUPS = [
   {
     label: "Croissance",
     items: [
-      { to: "/lamine", label: "Lamine — Marketing", icon: Megaphone },
       { to: "/funnel", label: "Funnel", icon: Filter },
-      { to: "/ethan", label: "Ethan — Analyse & veille", icon: LineChart },
       { to: "/marketing", label: "Campagnes", icon: Megaphone },
       { to: "/emails", label: "Emails", icon: Mail },
       { to: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -112,7 +121,7 @@ export const NAV_GROUPS = [
     adminOnly: true,
     items: [{ to: "/super-admin", label: "Super Admin", icon: ShieldCheck }],
   },
-] as const;
+];
 
 export const NAV = NAV_GROUPS.flatMap((g) => g.items.map((i) => ({ to: i.to, label: i.label })));
 
@@ -148,6 +157,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           <div className="space-y-0.5">
             {group.items.map((item) => {
               const active = pathname === item.to || pathname.startsWith(item.to + "/");
+              const isAgent = "agent" in item;
               return (
                 <Link
                   key={item.to}
@@ -162,13 +172,34 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
                   )}
                 >
-                  <item.icon
-                    className={cn(
-                      "size-[17px] shrink-0 transition-colors",
-                      active ? "text-sidebar-primary" : "text-sidebar-foreground/55",
-                    )}
-                  />
-                  <span className="truncate">{item.label}</span>
+                  {isAgent ? (
+                    <>
+                      <span className="grid size-[22px] shrink-0 place-items-center rounded-md text-[13px]">
+                        {item.agent.emoji}
+                      </span>
+                      <span className="flex-1 truncate">{item.label}</span>
+                      <span
+                        className={cn(
+                          "grid size-6 shrink-0 place-items-center rounded-full bg-gradient-to-br from-rose-400 to-violet-500 text-white shadow-sm",
+                          "opacity-80 transition-opacity group-hover:opacity-100",
+                        )}
+                        aria-label={`Parler à ${item.agent.name}`}
+                        title={`Parler à ${item.agent.name}`}
+                      >
+                        <MessageCircle className="size-3.5" />
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <item.icon
+                        className={cn(
+                          "size-[17px] shrink-0 transition-colors",
+                          active ? "text-sidebar-primary" : "text-sidebar-foreground/55",
+                        )}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </>
+                  )}
                 </Link>
               );
             })}
@@ -281,7 +312,11 @@ function CommandMenu({
                   navigate({ to: item.to });
                 }}
               >
-                <item.icon className="mr-2 size-4 text-muted-foreground" />
+                {"agent" in item ? (
+                  <span className="mr-2 text-base">{item.agent.emoji}</span>
+                ) : (
+                  <item.icon className="mr-2 size-4 text-muted-foreground" />
+                )}
                 {item.label}
               </CommandItem>
             ))}

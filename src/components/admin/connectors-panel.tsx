@@ -173,11 +173,14 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
             <DialogDescription>{connector.description}</DialogDescription>
           </DialogHeader>
 
-          {failed && error && (
-            <Alert variant="destructive">
+          {error && (
+            <Alert variant={failed ? "destructive" : "default"}>
               <AlertTriangle className="size-4" />
-              <AlertTitle>La connexion a échoué</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertTitle>{failed ? "La connexion a échoué" : "Dernier test en échec"}</AlertTitle>
+              <AlertDescription>
+                {error}
+                {warn ? " — le connecteur reste connecté tant que vous ne le déconnectez pas." : ""}
+              </AlertDescription>
             </Alert>
           )}
 

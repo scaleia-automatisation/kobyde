@@ -210,26 +210,6 @@ function EricPage() {
           </div>
         </Card>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Exemples
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {examples.map((ex) => (
-              <button
-                key={ex}
-                onClick={() => {
-                  setPrompt(ex);
-                  inputRef.current?.focus();
-                }}
-                disabled={mutation.isPending}
-                className="rounded-full border border-border bg-card px-3.5 py-2 text-left text-sm text-foreground/80 transition hover:border-primary/40 hover:bg-accent/40 disabled:opacity-50"
-              >
-                « {ex} »
-              </button>
-            ))}
-          </div>
-        </div>
 
         {mutation.isPending && <EricProgress />}
 

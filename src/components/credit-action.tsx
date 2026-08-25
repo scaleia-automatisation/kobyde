@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react";
-import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,

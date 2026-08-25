@@ -629,7 +629,23 @@ function LaminePage() {
       title="Lamine — Marketing"
       subtitle="Promesse, proposition de valeur, briefing de site et contenu prêt à publier."
     >
+      <a
+        href="/studio"
+        className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 transition-colors hover:bg-accent/50"
+      >
+        <span>
+          <span className="block text-sm font-bold text-black">Créer un contenu à publier</span>
+          <span className="block text-xs text-muted-foreground">
+            Image, carrousel ou vidéo générés par l'IA, légendes par plateforme et publication.
+          </span>
+        </span>
+        <span className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+          Ouvrir le Studio
+        </span>
+      </a>
+
       <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+
         <TabsList className="flex-wrap">
           <TabsTrigger value="promesse">Promesse</TabsTrigger>
           <TabsTrigger value="proposition">Proposition de valeur</TabsTrigger>

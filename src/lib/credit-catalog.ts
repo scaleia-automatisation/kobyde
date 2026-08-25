@@ -123,7 +123,12 @@ export const CREDIT_ACTIONS: CreditAction[] = [
     ["mkt.geo", "Génération GEO d'une page", 2],
     ["mkt.image_prompts", "Prompts images", 1],
     ["mkt.icon_prompts", "Prompts icônes", 1],
+    ["content.image", "Studio : génération d'une image", 2],
+    ["content.carousel", "Studio : génération d'un carrousel", 3],
+    ["content.video", "Studio : génération d'une vidéo", 8],
+    ["content.caption", "Studio : légendes adaptées par plateforme", 1],
   ]),
+
   ...A("RH", [
     ["hr.job_analysis", "Analyse d'une offre d'emploi", 2],
     ["hr.cv_analysis", "Analyse d'un CV", 2],

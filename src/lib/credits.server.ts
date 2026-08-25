@@ -21,20 +21,24 @@ export async function reserveCredits(
     agentId?: string | null;
     taskId?: string | null;
     label?: string;
+    /** Coût dynamique (catalogue de modèles IA administrable). */
+    cost?: number;
   },
 ): Promise<CreditTx | null> {
   const action = creditAction(params.actionKey);
-  if (action.cost <= 0) return null;
+  const cost = params.cost ?? action.cost;
+  if (cost <= 0) return null;
 
   const { data, error } = await (supabase as any).rpc("reserve_credits", {
     _org: params.orgId,
     _action_key: action.key,
     _action_label: params.label ?? action.label,
-    _credits: action.cost,
+    _credits: cost,
     _idempotency_key: params.idempotencyKey,
     _agent_id: params.agentId ?? null,
     _task_id: params.taskId ?? null,
   });
+
   if (error) {
     if (/Crédits insuffisants/i.test(error.message)) throw new Error("Crédits IA insuffisants.");
     throw new Error(error.message);

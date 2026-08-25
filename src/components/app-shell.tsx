@@ -93,6 +93,8 @@ export const NAV_GROUPS: { label: string; adminOnly?: boolean; items: NavItem[] 
     items: [
       { to: "/funnel", label: "Funnel", icon: Filter },
       { to: "/marketing", label: "Campagnes", icon: Megaphone },
+      { to: "/studio", label: "Studio de contenus", icon: Sparkles },
+
       { to: "/emails", label: "Emails", icon: Mail },
       { to: "/analytics", label: "Analytics", icon: BarChart3 },
     ],

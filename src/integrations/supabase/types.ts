@@ -802,6 +802,209 @@ export type Database = {
           },
         ]
       }
+      content_creations: {
+        Row: {
+          assets: Json
+          captions: Json
+          created_at: string
+          created_by: string | null
+          credits_used: number
+          error: string | null
+          id: string
+          instructions: string
+          kind: string
+          model_key: string
+          model_label: string
+          objective: string
+          org_id: string
+          params: Json
+          platforms: string[]
+          product_ids: string[]
+          slides: number
+          status: string
+          strategy: Json
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          assets?: Json
+          captions?: Json
+          created_at?: string
+          created_by?: string | null
+          credits_used?: number
+          error?: string | null
+          id?: string
+          instructions?: string
+          kind: string
+          model_key?: string
+          model_label?: string
+          objective?: string
+          org_id: string
+          params?: Json
+          platforms?: string[]
+          product_ids?: string[]
+          slides?: number
+          status?: string
+          strategy?: Json
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          assets?: Json
+          captions?: Json
+          created_at?: string
+          created_by?: string | null
+          credits_used?: number
+          error?: string | null
+          id?: string
+          instructions?: string
+          kind?: string
+          model_key?: string
+          model_label?: string
+          objective?: string
+          org_id?: string
+          params?: Json
+          platforms?: string[]
+          product_ids?: string[]
+          slides?: number
+          status?: string
+          strategy?: Json
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_creations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_models: {
+        Row: {
+          created_at: string
+          credits: number
+          engine: string | null
+          formats: string[]
+          id: string
+          is_active: boolean
+          key: string
+          kind: string
+          label: string
+          notes: string | null
+          params: Json
+          provider: string
+          quality: string
+          sort_order: number
+          speed: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credits?: number
+          engine?: string | null
+          formats?: string[]
+          id?: string
+          is_active?: boolean
+          key: string
+          kind: string
+          label: string
+          notes?: string | null
+          params?: Json
+          provider: string
+          quality?: string
+          sort_order?: number
+          speed?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          engine?: string | null
+          formats?: string[]
+          id?: string
+          is_active?: boolean
+          key?: string
+          kind?: string
+          label?: string
+          notes?: string | null
+          params?: Json
+          provider?: string
+          quality?: string
+          sort_order?: number
+          speed?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_publications: {
+        Row: {
+          account_label: string | null
+          caption: string
+          created_at: string
+          created_by: string | null
+          creation_id: string
+          error: string | null
+          external_id: string | null
+          id: string
+          org_id: string
+          platform: string
+          published_at: string | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_label?: string | null
+          caption?: string
+          created_at?: string
+          created_by?: string | null
+          creation_id: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          org_id: string
+          platform: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_label?: string | null
+          caption?: string
+          created_at?: string
+          created_by?: string | null
+          creation_id?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          org_id?: string
+          platform?: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_publications_creation_id_fkey"
+            columns: ["creation_id"]
+            isOneToOne: false
+            referencedRelation: "content_creations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_publications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           agent_id: string | null

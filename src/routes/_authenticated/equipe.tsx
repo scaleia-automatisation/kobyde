@@ -3,11 +3,10 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowRight, Send } from "lucide-react";
+import { ArrowRight, Send, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
-import { suggestionsFor } from "@/lib/agent-suggestions";
-import { useCustomSuggestions } from "@/lib/custom-suggestions";
+import { useAgentSuggestions } from "@/lib/custom-suggestions";
 
 import { useOrgId, useRows } from "@/lib/db";
 import { askAgent } from "@/lib/eric.functions";
@@ -147,10 +146,8 @@ function TeamPage() {
   const call = useServerFn(askAgent);
 
   const meta = selected ? agentByKey(selected) : null;
-  const { items: customSuggestions } = useCustomSuggestions(meta?.key ?? "");
-  const allSuggestions = meta
-    ? [...customSuggestions, ...suggestionsFor(meta.key).filter((s) => !customSuggestions.includes(s))]
-    : [];
+  const suggestions = useAgentSuggestions(meta?.key ?? "");
+  const allSuggestions = meta ? suggestions.all : [];
 
 
   const talk = useMutation({
@@ -307,19 +304,33 @@ function TeamPage() {
           <div className="space-y-4">
             {meta && allSuggestions.length > 0 && (
               <div>
-                <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  Suggestions — ce que {meta.name} fait en priorité
-                </p>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Suggestions — ce que {meta.name} fait en priorité
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => suggestions.removeAll()}
+                    className="text-xs font-medium text-muted-foreground transition hover:text-destructive"
+                  >
+                    Tout supprimer
+                  </button>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {allSuggestions.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setPromptText(s)}
-                      className="agent-suggestion-chip"
-                    >
-                      {s}
-                    </button>
+                    <span key={s} className="agent-suggestion-chip inline-flex items-center gap-1.5">
+                      <button type="button" onClick={() => setPromptText(s)} className="text-left">
+                        {s}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Supprimer la suggestion"
+                        onClick={() => suggestions.remove(s)}
+                        className="opacity-60 transition hover:opacity-100"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </span>
                   ))}
                 </div>
               </div>

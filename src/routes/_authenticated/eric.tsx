@@ -11,7 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
-import { useOrgId, useRows } from "@/lib/db";
+import { examplesFor } from "@/lib/agent-suggestions";
+import { useDeleteAllRows, useDeleteRow, useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
@@ -74,13 +75,8 @@ export const Route = createFileRoute("/_authenticated/eric")({
   }),
 });
 
-const EXAMPLES = [
-  "Trouve-moi 50 prospects pour mon offre de création de site.",
-  "Analyse mes concurrents.",
-  "Prépare un devis pour Jean.",
-  "Quels sont mes clients à relancer ?",
-  "Je veux recruter un commercial.",
-];
+
+
 
 type Plan = Awaited<ReturnType<typeof askEric>>;
 
@@ -104,6 +100,10 @@ function EricPage() {
   const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
   const suggestions = useAgentSuggestions(selectedAgent.key);
+  const examples = examplesFor(selectedAgent.key);
+  const deleteConversation = useDeleteRow("conversations");
+  const deleteAllConversations = useDeleteAllRows("conversations");
+
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -215,7 +215,7 @@ function EricPage() {
             Exemples
           </p>
           <div className="flex flex-wrap gap-2">
-            {EXAMPLES.map((ex) => (
+            {examples.map((ex) => (
               <button
                 key={ex}
                 onClick={() => {
@@ -419,9 +419,21 @@ function EricPage() {
 
         {suggestions.all.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Suggestions pour {selectedAgent.name}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Suggestions pour {selectedAgent.name}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  suggestions.removeAll();
+                  toast.success("Suggestions supprimées.");
+                }}
+                className="text-xs font-medium text-muted-foreground transition hover:text-destructive"
+              >
+                Tout supprimer
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {suggestions.all.map((s) => (
                 <span key={s} className="agent-suggestion-chip inline-flex items-center gap-1.5">
@@ -435,16 +447,14 @@ function EricPage() {
                   >
                     {s}
                   </button>
-                  {suggestions.custom.includes(s) && (
-                    <button
-                      type="button"
-                      aria-label="Retirer la suggestion"
-                      onClick={() => suggestions.remove(s)}
-                      className="opacity-60 hover:opacity-100"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    aria-label="Supprimer la suggestion"
+                    onClick={() => suggestions.remove(s)}
+                    className="opacity-60 transition hover:opacity-100"
+                  >
+                    <X className="size-3.5" />
+                  </button>
                 </span>
               ))}
             </div>
@@ -453,9 +463,24 @@ function EricPage() {
 
         {(conversations ?? []).length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Demandes récentes
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Demandes récentes
+              </p>
+              <button
+                type="button"
+                disabled={deleteAllConversations.isPending}
+                onClick={() =>
+                  deleteAllConversations.mutate(undefined, {
+                    onSuccess: () => toast.success("Demandes récentes supprimées."),
+                    onError: () => toast.error("Suppression impossible."),
+                  })
+                }
+                className="text-xs font-medium text-muted-foreground transition hover:text-destructive disabled:opacity-50"
+              >
+                Tout supprimer
+              </button>
+            </div>
             <div className="space-y-2">
               {(conversations ?? []).map((c: { id: string; title: string }) => (
                 <div
@@ -485,6 +510,18 @@ function EricPage() {
                   >
                     <Plus className="mr-1 inline size-3.5" />
                     Suggérer à l'agent
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Supprimer cette demande"
+                    onClick={() =>
+                      deleteConversation.mutate(c.id, {
+                        onError: () => toast.error("Suppression impossible."),
+                      })
+                    }
+                    className="shrink-0 text-muted-foreground transition hover:text-destructive"
+                  >
+                    <X className="size-4" />
                   </button>
                 </div>
               ))}

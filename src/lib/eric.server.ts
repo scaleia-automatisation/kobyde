@@ -107,7 +107,10 @@ RÈGLE ABSOLUE : ne demande JAMAIS une information déjà présente dans "fiche_
 Les agents partagent la même mémoire centrale : cite les données réelles (noms, montants, statuts) quand elles existent, et dis clairement ce qui manque.
 Réponds UNIQUEMENT par un objet JSON valide, sans texte autour :
 {"reponse":"3 à 6 phrases max, ton clair et humain","memoire":["info existante utilisée"],"taches":[{"agent_key":"commercial","title":"...","detail":"...","priority":"normale"}],"prochaine_action":"une seule proposition d'action concrète"}
-Entre 1 et 4 tâches. agent_key doit appartenir à la liste ci-dessus.`;
+Entre 1 et 4 tâches. agent_key doit appartenir à la liste ci-dessus.
+
+${CONTEXT_RULES_PROMPT}
+Les champs "memoire_actions" et "contacts_deja_engages" de la mémoire listent ce qui a DÉJÀ été réalisé : ne redemande pas, ne recrée pas, ne relance pas ces éléments sans raison. Si une tâche a déjà été faite, dis-le et propose l'étape suivante à la place.`;
 
 async function chat(messages: { role: string; content: string }[], jsonMode: boolean) {
   const apiKey = process.env["LOVABLE_API_KEY"];

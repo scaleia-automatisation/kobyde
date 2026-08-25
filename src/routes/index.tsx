@@ -277,12 +277,19 @@ function Landing() {
       </section>
 
       {/* BANDEAU OUTILS */}
-      <section id="outils" className="border-y border-border py-12">
-        <p className="text-center text-base font-bold text-foreground">
+      <section id="outils" className="w-full border-y border-border py-12">
+        <p className="text-center text-lg font-bold text-foreground">
           Connecté à vos outils du quotidien
         </p>
-        <div className="mx-auto mt-8 flex max-w-4xl flex-wrap items-start justify-center gap-x-10 gap-y-8 px-5">
-          <IntegrationButtons />
+        <div className="relative mt-8 w-full overflow-hidden">
+          <div className="marquee-track">
+            <div className="flex items-center gap-16 px-8">
+              <IntegrationButtons />
+            </div>
+            <div className="flex items-center gap-16 px-8" aria-hidden="true">
+              <IntegrationButtons />
+            </div>
+          </div>
         </div>
       </section>
 

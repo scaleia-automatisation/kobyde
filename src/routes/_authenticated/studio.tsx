@@ -61,7 +61,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/studio")({
   component: StudioPage,
-  validateSearch: (s: Record<string, unknown>) => ({ demande: typeof s.demande === "string" ? s.demande : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({ demande: typeof s["demande"] === "string" ? (s["demande"] as string) : undefined }),
   head: () => ({
     meta: [
       { title: "Studio de contenus IA — images, carrousels et vidéos — Kobyde" },
@@ -392,7 +392,7 @@ function StudioPage() {
           {model ? (
             <Section step={8} title="Paramètres du modèle">
               <div className="grid gap-3 sm:grid-cols-2">
-                {model.params?.ratio || model.params?.resolution ? (
+                {model.params?.["ratio"] || model.params?.["resolution"] ? (
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Format</Label>
                     <Select value={params.ratio ?? ""} onValueChange={(v) => setParams((p) => ({ ...p, ratio: v }))}>
@@ -410,7 +410,7 @@ function StudioPage() {
                   </div>
                 ) : null}
 
-                {model.params?.style ? (
+                {model.params?.["style"] ? (
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Style</Label>
                     <Select value={params.style ?? ""} onValueChange={(v) => setParams((p) => ({ ...p, style: v }))}>
@@ -428,7 +428,7 @@ function StudioPage() {
                   </div>
                 ) : null}
 
-                {model.params?.duration ? (
+                {model.params?.["duration"] ? (
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Durée</Label>
                     <Select
@@ -449,7 +449,7 @@ function StudioPage() {
                   </div>
                 ) : null}
 
-                {model.params?.resolution && model.kind === "video" ? (
+                {model.params?.["resolution"] && model.kind === "video" ? (
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Résolution</Label>
                     <Select
@@ -467,7 +467,7 @@ function StudioPage() {
                   </div>
                 ) : null}
 
-                {model.params?.camera ? (
+                {model.params?.["camera"] ? (
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Mouvement de caméra</Label>
                     <Select value={params.camera ?? ""} onValueChange={(v) => setParams((p) => ({ ...p, camera: v }))}>
@@ -485,7 +485,7 @@ function StudioPage() {
                   </div>
                 ) : null}
 
-                {model.params?.audio ? (
+                {model.params?.["audio"] ? (
                   <div className="flex items-center justify-between rounded-xl border px-3 py-2">
                     <Label className="text-xs text-muted-foreground">Bande son générée</Label>
                     <Switch

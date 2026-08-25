@@ -51,7 +51,7 @@ export function ContentModelsPanel() {
                 {m.provider} · {m.kind} · {m.speed} · {m.quality}
               </p>
             </div>
-            <Badge variant="secondary">{m.model}</Badge>
+            <Badge variant="secondary">{m.engine ?? m.key}</Badge>
             <div className="flex items-center gap-2">
               <Input
                 type="number"
@@ -62,7 +62,7 @@ export function ContentModelsPanel() {
               />
               <span className="text-xs text-muted-foreground">crédits</span>
               {edits[m.key] !== undefined && edits[m.key] !== m.credits ? (
-                <Button size="sm" onClick={() => mutate.mutate({ key: m.key, credits: edits[m.key] })}>
+                <Button size="sm" onClick={() => mutate.mutate({ key: m.key, credits: edits[m.key] ?? m.credits })}>
                   Enregistrer
                 </Button>
               ) : null}

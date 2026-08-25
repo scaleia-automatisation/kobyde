@@ -11,7 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
-import { useOrgId, useRows } from "@/lib/db";
+import { examplesFor } from "@/lib/agent-suggestions";
+import { useDeleteAllRows, useDeleteRow, useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
@@ -214,7 +215,7 @@ function EricPage() {
             Exemples
           </p>
           <div className="flex flex-wrap gap-2">
-            {EXAMPLES.map((ex) => (
+            {examples.map((ex) => (
               <button
                 key={ex}
                 onClick={() => {

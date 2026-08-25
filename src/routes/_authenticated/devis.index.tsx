@@ -21,6 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDeleteAllRows, useDeleteRow, useOrgId, useRows, eur2, frDate } from "@/lib/db";
 import { MEETING_SOURCES, QUOTE_STATUS_LABEL, addDays, isoDate, nextNumber } from "@/lib/sales";
 import { analyzeMeeting, analyzeMeetingAudio } from "@/lib/sales.functions";
+import { detectDuplicates, type DuplicateMatch } from "@/lib/context-engine";
+import { DuplicateGuardDialog } from "@/components/duplicate-guard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -77,6 +79,21 @@ function DevisPage() {
   const [catalogClient, setCatalogClient] = useState("");
   const [catalogTitle, setCatalogTitle] = useState("");
   const [picked, setPicked] = useState<Record<string, number>>({});
+  const [dupe, setDupe] = useState<{ matches: DuplicateMatch[]; create: () => void } | null>(null);
+
+  const FINALISES = ["accepte", "accepté", "refuse", "refusé", "expire", "expiré", "annule", "annulé"];
+
+  /** Non-duplication : un devis similaire non finalisé existe-t-il déjà ? */
+  const guardQuote = (candidate: Record<string, unknown>, create: () => void) => {
+    const ouverts = (quotes ?? []).filter(
+      (q: any) => !FINALISES.includes(String(q.status ?? "").toLowerCase()),
+    );
+    const matches = detectDuplicates("devis", candidate, ouverts, { recentDays: 90, threshold: 0.8 }).filter(
+      (m: DuplicateMatch) => !candidate["client_id"] || String((m.row as any).client_id ?? "") === String(candidate["client_id"]),
+    );
+    if (matches.length) { setDupe({ matches, create }); return; }
+    create();
+  };
 
   const clientName = (id: string | null) => {
     const c = (clients ?? []).find((x: any) => x.id === id);
@@ -87,13 +104,16 @@ function DevisPage() {
     e.preventDefault();
     if (!orgId) return;
     const fd = new FormData(e.currentTarget);
+    const clientId = String(fd.get("client_id") ?? "") || null;
+    const titre = String(fd.get("title") ?? "Nouveau devis");
+    const run = async () => {
     const { data, error } = await supabase
       .from("quotes")
       .insert({
         org_id: orgId,
-        client_id: String(fd.get("client_id") ?? "") || null,
+        client_id: clientId,
         number: nextNumber("DEV"),
-        title: String(fd.get("title") ?? "Nouveau devis"),
+        title: titre,
         status: "brouillon",
         validity_days: 30,
         valid_until: isoDate(addDays(30)),
@@ -104,6 +124,8 @@ function DevisPage() {
     if (error) { toast.error(error.message); return; }
     setManual(false);
     navigate({ to: "/devis/$id", params: { id: data.id } });
+    };
+    guardQuote({ client_id: clientId, title: titre }, () => void run());
   };
 
   const runAnalysis = async (idempotencyKey: string) => {
@@ -139,6 +161,14 @@ function DevisPage() {
   };
 
   const createFromAnalysis = async () => {
+    if (!orgId || !analysis) return;
+    guardQuote(
+      { client_id: meetingClient || null, title: meetingTitle.trim() || "Devis issu de la réunion" },
+      () => void doCreateFromAnalysis(),
+    );
+  };
+
+  const doCreateFromAnalysis = async () => {
     if (!orgId || !analysis) return;
     const retained = (analysis.besoins ?? []).filter((b: any) => b.retenu);
     const { data: quote, error } = await supabase
@@ -183,6 +213,18 @@ function DevisPage() {
   };
 
   const createFromCatalog = async () => {
+    if (!orgId) return;
+    if (!Object.entries(picked).some(([, q]) => q > 0)) {
+      toast.error("Sélectionnez au moins un produit ou service.");
+      return;
+    }
+    guardQuote(
+      { client_id: catalogClient || null, title: catalogTitle.trim() || "Devis catalogue" },
+      () => void doCreateFromCatalog(),
+    );
+  };
+
+  const doCreateFromCatalog = async () => {
     if (!orgId) return;
     const lines = Object.entries(picked).filter(([, qty]) => qty > 0);
     if (!lines.length) { toast.error("Sélectionnez au moins un produit ou service."); return; }
@@ -614,7 +656,46 @@ function DevisPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DuplicateGuardDialog
+        open={!!dupe}
+        onOpenChange={(v) => !v && setDupe(null)}
+        title="Un devis similaire existe déjà"
+        description="Avant de créer, vérifiez s'il s'agit du même besoin. Vous pouvez reprendre le devis existant plutôt que d'en créer un doublon."
+        matches={dupe?.matches ?? []}
+        render={(row) => ({
+          primary: row.title || row.number || "Devis",
+          details: [
+            row.number ? `Référence ${row.number}` : "",
+            row.total_ht != null ? `Montant HT : ${eur2(Number(row.total_ht))}` : "",
+            row.created_at ? `Créé le ${new Date(row.created_at).toLocaleDateString("fr-FR")}` : "",
+          ],
+          status: row.status,
+        })}
+        options={[
+          {
+            label: "Ouvrir et compléter le devis existant",
+            recommended: true,
+            onSelect: (row) => {
+              setDupe(null);
+              setManual(false);
+              navigate({ to: "/devis/$id", params: { id: row.id } });
+            },
+          },
+          {
+            label: "Créer quand même un nouveau devis",
+            variant: "outline",
+            onSelect: () => {
+              const create = dupe?.create;
+              setDupe(null);
+              create?.();
+            },
+          },
+          { label: "Annuler", variant: "ghost", onSelect: () => setDupe(null) },
+        ]}
+      />
     </AppShell>
+
   );
 }
 

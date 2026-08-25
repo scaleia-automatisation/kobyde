@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AGENTS } from "./agents";
+import { CONTEXT_RULES_PROMPT } from "./context-engine.server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -58,6 +59,13 @@ export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: st
     ? Object.entries(fiche).filter(([, v]) => v === null || v === undefined || String(v).trim() === "").map(([k]) => k)
     : [];
 
+  // Mémoire d'actions commune : ce qui a déjà été fait, pour ne jamais le refaire.
+  const { recentActions, excludedProspects } = await import("./context-engine.server");
+  const [actionsMemoire, dejaEngages] = await Promise.all([
+    recentActions(supabase, orgId, 30).catch(() => []),
+    excludedProspects(supabase, orgId).catch(() => []),
+  ]);
+
   return {
     fiche_entreprise: fiche,
     informations_manquantes: manquantes,
@@ -71,6 +79,12 @@ export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: st
     campagnes: campaigns,
     candidats: candidates,
     historique_agents: agentTasks,
+    memoire_actions: actionsMemoire,
+    contacts_deja_engages: dejaEngages.slice(0, 60).map((p: any) => ({
+      nom: p.company_name || p.full_name,
+      statut: p.status,
+      etape: p.followup_step,
+    })),
   };
 }
 
@@ -94,7 +108,10 @@ RÈGLE ABSOLUE : ne demande JAMAIS une information déjà présente dans "fiche_
 Les agents partagent la même mémoire centrale : cite les données réelles (noms, montants, statuts) quand elles existent, et dis clairement ce qui manque.
 Réponds UNIQUEMENT par un objet JSON valide, sans texte autour :
 {"reponse":"3 à 6 phrases max, ton clair et humain","memoire":["info existante utilisée"],"taches":[{"agent_key":"commercial","title":"...","detail":"...","priority":"normale"}],"prochaine_action":"une seule proposition d'action concrète"}
-Entre 1 et 4 tâches. agent_key doit appartenir à la liste ci-dessus.`;
+Entre 1 et 4 tâches. agent_key doit appartenir à la liste ci-dessus.
+
+${CONTEXT_RULES_PROMPT}
+Les champs "memoire_actions" et "contacts_deja_engages" de la mémoire listent ce qui a DÉJÀ été réalisé : ne redemande pas, ne recrée pas, ne relance pas ces éléments sans raison. Si une tâche a déjà été faite, dis-le et propose l'étape suivante à la place.`;
 
 async function chat(messages: { role: string; content: string }[], jsonMode: boolean) {
   const apiKey = process.env["LOVABLE_API_KEY"];
@@ -142,6 +159,8 @@ export async function runAgent(
 Tu exécutes la tâche confiée par Éric, le Directeur IA. Tu partages la mémoire centrale de l'entreprise.
 Réponds en français, 4 à 10 lignes maximum, format concret et actionnable (listes courtes, chiffres, noms réels de la mémoire).
 Utilise systématiquement la fiche entreprise ("fiche_entreprise") : nom, coordonnées, TVA, devise, langues, positionnement, valeurs, cible, produits, services, prix, conditions, équipe. Ne redemande jamais une information déjà connue. Si une information est réellement absente (voir "informations_manquantes") et indispensable, dis précisément ce qu'il faut renseigner dans la fiche entreprise. Pas de blabla, pas de markdown lourd.
+
+${CONTEXT_RULES_PROMPT}
 
 ${policy}`,
       },

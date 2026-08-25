@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_actions: {
+        Row: {
+          action_type: string
+          agent_key: string | null
+          created_at: string
+          entity_id: string | null
+          entity_label: string | null
+          entity_type: string
+          fingerprint: string
+          id: string
+          metadata: Json
+          org_id: string
+          result: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          agent_key?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type: string
+          fingerprint: string
+          id?: string
+          metadata?: Json
+          org_id: string
+          result?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          agent_key?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_label?: string | null
+          entity_type?: string
+          fingerprint?: string
+          id?: string
+          metadata?: Json
+          org_id?: string
+          result?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_actions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_tasks: {
         Row: {
           agent_id: string | null

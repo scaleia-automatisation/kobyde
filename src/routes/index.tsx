@@ -196,6 +196,43 @@ function IntegrationButtons() {
 }
 
 
+const TEMOIGNAGE_BACKGROUNDS = [
+  "bg-sky-50 border-sky-100",
+  "bg-emerald-50 border-emerald-100",
+  "bg-violet-50 border-violet-100",
+  "bg-rose-50 border-rose-100",
+  "bg-amber-50 border-amber-100",
+  "bg-teal-50 border-teal-100",
+];
+
+function TestimonialCard({
+  t,
+  index,
+}: {
+  t: (typeof TEMOIGNAGES)[number];
+  index: number;
+}) {
+  const bg = TEMOIGNAGE_BACKGROUNDS[index % TEMOIGNAGE_BACKGROUNDS.length];
+  return (
+    <figure
+      className={`shrink-0 w-[340px] md:w-[420px] rounded-3xl border p-6 shadow-sm ${bg}`}
+    >
+      <div className="flex gap-0.5 text-amber-500">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star key={i} className="size-4 fill-current" />
+        ))}
+      </div>
+      <blockquote className="mt-3 text-sm text-foreground leading-relaxed">
+        « {t.text} »
+      </blockquote>
+      <figcaption className="mt-4 text-sm">
+        <span className="font-semibold text-foreground">{t.name}</span>
+        <span className="block text-xs text-muted-foreground">{t.role}</span>
+      </figcaption>
+    </figure>
+  );
+}
+
 function Landing() {
   const lead = AGENTS.find((a) => a.key === "directeur") ?? AGENTS[0]!;
   const rest = AGENTS.filter((a) => a.key !== lead.key);

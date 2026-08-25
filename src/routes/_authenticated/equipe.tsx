@@ -147,6 +147,11 @@ function TeamPage() {
   const call = useServerFn(askAgent);
 
   const meta = selected ? agentByKey(selected) : null;
+  const { items: customSuggestions } = useCustomSuggestions(meta?.key ?? "");
+  const allSuggestions = meta
+    ? [...customSuggestions, ...suggestionsFor(meta.key).filter((s) => !customSuggestions.includes(s))]
+    : [];
+
 
   const talk = useMutation({
     mutationFn: async (vars: { agentKey: string; prompt: string; key: string }) =>

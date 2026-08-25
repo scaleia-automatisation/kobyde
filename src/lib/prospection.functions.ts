@@ -174,10 +174,14 @@ export const findProspects = createServerFn({ method: "POST" })
       const { ALREADY_ENGAGED } = await import("./context-engine");
 
       const memory = await loadMemory(supabase, data.orgId);
-      const result = await findProspectsAI(data.params, data.personaText, memory);
 
-      // Base existante : on vérifie AVANT de créer quoi que ce soit.
+      // Base existante : on vérifie AVANT de chercher et AVANT de créer quoi que ce soit.
       const existing = await loadEntityRows(supabase, data.orgId, "prospect", 2000);
+      const exclude = data.includeExisting
+        ? []
+        : existing.map((p: any) => [p.company_name, p.website].filter(Boolean).join(" — ")).filter(Boolean);
+
+      const result = await findProspectsAI(data.params, data.personaText, memory, exclude);
       const clean = (v: string) => (v === NOT_FOUND ? null : v);
 
       const fresh: typeof result.prospects = [];

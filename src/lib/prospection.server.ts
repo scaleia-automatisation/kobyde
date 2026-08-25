@@ -163,6 +163,7 @@ export async function findProspectsAI(
   params: SearchParams,
   persona: string,
   memory: unknown,
+  exclude: string[] = [],
 ): Promise<{ prospects: FoundProspect[]; rapport: string; etapes: { step: string; detail: string }[] }> {
   const parsed = await chatJson(
     `Tu es Jason, agent IA commercial du SaaS Kobyde, spécialiste de la génération de prospects B2B réels.
@@ -187,7 +188,10 @@ Paramètres de recherche :
 - nombre de résultats souhaités : ${params.count}
 - produit/service : ${params.offer || NOT_FOUND}
 - canal : ${params.channel}
-- outil : ${params.tool}`,
+- outil : ${params.tool}
+
+Entreprises DÉJÀ présentes dans la base ou déjà contactées — ne les renvoie pas, cherche d'autres entreprises :
+${exclude.length ? exclude.slice(0, 200).map((e) => `- ${e}`).join("\n") : "- aucune"}`,
   );
 
   const s = (v: any) => (v === undefined || v === null || String(v).trim() === "" ? NOT_FOUND : String(v));

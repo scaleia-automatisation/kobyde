@@ -89,19 +89,20 @@ export type ContentModel = {
 };
 
 export type ContentParams = {
-  ratio?: string;
-  resolution?: string;
-  quality?: string;
-  style?: string;
-  realism?: string;
-  count?: number;
-  duration?: number;
-  audio?: boolean;
-  camera?: string;
-  language?: string;
-  withText?: boolean;
-  prompt?: string;
+  ratio?: string | undefined;
+  resolution?: string | undefined;
+  quality?: string | undefined;
+  style?: string | undefined;
+  realism?: string | undefined;
+  count?: number | undefined;
+  duration?: number | undefined;
+  audio?: boolean | undefined;
+  camera?: string | undefined;
+  language?: string | undefined;
+  withText?: boolean | undefined;
+  prompt?: string | undefined;
 };
+
 
 /** Détection locale immédiate (l'IA affine ensuite côté serveur). */
 export function detectKindLocal(message: string): { kind: ContentKind; slides: number } {

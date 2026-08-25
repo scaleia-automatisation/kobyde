@@ -419,9 +419,21 @@ function EricPage() {
 
         {suggestions.all.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Suggestions pour {selectedAgent.name}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Suggestions pour {selectedAgent.name}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  suggestions.removeAll();
+                  toast.success("Suggestions supprimees.");
+                }}
+                className="text-xs font-medium text-muted-foreground transition hover:text-destructive"
+              >
+                Tout supprimer
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {suggestions.all.map((s) => (
                 <span key={s} className="agent-suggestion-chip inline-flex items-center gap-1.5">
@@ -435,16 +447,14 @@ function EricPage() {
                   >
                     {s}
                   </button>
-                  {suggestions.custom.includes(s) && (
-                    <button
-                      type="button"
-                      aria-label="Retirer la suggestion"
-                      onClick={() => suggestions.remove(s)}
-                      className="opacity-60 hover:opacity-100"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    aria-label="Supprimer la suggestion"
+                    onClick={() => suggestions.remove(s)}
+                    className="opacity-60 transition hover:opacity-100"
+                  >
+                    <X className="size-3.5" />
+                  </button>
                 </span>
               ))}
             </div>
@@ -453,9 +463,24 @@ function EricPage() {
 
         {(conversations ?? []).length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Demandes récentes
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Demandes recentes
+              </p>
+              <button
+                type="button"
+                disabled={deleteAllConversations.isPending}
+                onClick={() =>
+                  deleteAllConversations.mutate(undefined, {
+                    onSuccess: () => toast.success("Demandes recentes supprimees."),
+                    onError: () => toast.error("Suppression impossible."),
+                  })
+                }
+                className="text-xs font-medium text-muted-foreground transition hover:text-destructive disabled:opacity-50"
+              >
+                Tout supprimer
+              </button>
+            </div>
             <div className="space-y-2">
               {(conversations ?? []).map((c: { id: string; title: string }) => (
                 <div
@@ -477,14 +502,26 @@ function EricPage() {
                       const ok = suggestions.add(c.title);
                       toast[ok ? "success" : "info"](
                         ok
-                          ? `Ajouté aux suggestions de ${selectedAgent.name}`
-                          : "Cette demande est déjà proposée en suggestion.",
+                          ? `Ajoute aux suggestions de ${selectedAgent.name}`
+                          : "Cette demande est deja proposee en suggestion.",
                       );
                     }}
                     className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-accent/40"
                   >
                     <Plus className="mr-1 inline size-3.5" />
-                    Suggérer à l'agent
+                    Suggerer a l'agent
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Supprimer cette demande"
+                    onClick={() =>
+                      deleteConversation.mutate(c.id, {
+                        onError: () => toast.error("Suppression impossible."),
+                      })
+                    }
+                    className="shrink-0 text-muted-foreground transition hover:text-destructive"
+                  >
+                    <X className="size-4" />
                   </button>
                 </div>
               ))}

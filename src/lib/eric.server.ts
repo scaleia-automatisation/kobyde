@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AGENTS } from "./agents";
+import { CONTEXT_RULES_PROMPT } from "./context-engine.server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -158,6 +159,8 @@ export async function runAgent(
 Tu exécutes la tâche confiée par Éric, le Directeur IA. Tu partages la mémoire centrale de l'entreprise.
 Réponds en français, 4 à 10 lignes maximum, format concret et actionnable (listes courtes, chiffres, noms réels de la mémoire).
 Utilise systématiquement la fiche entreprise ("fiche_entreprise") : nom, coordonnées, TVA, devise, langues, positionnement, valeurs, cible, produits, services, prix, conditions, équipe. Ne redemande jamais une information déjà connue. Si une information est réellement absente (voir "informations_manquantes") et indispensable, dis précisément ce qu'il faut renseigner dans la fiche entreprise. Pas de blabla, pas de markdown lourd.
+
+${CONTEXT_RULES_PROMPT}
 
 ${policy}`,
       },

@@ -74,13 +74,8 @@ export const Route = createFileRoute("/_authenticated/eric")({
   }),
 });
 
-const EXAMPLES = [
-  "Trouve-moi 50 prospects pour mon offre de création de site.",
-  "Analyse mes concurrents.",
-  "Prépare un devis pour Jean.",
-  "Quels sont mes clients à relancer ?",
-  "Je veux recruter un commercial.",
-];
+type Plan2 = never;
+
 
 type Plan = Awaited<ReturnType<typeof askEric>>;
 

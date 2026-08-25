@@ -44,6 +44,7 @@ import { Route as AuthenticatedParametresRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedProspectsRouteImport } from './routes/_authenticated/prospects'
 import { Route as AuthenticatedRhRouteImport } from './routes/_authenticated/rh'
+import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated/studio'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
 import { Route as AuthenticatedTachesRouteImport } from './routes/_authenticated/taches'
@@ -241,6 +242,11 @@ const AuthenticatedRhRoute = AuthenticatedRhRouteImport.update({
   path: '/rh',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStudioRoute = AuthenticatedStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSuperAdminRoute = AuthenticatedSuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRoute
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
+  '/studio': typeof AuthenticatedStudioRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/taches': typeof AuthenticatedTachesRoute
@@ -438,6 +445,7 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRoute
   '/prospects': typeof AuthenticatedProspectsRoute
   '/rh': typeof AuthenticatedRhRoute
+  '/studio': typeof AuthenticatedStudioRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/taches': typeof AuthenticatedTachesRoute
@@ -496,6 +504,7 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/prospects': typeof AuthenticatedProspectsRoute
   '/_authenticated/rh': typeof AuthenticatedRhRoute
+  '/_authenticated/studio': typeof AuthenticatedStudioRoute
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/_authenticated/taches': typeof AuthenticatedTachesRoute
@@ -554,6 +563,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/prospects'
     | '/rh'
+    | '/studio'
     | '/super-admin'
     | '/tableau-de-bord'
     | '/taches'
@@ -610,6 +620,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/prospects'
     | '/rh'
+    | '/studio'
     | '/super-admin'
     | '/tableau-de-bord'
     | '/taches'
@@ -667,6 +678,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/prospects'
     | '/_authenticated/rh'
+    | '/_authenticated/studio'
     | '/_authenticated/super-admin'
     | '/_authenticated/tableau-de-bord'
     | '/_authenticated/taches'
@@ -958,6 +970,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRhRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/studio': {
+      id: '/_authenticated/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof AuthenticatedStudioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/super-admin': {
       id: '/_authenticated/super-admin'
       path: '/super-admin'
@@ -1128,6 +1147,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedProspectsRoute: typeof AuthenticatedProspectsRoute
   AuthenticatedRhRoute: typeof AuthenticatedRhRoute
+  AuthenticatedStudioRoute: typeof AuthenticatedStudioRoute
   AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
   AuthenticatedTachesRoute: typeof AuthenticatedTachesRoute
@@ -1167,6 +1187,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedProspectsRoute: AuthenticatedProspectsRoute,
   AuthenticatedRhRoute: AuthenticatedRhRoute,
+  AuthenticatedStudioRoute: AuthenticatedStudioRoute,
   AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
   AuthenticatedTachesRoute: AuthenticatedTachesRoute,

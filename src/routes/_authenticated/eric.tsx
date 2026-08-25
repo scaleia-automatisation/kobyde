@@ -396,26 +396,6 @@ function EricPage() {
           </div>
         )}
 
-        <div className="space-y-3 border-t border-border pt-6">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Interconnexion de l'équipe
-          </p>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            {AGENTS.filter((a) => !a.primary).map((a) => (
-              <span
-                key={a.key}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ${a.ring}`}
-                title={a.description}
-              >
-                {a.emoji} {a.name} · {a.role}
-              </span>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Tous les agents partagent la même mémoire centrale : prospects, clients, devis,
-            factures, projets et historique des tâches.
-          </p>
-        </div>
 
         {suggestions.all.length > 0 && (
           <div className="space-y-2">

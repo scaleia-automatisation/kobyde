@@ -58,6 +58,13 @@ export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: st
     ? Object.entries(fiche).filter(([, v]) => v === null || v === undefined || String(v).trim() === "").map(([k]) => k)
     : [];
 
+  // Mémoire d'actions commune : ce qui a déjà été fait, pour ne jamais le refaire.
+  const { recentActions, excludedProspects } = await import("./context-engine.server");
+  const [actionsMemoire, dejaEngages] = await Promise.all([
+    recentActions(supabase, orgId, 30).catch(() => []),
+    excludedProspects(supabase, orgId).catch(() => []),
+  ]);
+
   return {
     fiche_entreprise: fiche,
     informations_manquantes: manquantes,

@@ -656,7 +656,46 @@ function DevisPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DuplicateGuardDialog
+        open={!!dupe}
+        onOpenChange={(v) => !v && setDupe(null)}
+        title="Un devis similaire existe déjà"
+        description="Avant de créer, vérifiez s'il s'agit du même besoin. Vous pouvez reprendre le devis existant plutôt que d'en créer un doublon."
+        matches={dupe?.matches ?? []}
+        render={(row) => ({
+          primary: row.title || row.number || "Devis",
+          details: [
+            row.number ? `Référence ${row.number}` : "",
+            row.total_ht != null ? `Montant HT : ${eur2(Number(row.total_ht))}` : "",
+            row.created_at ? `Créé le ${new Date(row.created_at).toLocaleDateString("fr-FR")}` : "",
+          ],
+          status: row.status,
+        })}
+        options={[
+          {
+            label: "Ouvrir et compléter le devis existant",
+            recommended: true,
+            onSelect: (row) => {
+              setDupe(null);
+              setManual(false);
+              navigate({ to: "/devis/$id", params: { id: row.id } });
+            },
+          },
+          {
+            label: "Créer quand même un nouveau devis",
+            variant: "outline",
+            onSelect: () => {
+              const create = dupe?.create;
+              setDupe(null);
+              create?.();
+            },
+          },
+          { label: "Annuler", variant: "ghost", onSelect: () => setDupe(null) },
+        ]}
+      />
     </AppShell>
+
   );
 }
 

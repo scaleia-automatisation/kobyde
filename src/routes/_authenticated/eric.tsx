@@ -440,7 +440,9 @@ function EricPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {(conversations ?? []).map((c: { id: string; title: string }) => (
+              {(conversations ?? []).map((c: { id: string; title: string }) => {
+                const isSuggested = suggestions.all.includes(c.title);
+                return (
                 <div
                   key={c.id}
                   className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5"
@@ -457,18 +459,24 @@ function EricPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      const ok = suggestions.add(c.title);
-                      toast[ok ? "success" : "info"](
-                        ok
-                          ? `Ajouté aux suggestions de ${selectedAgent.name}`
-                          : "Cette demande est déjà proposée en suggestion.",
-                      );
+                      if (isSuggested) {
+                        suggestions.remove(c.title);
+                        toast.success(`Retiré des suggestions de ${selectedAgent.name}`);
+                        return;
+                      }
+                      suggestions.add(c.title);
+                      toast.success(`Ajouté aux suggestions de ${selectedAgent.name}`);
                     }}
                     className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-accent/40"
                   >
-                    <Plus className="mr-1 inline size-3.5" />
-                    Suggérer à l'agent
+                    {isSuggested ? (
+                      <X className="mr-1 inline size-3.5" />
+                    ) : (
+                      <Plus className="mr-1 inline size-3.5" />
+                    )}
+                    {isSuggested ? "Ne plus suggérer" : "Suggérer à l'agent"}
                   </button>
+
                   <button
                     type="button"
                     aria-label="Supprimer cette demande"

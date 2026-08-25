@@ -11,7 +11,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { askEric, runTask } from "@/lib/eric.functions";
 import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
-import { examplesFor } from "@/lib/agent-suggestions";
 import { useDeleteAllRows, useDeleteRow, useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
@@ -100,7 +99,6 @@ function EricPage() {
   const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
   const suggestions = useAgentSuggestions(selectedAgent.key);
-  const examples = examplesFor(selectedAgent.key);
   const deleteConversation = useDeleteRow("conversations");
   const deleteAllConversations = useDeleteAllRows("conversations");
 

@@ -130,6 +130,8 @@ export const findProspects = createServerFn({ method: "POST" })
         params: paramsSchema,
         personaId: z.string().uuid().nullable().optional(),
         personaText: z.string().max(8000).default(""),
+        /** Par défaut, les entreprises déjà présentes en base sont exclues. */
+        includeExisting: z.boolean().default(false),
       })
       .parse(data),
   )

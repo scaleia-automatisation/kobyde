@@ -598,12 +598,12 @@ function Landing() {
             </AccordionItem>
           ))}
         </Accordion>
-        <div className="surface mt-8 p-6 text-center">
+        <div className="surface mt-8 bg-muted/60 p-8 text-center">
           <p className="font-semibold">Vous avez encore besoin d'aide ?</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Écrivez-nous, nous répondons sous 24 h ouvrées.
           </p>
-          <Button asChild variant="outline" className="mt-4">
+          <Button asChild variant="default" className="mt-5">
             <a href="mailto:contact@kobyde.com">Contacter l'équipe</a>
           </Button>
         </div>

@@ -99,6 +99,10 @@ function EricPage() {
   const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
   const suggestions = useAgentSuggestions(selectedAgent.key);
+  const examples = examplesFor(selectedAgent.key);
+  const deleteConversation = useDeleteRow("conversations");
+  const deleteAllConversations = useDeleteAllRows("conversations");
+
 
   useEffect(() => {
     inputRef.current?.focus();

@@ -3,10 +3,9 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowRight, Send } from "lucide-react";
+import { ArrowRight, Send, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
-import { suggestionsFor } from "@/lib/agent-suggestions";
 import { useAgentSuggestions } from "@/lib/custom-suggestions";
 
 import { useOrgId, useRows } from "@/lib/db";

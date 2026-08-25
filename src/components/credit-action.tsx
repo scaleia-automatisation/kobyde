@@ -79,12 +79,8 @@ export function CreditActionButton({
         onClick={() => (cost > 0 ? setOpen(true) : run())}
       >
         {children}
-        {cost > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-background/20 px-2 py-0.5 text-[11px]">
-            <Sparkles className="size-3" /> {creditLabel(cost)}
-          </span>
-        )}
       </Button>
+
       <CreditCost actionKey={actionKey} />
 
       <AlertDialog open={open} onOpenChange={(o) => !busy && setOpen(o)}>

@@ -277,9 +277,25 @@
   }
 }
 
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 30s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aurora-bg::before,
-  .hero-title {
+  .hero-title,
+  .marquee-track {
     animation: none;
   }
 }

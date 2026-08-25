@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { askEric, runTask } from "@/lib/eric.functions";
-import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
+import { LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useDeleteAllRows, useDeleteRow, useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";

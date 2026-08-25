@@ -160,6 +160,7 @@ function JasonPage() {
   const callPersona = useServerFn(generatePersona);
   const callSave = useServerFn(savePersona);
   const callFind = useServerFn(findProspects);
+  const [includeExisting, setIncludeExisting] = useState(false);
 
   const personaMutation = useMutation({
     mutationFn: (key: string) =>
@@ -196,13 +197,18 @@ function JasonPage() {
           params,
           personaId: persona?.id ?? null,
           personaText: persona?.content ?? "",
+          includeExisting,
         },
       }),
     onSuccess: (d) => {
       setResult(d);
       setEditedReport(null);
       qc.invalidateQueries();
-      toast.success(`${d.inserted} prospect(s) ajouté(s) à votre CRM.`);
+      toast.success(
+        `${d.inserted} prospect(s) ajouté(s)${d.enrichis ? `, ${d.enrichis} fiche(s) enrichie(s)` : ""}${
+          d.deja_engages ? `, ${d.deja_engages} déjà contacté(s) écarté(s)` : ""
+        }.`,
+      );
     },
     onError: (e: Error) => toast.error(e.message || "La recherche n'a pas abouti."),
   });
@@ -396,6 +402,16 @@ function JasonPage() {
             {running ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
             Trouver les prospects
           </CreditActionButton>
+
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              className="size-4 accent-primary"
+              checked={includeExisting}
+              onChange={(e) => setIncludeExisting(e.target.checked)}
+            />
+            Inclure les entreprises déjà présentes dans ma base
+          </label>
         </Card>
 
         {result && (
@@ -405,6 +421,8 @@ function JasonPage() {
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">{result.inserted} ajoutés au CRM</Badge>
                 <Badge variant="outline">{result.doublons} doublon(s) écarté(s)</Badge>
+                <Badge variant="outline">{result.enrichis} fiche(s) enrichie(s)</Badge>
+                <Badge variant="outline">{result.deja_engages} déjà engagé(s)</Badge>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">{result.rapport}</p>

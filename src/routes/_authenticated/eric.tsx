@@ -2,7 +2,7 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Loader2, RefreshCw, Send, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Plus, RefreshCw, Send, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
@@ -15,6 +15,7 @@ import { useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
+import { useAgentSuggestions } from "@/lib/custom-suggestions";
 import { AiProgress } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +103,7 @@ function EricPage() {
   const call = useServerFn(askEric);
   const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
+  const suggestions = useAgentSuggestions(selectedAgent.key);
 
   useEffect(() => {
     inputRef.current?.focus();

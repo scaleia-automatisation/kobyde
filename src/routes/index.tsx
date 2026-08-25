@@ -531,13 +531,13 @@ function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="mx-auto max-w-3xl px-5 py-16">
+      <section id="faq" className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="text-center text-3xl">Les questions fréquentes</h2>
         <Accordion type="single" collapsible className="mt-8">
           {FAQ.map((f) => (
             <AccordionItem key={f.q} value={f.q}>
-              <AccordionTrigger className="text-left">{f.q}</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">{f.a}</AccordionContent>
+              <AccordionTrigger className="text-left text-xl">{f.q}</AccordionTrigger>
+              <AccordionContent className="text-lg text-muted-foreground">{f.a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>

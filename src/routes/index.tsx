@@ -613,7 +613,7 @@ function Landing() {
       <section className="py-20">
         <div className="mx-auto max-w-3xl px-5 text-center">
           <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-bold leading-tight text-foreground">
-            Recrutez vos 10 agents IA dès aujourd'hui
+            Recrutez vos <span className="bg-linear-to-r from-pink-500 via-violet-500 to-orange-500 bg-clip-text text-transparent">10 agents IA</span> dès aujourd'hui
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
             Moins de 1,30 € par jour pour une équipe qui prospecte, vend, relance, analyse et livre —

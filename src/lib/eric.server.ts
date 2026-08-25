@@ -71,6 +71,12 @@ export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: st
     campagnes: campaigns,
     candidats: candidates,
     historique_agents: agentTasks,
+    memoire_actions: actionsMemoire,
+    contacts_deja_engages: dejaEngages.slice(0, 60).map((p: any) => ({
+      nom: p.company_name || p.full_name,
+      statut: p.status,
+      etape: p.followup_step,
+    })),
   };
 }
 

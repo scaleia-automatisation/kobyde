@@ -490,7 +490,9 @@ function EricPage() {
                     <X className="size-4" />
                   </button>
                 </div>
-              ))}
+                );
+              })}
+
             </div>
           </div>
         )}

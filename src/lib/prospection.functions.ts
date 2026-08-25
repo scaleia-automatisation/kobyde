@@ -169,28 +169,75 @@ export const findProspects = createServerFn({ method: "POST" })
     }
 
     try {
+      const { detectDuplicates, enrichPatch } = await import("./context-engine");
+      const { loadEntityRows, recordAction } = await import("./context-engine.server");
+      const { ALREADY_ENGAGED } = await import("./context-engine");
+
       const memory = await loadMemory(supabase, data.orgId);
       const result = await findProspectsAI(data.params, data.personaText, memory);
 
-      // Déduplication avec les prospects déjà en base.
-      const { data: existing } = await supabase
-        .from("prospects")
-        .select("company_name,email,website")
-        .eq("org_id", data.orgId)
-        .limit(1000);
-      const seen = new Set(
-        (existing ?? []).map((p) =>
-          `${String(p.company_name ?? "").toLowerCase()}|${String(p.email ?? "").toLowerCase()}`,
-        ),
-      );
+      // Base existante : on vérifie AVANT de créer quoi que ce soit.
+      const existing = await loadEntityRows(supabase, data.orgId, "prospect", 2000);
+      const clean = (v: string) => (v === NOT_FOUND ? null : v);
 
-      const fresh = result.prospects.filter(
-        (p) => !seen.has(`${p.company_name.toLowerCase()}|${p.email.toLowerCase()}`),
-      );
+      const fresh: typeof result.prospects = [];
+      let enriched = 0;
+      let ignores = 0;
 
-      let inserted: { id: string }[] = [];
+      for (const p of result.prospects) {
+        const candidate = {
+          company_name: p.company_name === NOT_FOUND ? "" : p.company_name,
+          full_name: p.full_name === NOT_FOUND ? "" : p.full_name,
+          email: clean(p.email),
+          phone: clean(p.phone),
+          website: clean(p.website),
+        };
+        const matches = detectDuplicates("prospect", candidate, existing);
+        const match = matches[0];
+
+        if (!match) {
+          fresh.push(p);
+          continue;
+        }
+
+        const statut = String(match.row.status ?? "").toLowerCase();
+        const etape = String(match.row.followup_step ?? "").toLowerCase();
+        const engage = ALREADY_ENGAGED.has(statut) || ALREADY_ENGAGED.has(etape);
+
+        // Prospect déjà connu : on enrichit uniquement les champs manquants, jamais de doublon.
+        const patch = enrichPatch(match.row, {
+          email: clean(p.email),
+          phone: clean(p.phone),
+          website: clean(p.website),
+          city: clean(p.city),
+          source_url: clean(p.source_url),
+          qualification: clean(p.qualification),
+          angle: clean(p.angle),
+        });
+        if (Object.keys(patch).length) {
+          await supabase.from("prospects").update(patch).eq("id", match.row.id);
+          enriched += 1;
+          await recordAction(supabase, {
+            orgId: data.orgId,
+            userId: context.userId,
+            agentKey: "commercial",
+            actionType: "prospect_enrichi",
+            entityType: "prospect",
+            entityId: match.row.id,
+            entityLabel: match.row.company_name || match.row.full_name,
+            result: `Champs enrichis : ${Object.keys(patch).join(", ")}`,
+            metadata: { source: data.params.tool, champs: Object.keys(patch) },
+          });
+        } else if (engage) {
+          ignores += 1;
+        }
+      }
+
+      // Sans l'option explicite, on ne renvoie pas les entreprises déjà présentes.
+      const visibles = data.includeExisting ? result.prospects : result.prospects.filter((p) => fresh.includes(p));
+
+      let inserted: { id: string; company_name: string | null }[] = [];
       if (fresh.length) {
-        const clean = (v: string) => (v === NOT_FOUND ? null : v);
         const { data: rows, error } = await supabase
           .from("prospects")
           .insert(
@@ -216,9 +263,24 @@ export const findProspects = createServerFn({ method: "POST" })
               notes: clean(p.notes),
             })),
           )
-          .select("id");
+          .select("id,company_name");
         if (error) throw new Error(error.message);
-        inserted = (rows ?? []) as { id: string }[];
+        inserted = (rows ?? []) as { id: string; company_name: string | null }[];
+      }
+
+      for (const row of inserted) {
+        await recordAction(supabase, {
+          orgId: data.orgId,
+          userId: context.userId,
+          agentKey: "commercial",
+          actionType: "prospect_recherche",
+          entityType: "prospect",
+          entityId: row.id,
+          entityLabel: row.company_name,
+          result: "Prospect trouvé et enregistré",
+          metadata: { canal: data.params.channel, outil: data.params.tool },
+          fingerprintParts: ["prospect_recherche", row.company_name ?? row.id],
+        });
       }
 
       await supabase
@@ -237,8 +299,10 @@ export const findProspects = createServerFn({ method: "POST" })
         searchId: search.id as string,
         rapport: result.rapport,
         etapes: result.etapes,
-        prospects: result.prospects,
+        prospects: visibles,
         inserted: inserted.length,
+        enrichis: enriched,
+        deja_engages: ignores,
         doublons: result.prospects.length - fresh.length,
         credits_used: tx ? Math.abs(tx.amount) : 0,
         credits_left: tx ? tx.balance_after : null,

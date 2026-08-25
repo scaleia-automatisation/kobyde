@@ -427,7 +427,7 @@ function EricPage() {
                 type="button"
                 onClick={() => {
                   suggestions.removeAll();
-                  toast.success("Suggestions supprimees.");
+                  toast.success("Suggestions supprimées.");
                 }}
                 className="text-xs font-medium text-muted-foreground transition hover:text-destructive"
               >
@@ -465,14 +465,14 @@ function EricPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Demandes recentes
+                Demandes récentes
               </p>
               <button
                 type="button"
                 disabled={deleteAllConversations.isPending}
                 onClick={() =>
                   deleteAllConversations.mutate(undefined, {
-                    onSuccess: () => toast.success("Demandes recentes supprimees."),
+                    onSuccess: () => toast.success("Demandes récentes supprimées."),
                     onError: () => toast.error("Suppression impossible."),
                   })
                 }
@@ -502,14 +502,14 @@ function EricPage() {
                       const ok = suggestions.add(c.title);
                       toast[ok ? "success" : "info"](
                         ok
-                          ? `Ajoute aux suggestions de ${selectedAgent.name}`
-                          : "Cette demande est deja proposee en suggestion.",
+                          ? `Ajouté aux suggestions de ${selectedAgent.name}`
+                          : "Cette demande est déjà proposée en suggestion.",
                       );
                     }}
                     className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-accent/40"
                   >
                     <Plus className="mr-1 inline size-3.5" />
-                    Suggerer a l'agent
+                    Suggérer à l'agent
                   </button>
                   <button
                     type="button"

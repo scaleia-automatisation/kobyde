@@ -219,7 +219,7 @@ export const findProspects = createServerFn({ method: "POST" })
           angle: clean(p.angle),
         });
         if (Object.keys(patch).length) {
-          await supabase.from("prospects").update(patch).eq("id", match.row.id);
+          await (supabase.from("prospects") as any).update(patch).eq("id", match.row.id);
           enriched += 1;
           await recordAction(supabase, {
             orgId: data.orgId,

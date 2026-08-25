@@ -27,6 +27,8 @@ import {
 } from "@/lib/admin.functions";
 import { USER_EVENT_LABELS } from "@/lib/user-events";
 import { ConnectorsPanel } from "@/components/admin/connectors-panel";
+import { ContentModelsPanel } from "@/components/admin/content-models-panel";
+
 import { BudgetsPanel, CostsPanel, LogsPanel, PricingPanel } from "@/components/admin/costs-panel";
 
 export const Route = createFileRoute("/_authenticated/super-admin")({
@@ -431,9 +433,11 @@ function SuperAdminPage() {
             </table>
           </Card>
         </TabsContent>
-        <TabsContent value="connecteurs">
+        <TabsContent value="connecteurs" className="space-y-4">
           <ConnectorsPanel />
+          <ContentModelsPanel />
         </TabsContent>
+
 
         <TabsContent value="couts">
           <CostsPanel />

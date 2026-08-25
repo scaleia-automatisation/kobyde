@@ -11,7 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-[var(--shadow-subtle)] hover:bg-primary/90 hover:shadow-[var(--shadow-card)]",
+          "bg-linear-to-r from-pink-500 via-violet-500 to-orange-500 text-white shadow-[var(--shadow-subtle)] hover:opacity-90 hover:shadow-[var(--shadow-card)]",
         destructive:
           "bg-destructive text-destructive-foreground shadow-[var(--shadow-subtle)] hover:bg-destructive/90",
         outline:
@@ -20,7 +20,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-secondary hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline active:scale-100",
         success: "bg-success text-success-foreground hover:bg-success/90",
-        cta: "rounded-full border-0 bg-primary text-primary-foreground font-semibold shadow-[var(--shadow-subtle)] hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
+        cta: "rounded-full border-0 bg-linear-to-r from-pink-500 via-violet-500 to-orange-500 text-white font-semibold shadow-[var(--shadow-subtle)] hover:opacity-90 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
       },
       size: {
         default: "h-9 px-4 py-2",

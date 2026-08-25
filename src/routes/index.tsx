@@ -293,8 +293,8 @@ function Landing() {
           </span>
           <h1 className="mx-auto mt-6 max-w-full text-[clamp(1.75rem,5.2vw,4.25rem)] leading-[1.08] font-bold tracking-tight whitespace-nowrap text-foreground">
             <span className="block">Une équipe complète</span>
-            <span className="block">d'agents IA pour votre entreprise,</span>
-            <span className="block">pour moins de 1,30 € par jour.</span>
+            <span className="block">d'<span className="bg-linear-to-r from-pink-500 via-violet-500 to-orange-500 bg-clip-text text-transparent">agents IA</span> pour votre entreprise,</span>
+            <span className="block">pour moins de <span className="bg-linear-to-r from-pink-500 via-violet-500 to-orange-500 bg-clip-text text-transparent">1,30 €</span> par jour.</span>
           </h1>
 
           <div className="mt-9 flex flex-wrap justify-center gap-3">

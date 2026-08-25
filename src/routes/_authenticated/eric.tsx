@@ -74,7 +74,7 @@ export const Route = createFileRoute("/_authenticated/eric")({
   }),
 });
 
-type Plan2 = never;
+
 
 
 type Plan = Awaited<ReturnType<typeof askEric>>;

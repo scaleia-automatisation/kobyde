@@ -10,8 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { askEric, runTask } from "@/lib/eric.functions";
-import { AGENTS, LEAD_AGENT, agentByKey } from "@/lib/agents";
-import { examplesFor } from "@/lib/agent-suggestions";
+import { LEAD_AGENT, agentByKey } from "@/lib/agents";
 import { useDeleteAllRows, useDeleteRow, useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
@@ -100,7 +99,6 @@ function EricPage() {
   const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
   const suggestions = useAgentSuggestions(selectedAgent.key);
-  const examples = examplesFor(selectedAgent.key);
   const deleteConversation = useDeleteRow("conversations");
   const deleteAllConversations = useDeleteAllRows("conversations");
 
@@ -210,26 +208,6 @@ function EricPage() {
           </div>
         </Card>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Exemples
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {examples.map((ex) => (
-              <button
-                key={ex}
-                onClick={() => {
-                  setPrompt(ex);
-                  inputRef.current?.focus();
-                }}
-                disabled={mutation.isPending}
-                className="rounded-full border border-border bg-card px-3.5 py-2 text-left text-sm text-foreground/80 transition hover:border-primary/40 hover:bg-accent/40 disabled:opacity-50"
-              >
-                « {ex} »
-              </button>
-            ))}
-          </div>
-        </div>
 
         {mutation.isPending && <EricProgress />}
 
@@ -396,26 +374,6 @@ function EricPage() {
           </div>
         )}
 
-        <div className="space-y-3 border-t border-border pt-6">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Interconnexion de l'équipe
-          </p>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            {AGENTS.filter((a) => !a.primary).map((a) => (
-              <span
-                key={a.key}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 ${a.ring}`}
-                title={a.description}
-              >
-                {a.emoji} {a.name} · {a.role}
-              </span>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Tous les agents partagent la même mémoire centrale : prospects, clients, devis,
-            factures, projets et historique des tâches.
-          </p>
-        </div>
 
         {suggestions.all.length > 0 && (
           <div className="space-y-2">
@@ -482,7 +440,9 @@ function EricPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {(conversations ?? []).map((c: { id: string; title: string }) => (
+              {(conversations ?? []).map((c: { id: string; title: string }) => {
+                const isSuggested = suggestions.all.includes(c.title);
+                return (
                 <div
                   key={c.id}
                   className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5"
@@ -499,18 +459,24 @@ function EricPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      const ok = suggestions.add(c.title);
-                      toast[ok ? "success" : "info"](
-                        ok
-                          ? `Ajouté aux suggestions de ${selectedAgent.name}`
-                          : "Cette demande est déjà proposée en suggestion.",
-                      );
+                      if (isSuggested) {
+                        suggestions.remove(c.title);
+                        toast.success(`Retiré des suggestions de ${selectedAgent.name}`);
+                        return;
+                      }
+                      suggestions.add(c.title);
+                      toast.success(`Ajouté aux suggestions de ${selectedAgent.name}`);
                     }}
                     className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-accent/40"
                   >
-                    <Plus className="mr-1 inline size-3.5" />
-                    Suggérer à l'agent
+                    {isSuggested ? (
+                      <X className="mr-1 inline size-3.5" />
+                    ) : (
+                      <Plus className="mr-1 inline size-3.5" />
+                    )}
+                    {isSuggested ? "Ne plus suggérer" : "Suggérer à l'agent"}
                   </button>
+
                   <button
                     type="button"
                     aria-label="Supprimer cette demande"
@@ -524,7 +490,9 @@ function EricPage() {
                     <X className="size-4" />
                   </button>
                 </div>
-              ))}
+                );
+              })}
+
             </div>
           </div>
         )}

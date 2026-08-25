@@ -196,7 +196,7 @@ ${exclude.length ? exclude.slice(0, 200).map((e) => `- ${e}`).join("\n") : "- au
 
   const s = (v: any) => (v === undefined || v === null || String(v).trim() === "" ? NOT_FOUND : String(v));
   const prospects: FoundProspect[] = (Array.isArray(parsed.prospects) ? parsed.prospects : [])
-    .slice(0, Math.max(0, Math.min(100, params.count)))
+    .slice(0, Math.max(0, Math.min(50, params.count)))
     .map((p: any) => ({
       company_name: s(p.company_name),
       full_name: s(p.full_name),

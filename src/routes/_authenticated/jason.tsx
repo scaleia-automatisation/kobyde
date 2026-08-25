@@ -270,15 +270,15 @@ function JasonPage() {
             <Field label="Quartier" value={params.district} onChange={(v) => set("district", v)} placeholder="Le Marais" />
 
             <div className="space-y-1.5">
-              <Label htmlFor="prospect-count" className="text-xs text-muted-foreground">Nombre de résultats (0 à 100)</Label>
+              <Label htmlFor="prospect-count" className="text-xs text-muted-foreground">Nombre de résultats (0 à 50)</Label>
               <Input
                 id="prospect-count"
                 type="number"
                 min={0}
-                max={100}
+                max={50}
                 value={params.count}
                 onChange={(e) =>
-                  set("count", Math.max(0, Math.min(100, Number(e.target.value) || 0)))
+                  set("count", Math.max(0, Math.min(50, Number(e.target.value) || 0)))
                 }
               />
             </div>

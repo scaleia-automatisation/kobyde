@@ -65,3 +65,71 @@ export const AGENT_SUGGESTIONS: Record<string, string[]> = {
 export function suggestionsFor(key: string): string[] {
   return AGENT_SUGGESTIONS[key] ?? [];
 }
+
+/** Exemples courts de demandes, propres aux compétences de chaque agent. */
+export const AGENT_EXAMPLES: Record<string, string[]> = {
+  directeur: [
+    "Fais le point sur mon activité cette semaine.",
+    "Quelles sont mes 3 priorités aujourd'hui ?",
+    "Confie les tâches en cours aux bons agents.",
+    "Prépare un résumé pour ma réunion.",
+  ],
+  commercial: [
+    "Trouve-moi 50 prospects pour mon offre de création de site.",
+    "Rédige un message de prise de contact.",
+    "Qualifie mes opportunités en cours.",
+    "Relance les prospects sans réponse.",
+  ],
+  devis: [
+    "Prépare un devis pour Jean.",
+    "Crée un devis à partir du catalogue.",
+    "Propose 3 options tarifaires.",
+    "Vérifie les prix de mon dernier devis.",
+  ],
+  clients: [
+    "Résume l'historique de ce client avant mon appel.",
+    "Quels clients sont à risque de départ ?",
+    "Écris un message de suivi personnalisé.",
+    "Mets à jour la fiche d'un client.",
+  ],
+  relances: [
+    "Quels sont mes clients à relancer ?",
+    "Relance les factures impayées.",
+    "Crée une séquence de 3 relances.",
+    "Réactive mes clients inactifs.",
+  ],
+  marketing: [
+    "Donne-moi 5 idées de posts.",
+    "Rédige un post LinkedIn sur notre expertise.",
+    "Prépare un calendrier de publication.",
+    "Écris une newsletter courte.",
+  ],
+  rh: [
+    "Je veux recruter un commercial.",
+    "Rédige une offre d'emploi attractive.",
+    "Prépare 10 questions d'entretien.",
+    "Classe les candidatures reçues.",
+  ],
+  gestion: [
+    "Fais le point sur ma trésorerie.",
+    "Liste les factures en retard.",
+    "Analyse mes dépenses du mois.",
+    "Prépare le récapitulatif du trimestre.",
+  ],
+  analyse: [
+    "Analyse mes concurrents.",
+    "Donne-moi les tendances de mon marché.",
+    "Surveille mon e-réputation.",
+    "Identifie 3 opportunités de croissance.",
+  ],
+  projets: [
+    "Où en sont mes projets ?",
+    "Découpe ce projet en étapes.",
+    "Quels projets sont en retard ?",
+    "Prépare un point d'avancement client.",
+  ],
+};
+
+export function examplesFor(key: string): string[] {
+  return AGENT_EXAMPLES[key] ?? AGENT_EXAMPLES["directeur"]!;
+}

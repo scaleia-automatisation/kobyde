@@ -13,7 +13,7 @@ const paramsSchema = z.object({
   department: z.string().max(80).default(""),
   city: z.string().max(80).default(""),
   district: z.string().max(80).default(""),
-  count: z.number().int().min(0).max(100).default(20),
+  count: z.number().int().min(0).max(50).default(20),
   offer: z.string().max(300).default(""),
   channel: z.string().max(40).default("Google Search"),
   tool: z.string().max(40).default("Automatique"),

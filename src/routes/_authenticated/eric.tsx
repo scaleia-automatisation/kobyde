@@ -2,7 +2,7 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Loader2, RefreshCw, Send, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, Plus, RefreshCw, Send, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
@@ -15,6 +15,7 @@ import { useOrgId, useRows } from "@/lib/db";
 import { CreditActionButton } from "@/components/credit-action";
 import { GenerationActions } from "@/components/generation-actions";
 import { newIdempotencyKey } from "@/lib/credits";
+import { useAgentSuggestions } from "@/lib/custom-suggestions";
 import { AiProgress } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +103,7 @@ function EricPage() {
   const call = useServerFn(askEric);
   const execTask = useServerFn(runTask);
   const { data: conversations } = useRows("conversations", { limit: 5 });
+  const suggestions = useAgentSuggestions(selectedAgent.key);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -415,6 +417,40 @@ function EricPage() {
           </p>
         </div>
 
+        {suggestions.all.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Suggestions pour {selectedAgent.name}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.all.map((s) => (
+                <span key={s} className="agent-suggestion-chip inline-flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrompt(s);
+                      inputRef.current?.focus();
+                    }}
+                    className="text-left"
+                  >
+                    {s}
+                  </button>
+                  {suggestions.custom.includes(s) && (
+                    <button
+                      type="button"
+                      aria-label="Retirer la suggestion"
+                      onClick={() => suggestions.remove(s)}
+                      className="opacity-60 hover:opacity-100"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {(conversations ?? []).length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -422,21 +458,40 @@ function EricPage() {
             </p>
             <div className="space-y-2">
               {(conversations ?? []).map((c: { id: string; title: string }) => (
-                <button
+                <div
                   key={c.id}
-                  onClick={() => {
-                    setPrompt(c.title);
-                    inputRef.current?.focus();
-                  }}
-
-                  className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-left text-sm hover:bg-accent/40"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5"
                 >
-                  {c.title}
-                </button>
+                  <button
+                    onClick={() => {
+                      setPrompt(c.title);
+                      inputRef.current?.focus();
+                    }}
+                    className="flex-1 text-left text-sm"
+                  >
+                    {c.title}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ok = suggestions.add(c.title);
+                      toast[ok ? "success" : "info"](
+                        ok
+                          ? `Ajouté aux suggestions de ${selectedAgent.name}`
+                          : "Cette demande est déjà proposée en suggestion.",
+                      );
+                    }}
+                    className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-medium transition hover:bg-accent/40"
+                  >
+                    <Plus className="mr-1 inline size-3.5" />
+                    Suggérer à l'agent
+                  </button>
+                </div>
               ))}
             </div>
           </div>
         )}
+
       </div>
     </AppShell>
   );

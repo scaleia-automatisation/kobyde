@@ -7,6 +7,7 @@ import { ArrowRight, Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AGENTS, LEAD_AGENT, agentByKey, type AgentMeta } from "@/lib/agents";
 import { suggestionsFor } from "@/lib/agent-suggestions";
+import { useCustomSuggestions } from "@/lib/custom-suggestions";
 
 import { useOrgId, useRows } from "@/lib/db";
 import { askAgent } from "@/lib/eric.functions";
@@ -146,6 +147,11 @@ function TeamPage() {
   const call = useServerFn(askAgent);
 
   const meta = selected ? agentByKey(selected) : null;
+  const { items: customSuggestions } = useCustomSuggestions(meta?.key ?? "");
+  const allSuggestions = meta
+    ? [...customSuggestions, ...suggestionsFor(meta.key).filter((s) => !customSuggestions.includes(s))]
+    : [];
+
 
   const talk = useMutation({
     mutationFn: async (vars: { agentKey: string; prompt: string; key: string }) =>
@@ -299,13 +305,13 @@ function TeamPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {meta && suggestionsFor(meta.key).length > 0 && (
+            {meta && allSuggestions.length > 0 && (
               <div>
                 <p className="mb-2 text-xs font-medium text-muted-foreground">
                   Suggestions — ce que {meta.name} fait en priorité
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {suggestionsFor(meta.key).map((s) => (
+                  {allSuggestions.map((s) => (
                     <button
                       key={s}
                       type="button"

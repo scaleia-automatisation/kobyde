@@ -66,7 +66,7 @@ function CompanyPage() {
   const [knowledge, setKnowledge] = useState("");
   const [pasted, setPasted] = useState("");
   const [saving, setSaving] = useState(false);
-  const [busy, setBusy] = useState<"generate" | "import" | null>(null);
+  const [busy, setBusy] = useState<"generate" | "update" | "import" | "fill" | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);

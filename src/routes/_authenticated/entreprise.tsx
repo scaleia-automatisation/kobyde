@@ -20,7 +20,9 @@ import {
   companyCompletion,
   type OpeningDay,
 } from "@/lib/company";
+import { LOGO_ACCEPT, prepareLogo } from "@/lib/logo";
 import { generateKnowledgeBase, importKnowledgeBase } from "@/lib/knowledge.functions";
+
 
 export const Route = createFileRoute("/_authenticated/entreprise")({
   head: () => ({
@@ -65,7 +67,24 @@ function CompanyPage() {
   const [pasted, setPasted] = useState("");
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<"generate" | "import" | null>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
+
+  const handleLogo = async (file: File) => {
+    setLogoBusy(true);
+    try {
+      const dataUrl = await prepareLogo(file);
+      setValues((v) => ({ ...v, logo_url: dataUrl }));
+      toast.success("Logo importé — n'oubliez pas d'enregistrer.");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Import du logo impossible.");
+    } finally {
+      setLogoBusy(false);
+      if (logoRef.current) logoRef.current.value = "";
+    }
+  };
+
 
   useEffect(() => {
     if (!org) return;
@@ -176,12 +195,46 @@ function CompanyPage() {
               <div className="mt-2 h-2 w-56 max-w-full overflow-hidden rounded-full bg-secondary">
                 <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${completion}%` }} />
               </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={logoBusy}
+                  onClick={() => logoRef.current?.click()}
+                >
+                  <Upload className="mr-1.5 size-4" />
+                  {logoBusy ? "Traitement…" : values["logo_url"] ? "Changer le logo" : "Importer un logo"}
+                </Button>
+                {values["logo_url"] && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setValues((v) => ({ ...v, logo_url: "" }))}
+                  >
+                    <X className="mr-1.5 size-4" /> Retirer
+                  </Button>
+                )}
+                <span className="text-xs text-muted-foreground">JPEG, PNG ou PDF — 2 Mo max, 300 × 300 px</span>
+              </div>
+              <input
+                ref={logoRef}
+                type="file"
+                accept={LOGO_ACCEPT}
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void handleLogo(f);
+                }}
+              />
             </div>
           </div>
           <Button type="submit" disabled={saving}>
             {saving ? "Enregistrement…" : "Enregistrer"}
           </Button>
         </section>
+
 
         {COMPANY_GROUPS.map((group) => (
           <section key={group.title} className="surface p-6">

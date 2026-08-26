@@ -235,6 +235,29 @@ function CompanyPage() {
           </Button>
         </section>
 
+        <section className="surface p-6">
+          <h2 className="text-lg">Lien du site internet</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kobyde lit votre site et remplit la fiche avec les informations réellement trouvées. Aucune information
+            n'est inventée : les champs introuvables restent vides.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <Input
+              id="site_url"
+              aria-label="Lien du site internet"
+              placeholder="https://votre-site.com"
+              value={values["website"] ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, website: e.target.value }))}
+              className="sm:max-w-md"
+            />
+            <Button type="button" onClick={runFill} disabled={busy !== null || !(values["website"] ?? "").trim()}>
+              <Globe className="size-4" />
+              {busy === "fill" ? "Lecture du site…" : "Remplir la fiche"}
+            </Button>
+          </div>
+        </section>
+
+
 
         {COMPANY_GROUPS.map((group) => (
           <section key={group.title} className="surface p-6">

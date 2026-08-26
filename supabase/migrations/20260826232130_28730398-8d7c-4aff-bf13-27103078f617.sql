@@ -1,0 +1,15 @@
+ALTER TABLE public.organizations
+  ADD COLUMN IF NOT EXISTS siren text,
+  ADD COLUMN IF NOT EXISTS vat_number text,
+  ADD COLUMN IF NOT EXISTS facebook_url text,
+  ADD COLUMN IF NOT EXISTS instagram_url text,
+  ADD COLUMN IF NOT EXISTS tiktok_url text,
+  ADD COLUMN IF NOT EXISTS linkedin_url text,
+  ADD COLUMN IF NOT EXISTS youtube_url text,
+  ADD COLUMN IF NOT EXISTS twitter_url text,
+  ADD COLUMN IF NOT EXISTS google_business_url text,
+  ADD COLUMN IF NOT EXISTS whatsapp_phone text,
+  ADD COLUMN IF NOT EXISTS telegram_phone text,
+  ADD COLUMN IF NOT EXISTS phone_country_code text,
+  ADD COLUMN IF NOT EXISTS opening_hours jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS knowledge_base text;

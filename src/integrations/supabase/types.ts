@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -2174,6 +2174,8 @@ export type Database = {
           currency: string
           description: string | null
           email: string | null
+          facebook_url: string | null
+          google_business_url: string | null
           id: string
           ideal_client_location: string | null
           ideal_client_needs: string | null
@@ -2181,13 +2183,18 @@ export type Database = {
           ideal_client_size: string | null
           ideal_client_type: string | null
           industry: string | null
+          instagram_url: string | null
           integrations: Json
           is_suspended: boolean
+          knowledge_base: string | null
           languages: string | null
+          linkedin_url: string | null
           logo_url: string | null
           name: string
           onboarding_completed: boolean
+          opening_hours: Json
           phone: string | null
+          phone_country_code: string | null
           plan: string
           plan_credits: number
           plan_price_eur: number
@@ -2196,6 +2203,7 @@ export type Database = {
           pricing_text: string | null
           products_text: string | null
           services_text: string | null
+          siren: string | null
           siret: string | null
           slug: string | null
           social_links: string | null
@@ -2203,12 +2211,18 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_phone: string | null
           terms_text: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string
           values_text: string | null
+          vat_number: string | null
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_phone: string | null
+          youtube_url: string | null
         }
         Insert: {
           address?: string | null
@@ -2222,6 +2236,8 @@ export type Database = {
           currency?: string
           description?: string | null
           email?: string | null
+          facebook_url?: string | null
+          google_business_url?: string | null
           id?: string
           ideal_client_location?: string | null
           ideal_client_needs?: string | null
@@ -2229,13 +2245,18 @@ export type Database = {
           ideal_client_size?: string | null
           ideal_client_type?: string | null
           industry?: string | null
+          instagram_url?: string | null
           integrations?: Json
           is_suspended?: boolean
+          knowledge_base?: string | null
           languages?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           name: string
           onboarding_completed?: boolean
+          opening_hours?: Json
           phone?: string | null
+          phone_country_code?: string | null
           plan?: string
           plan_credits?: number
           plan_price_eur?: number
@@ -2244,6 +2265,7 @@ export type Database = {
           pricing_text?: string | null
           products_text?: string | null
           services_text?: string | null
+          siren?: string | null
           siret?: string | null
           slug?: string | null
           social_links?: string | null
@@ -2251,12 +2273,18 @@ export type Database = {
           suspended_reason?: string | null
           target_audience?: string | null
           team_text?: string | null
+          telegram_phone?: string | null
           terms_text?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           values_text?: string | null
+          vat_number?: string | null
           vat_rate?: number
           vat_regime?: string | null
           website?: string | null
+          whatsapp_phone?: string | null
+          youtube_url?: string | null
         }
         Update: {
           address?: string | null
@@ -2270,6 +2298,8 @@ export type Database = {
           currency?: string
           description?: string | null
           email?: string | null
+          facebook_url?: string | null
+          google_business_url?: string | null
           id?: string
           ideal_client_location?: string | null
           ideal_client_needs?: string | null
@@ -2277,13 +2307,18 @@ export type Database = {
           ideal_client_size?: string | null
           ideal_client_type?: string | null
           industry?: string | null
+          instagram_url?: string | null
           integrations?: Json
           is_suspended?: boolean
+          knowledge_base?: string | null
           languages?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           name?: string
           onboarding_completed?: boolean
+          opening_hours?: Json
           phone?: string | null
+          phone_country_code?: string | null
           plan?: string
           plan_credits?: number
           plan_price_eur?: number
@@ -2292,6 +2327,7 @@ export type Database = {
           pricing_text?: string | null
           products_text?: string | null
           services_text?: string | null
+          siren?: string | null
           siret?: string | null
           slug?: string | null
           social_links?: string | null
@@ -2299,12 +2335,18 @@ export type Database = {
           suspended_reason?: string | null
           target_audience?: string | null
           team_text?: string | null
+          telegram_phone?: string | null
           terms_text?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           values_text?: string | null
+          vat_number?: string | null
           vat_rate?: number
           vat_regime?: string | null
           website?: string | null
+          whatsapp_phone?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -3688,6 +3730,8 @@ export type Database = {
           currency: string
           description: string | null
           email: string | null
+          facebook_url: string | null
+          google_business_url: string | null
           id: string
           ideal_client_location: string | null
           ideal_client_needs: string | null
@@ -3695,13 +3739,18 @@ export type Database = {
           ideal_client_size: string | null
           ideal_client_type: string | null
           industry: string | null
+          instagram_url: string | null
           integrations: Json
           is_suspended: boolean
+          knowledge_base: string | null
           languages: string | null
+          linkedin_url: string | null
           logo_url: string | null
           name: string
           onboarding_completed: boolean
+          opening_hours: Json
           phone: string | null
+          phone_country_code: string | null
           plan: string
           plan_credits: number
           plan_price_eur: number
@@ -3710,6 +3759,7 @@ export type Database = {
           pricing_text: string | null
           products_text: string | null
           services_text: string | null
+          siren: string | null
           siret: string | null
           slug: string | null
           social_links: string | null
@@ -3717,12 +3767,18 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_phone: string | null
           terms_text: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string
           values_text: string | null
+          vat_number: string | null
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_phone: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -3745,6 +3801,8 @@ export type Database = {
           currency: string
           description: string | null
           email: string | null
+          facebook_url: string | null
+          google_business_url: string | null
           id: string
           ideal_client_location: string | null
           ideal_client_needs: string | null
@@ -3752,13 +3810,18 @@ export type Database = {
           ideal_client_size: string | null
           ideal_client_type: string | null
           industry: string | null
+          instagram_url: string | null
           integrations: Json
           is_suspended: boolean
+          knowledge_base: string | null
           languages: string | null
+          linkedin_url: string | null
           logo_url: string | null
           name: string
           onboarding_completed: boolean
+          opening_hours: Json
           phone: string | null
+          phone_country_code: string | null
           plan: string
           plan_credits: number
           plan_price_eur: number
@@ -3767,6 +3830,7 @@ export type Database = {
           pricing_text: string | null
           products_text: string | null
           services_text: string | null
+          siren: string | null
           siret: string | null
           slug: string | null
           social_links: string | null
@@ -3774,12 +3838,18 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_phone: string | null
           terms_text: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string
           values_text: string | null
+          vat_number: string | null
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_phone: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -3835,6 +3905,8 @@ export type Database = {
           currency: string
           description: string | null
           email: string | null
+          facebook_url: string | null
+          google_business_url: string | null
           id: string
           ideal_client_location: string | null
           ideal_client_needs: string | null
@@ -3842,13 +3914,18 @@ export type Database = {
           ideal_client_size: string | null
           ideal_client_type: string | null
           industry: string | null
+          instagram_url: string | null
           integrations: Json
           is_suspended: boolean
+          knowledge_base: string | null
           languages: string | null
+          linkedin_url: string | null
           logo_url: string | null
           name: string
           onboarding_completed: boolean
+          opening_hours: Json
           phone: string | null
+          phone_country_code: string | null
           plan: string
           plan_credits: number
           plan_price_eur: number
@@ -3857,6 +3934,7 @@ export type Database = {
           pricing_text: string | null
           products_text: string | null
           services_text: string | null
+          siren: string | null
           siret: string | null
           slug: string | null
           social_links: string | null
@@ -3864,12 +3942,18 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_phone: string | null
           terms_text: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
           updated_at: string
           values_text: string | null
+          vat_number: string | null
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_phone: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"

@@ -47,12 +47,23 @@ export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: st
   const fiche = o
     ? {
         nom: o.name, logo: o.logo_url, description: o.description, type_entreprise: o.company_type,
-        siret: o.siret, adresse: o.address, pays: o.country, ville: o.city, secteur: o.industry,
-        site_web: o.website, email: o.email, telephone: o.phone, taux_tva: o.vat_rate,
+        siret: o.siret, siren: o.siren, tva_intracom: o.vat_number,
+        adresse: o.address, pays: o.country, ville: o.city, secteur: o.industry,
+        site_web: o.website, email: o.email,
+        telephone: [o.phone_country_code, o.phone].filter(Boolean).join(" ") || null,
+        whatsapp: [o.phone_country_code, o.whatsapp_phone].filter(Boolean).join(" ") || null,
+        telegram: [o.phone_country_code, o.telegram_phone].filter(Boolean).join(" ") || null,
+        taux_tva: o.vat_rate,
         devise: o.currency, langues: o.languages, reseaux_sociaux: o.social_links,
+        facebook: o.facebook_url, instagram: o.instagram_url, tiktok: o.tiktok_url,
+        linkedin: o.linkedin_url, youtube: o.youtube_url, twitter: o.twitter_url,
+        google_my_business: o.google_business_url,
+        horaires_ouverture: o.opening_hours,
+        base_de_connaissance: typeof o.knowledge_base === "string" ? o.knowledge_base.slice(0, 8000) : null,
         positionnement: o.positioning, valeurs: o.values_text, cible: o.target_audience,
         produits: o.products_text, services: o.services_text, prix: o.pricing_text,
         conditions: o.terms_text, equipe: o.team_text,
+
       }
     : null;
   const manquantes = fiche

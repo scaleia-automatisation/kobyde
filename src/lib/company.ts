@@ -241,7 +241,13 @@ export const COMPANY_GROUPS: CompanyGroup[] = [
         options: VAT_RATES,
       },
       { key: "currency", label: "Devise", type: "select", placeholder: "Choisir une devise", options: CURRENCIES },
-      { key: "languages", label: "Langues", type: "text", placeholder: "Français, anglais" },
+      {
+        key: "languages",
+        label: "Langues",
+        type: "multiselect",
+        placeholder: "Ajouter une langue",
+        options: opts(LANGUAGES),
+      },
     ],
   },
   {

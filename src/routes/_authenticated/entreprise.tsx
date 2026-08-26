@@ -202,6 +202,87 @@ function CompanyPage() {
                       value={values[f.key] ?? ""}
                       onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                     />
+                  ) : f.type === "phone" ? (
+                    <div className="flex gap-2">
+                      <Select
+                        value={values[f.codeKey!] ?? ""}
+                        onValueChange={(val) => setValues((v) => ({ ...v, [f.codeKey!]: val }))}
+                      >
+                        <SelectTrigger className="w-36 shrink-0" aria-label={`Indicatif ${f.label}`}>
+                          <SelectValue placeholder="Indicatif" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(f.options ?? []).map((o) => (
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id={f.key}
+                        type="tel"
+                        className="flex-1"
+                        placeholder={f.placeholder}
+                        value={values[f.key] ?? ""}
+                        onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                      />
+                    </div>
+                  ) : f.type === "multiselect" ? (
+                    <div className="space-y-2">
+                      <Select
+                        value=""
+                        onValueChange={(val) =>
+                          setValues((v) => {
+                            const list = (v[f.key] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+                            if (list.includes(val)) return v;
+                            return { ...v, [f.key]: [...list, val].join(", ") };
+                          })
+                        }
+                      >
+                        <SelectTrigger id={f.key}>
+                          <SelectValue placeholder={f.placeholder ?? "Ajouter"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(f.options ?? []).map((o) => (
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex flex-wrap gap-2">
+                        {(values[f.key] ?? "")
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                          .map((item) => (
+                            <span
+                              key={item}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm"
+                            >
+                              {item}
+                              <button
+                                type="button"
+                                aria-label={`Retirer ${item}`}
+                                onClick={() =>
+                                  setValues((v) => ({
+                                    ...v,
+                                    [f.key]: (v[f.key] ?? "")
+                                      .split(",")
+                                      .map((s) => s.trim())
+                                      .filter((s) => s && s !== item)
+                                      .join(", "),
+                                  }))
+                                }
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="size-3.5" />
+                              </button>
+                            </span>
+                          ))}
+                      </div>
+                    </div>
                   ) : f.type === "select" ? (
                     <Select
                       value={values[f.key] ?? ""}

@@ -535,9 +535,18 @@ function CompanyPage() {
             importez vos documents.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button type="button" onClick={runGenerate} disabled={busy !== null}>
+            <Button type="button" onClick={() => void runGenerate("generate")} disabled={busy !== null}>
               <Sparkles className="size-4" />
               {busy === "generate" ? "Génération…" : "Générer la base de connaissance"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void runGenerate("update")}
+              disabled={busy !== null}
+            >
+              <RefreshCw className="size-4" />
+              {busy === "update" ? "Mise à jour…" : "Mettre à jour la base de connaissance"}
             </Button>
             <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={busy !== null}>
               <Upload className="size-4" />

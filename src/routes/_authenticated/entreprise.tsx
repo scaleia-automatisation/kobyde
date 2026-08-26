@@ -323,38 +323,105 @@ function CompanyPage() {
           </p>
           <div className="mt-5 space-y-3">
             {hours.map((d, i) => (
-              <div key={d.day} className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[8rem_auto_1fr_1fr]">
-                <span className="text-sm font-medium">{d.day}</span>
-                <div className="flex items-center gap-2">
-                  <Switch checked={!d.closed} onCheckedChange={(c) => setHour(i, { closed: !c })} id={`open-${i}`} />
-                  <Label htmlFor={`open-${i}`} className="text-sm text-muted-foreground">
-                    {d.closed ? "Fermé" : "Ouvert"}
-                  </Label>
+              <div key={d.day} className="rounded-xl border border-border/70 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-sm font-medium">{d.day}</span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={!d.closed}
+                        onCheckedChange={(c) => setHour(i, { closed: !c })}
+                        id={`open-${i}`}
+                      />
+                      <Label htmlFor={`open-${i}`} className="text-sm text-muted-foreground">
+                        {d.closed ? "Fermé" : "Ouvert"}
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={!!d.hasBreak}
+                        disabled={d.closed}
+                        onCheckedChange={(c) =>
+                          setHour(i, { hasBreak: c, open2: d.open2 ?? "14:00", close2: d.close2 ?? "18:00" })
+                        }
+                        id={`break-${i}`}
+                      />
+                      <Label htmlFor={`break-${i}`} className="text-sm text-muted-foreground">
+                        Pause déjeuner
+                      </Label>
+                    </div>
+                  </div>
                 </div>
-                <Select value={d.open} onValueChange={(v) => setHour(i, { open: v })} disabled={d.closed}>
-                  <SelectTrigger aria-label={`Heure d'ouverture ${d.day}`}>
-                    <SelectValue placeholder="Ouverture" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HOUR_SLOTS.map((h) => (
-                      <SelectItem key={h} value={h}>
-                        {h}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={d.close} onValueChange={(v) => setHour(i, { close: v })} disabled={d.closed}>
-                  <SelectTrigger aria-label={`Heure de fermeture ${d.day}`}>
-                    <SelectValue placeholder="Fermeture" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HOUR_SLOTS.map((h) => (
-                      <SelectItem key={h} value={h}>
-                        {h}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+                {!d.closed && (
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {d.hasBreak ? "Matin" : "Journée"}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select value={d.open} onValueChange={(v) => setHour(i, { open: v })}>
+                          <SelectTrigger aria-label={`Ouverture matin ${d.day}`}>
+                            <SelectValue placeholder="Ouverture" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HOUR_SLOTS.map((h) => (
+                              <SelectItem key={h} value={h}>
+                                {h}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={d.close} onValueChange={(v) => setHour(i, { close: v })}>
+                          <SelectTrigger aria-label={`Fermeture matin ${d.day}`}>
+                            <SelectValue placeholder="Fermeture" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HOUR_SLOTS.map((h) => (
+                              <SelectItem key={h} value={h}>
+                                {h}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {d.hasBreak && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Après-midi
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Select value={d.open2 ?? "14:00"} onValueChange={(v) => setHour(i, { open2: v })}>
+                            <SelectTrigger aria-label={`Ouverture après-midi ${d.day}`}>
+                              <SelectValue placeholder="Ouverture" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOUR_SLOTS.map((h) => (
+                                <SelectItem key={h} value={h}>
+                                  {h}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select value={d.close2 ?? "18:00"} onValueChange={(v) => setHour(i, { close2: v })}>
+                            <SelectTrigger aria-label={`Fermeture après-midi ${d.day}`}>
+                              <SelectValue placeholder="Fermeture" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOUR_SLOTS.map((h) => (
+                                <SelectItem key={h} value={h}>
+                                  {h}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

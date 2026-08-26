@@ -20,7 +20,9 @@ import {
   companyCompletion,
   type OpeningDay,
 } from "@/lib/company";
+import { LOGO_ACCEPT, prepareLogo } from "@/lib/logo";
 import { generateKnowledgeBase, importKnowledgeBase } from "@/lib/knowledge.functions";
+
 
 export const Route = createFileRoute("/_authenticated/entreprise")({
   head: () => ({

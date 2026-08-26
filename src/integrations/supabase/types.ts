@@ -2211,6 +2211,7 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_country_code: string | null
           telegram_phone: string | null
           terms_text: string | null
           tiktok_url: string | null
@@ -2221,6 +2222,7 @@ export type Database = {
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_country_code: string | null
           whatsapp_phone: string | null
           youtube_url: string | null
         }
@@ -2273,6 +2275,7 @@ export type Database = {
           suspended_reason?: string | null
           target_audience?: string | null
           team_text?: string | null
+          telegram_country_code?: string | null
           telegram_phone?: string | null
           terms_text?: string | null
           tiktok_url?: string | null
@@ -2283,6 +2286,7 @@ export type Database = {
           vat_rate?: number
           vat_regime?: string | null
           website?: string | null
+          whatsapp_country_code?: string | null
           whatsapp_phone?: string | null
           youtube_url?: string | null
         }
@@ -2335,6 +2339,7 @@ export type Database = {
           suspended_reason?: string | null
           target_audience?: string | null
           team_text?: string | null
+          telegram_country_code?: string | null
           telegram_phone?: string | null
           terms_text?: string | null
           tiktok_url?: string | null
@@ -2345,6 +2350,7 @@ export type Database = {
           vat_rate?: number
           vat_regime?: string | null
           website?: string | null
+          whatsapp_country_code?: string | null
           whatsapp_phone?: string | null
           youtube_url?: string | null
         }
@@ -3767,6 +3773,7 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_country_code: string | null
           telegram_phone: string | null
           terms_text: string | null
           tiktok_url: string | null
@@ -3777,6 +3784,7 @@ export type Database = {
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_country_code: string | null
           whatsapp_phone: string | null
           youtube_url: string | null
         }
@@ -3838,6 +3846,7 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_country_code: string | null
           telegram_phone: string | null
           terms_text: string | null
           tiktok_url: string | null
@@ -3848,6 +3857,7 @@ export type Database = {
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_country_code: string | null
           whatsapp_phone: string | null
           youtube_url: string | null
         }
@@ -3942,6 +3952,7 @@ export type Database = {
           suspended_reason: string | null
           target_audience: string | null
           team_text: string | null
+          telegram_country_code: string | null
           telegram_phone: string | null
           terms_text: string | null
           tiktok_url: string | null
@@ -3952,6 +3963,7 @@ export type Database = {
           vat_rate: number
           vat_regime: string | null
           website: string | null
+          whatsapp_country_code: string | null
           whatsapp_phone: string | null
           youtube_url: string | null
         }

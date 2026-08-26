@@ -3,7 +3,9 @@ export type CompanyField = {
   key: string;
   label: string;
   hint?: string;
-  type: "text" | "textarea" | "number" | "select";
+  type: "text" | "textarea" | "number" | "select" | "phone" | "multiselect";
+  /** Pour les champs téléphone : clé de l'indicatif stocké séparément. */
+  codeKey?: string;
   placeholder?: string;
   options?: { value: string; label: string }[];
   optional?: boolean;
@@ -84,19 +86,63 @@ export const HOUR_SLOTS = Array.from({ length: 48 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-export type OpeningDay = { day: string; closed: boolean; open: string; close: string };
+/** Langues les plus fréquentes en premier, puis le reste par ordre alphabétique. */
+export const LANGUAGES = [
+  "Français",
+  "Anglais",
+  "Espagnol",
+  "Allemand",
+  "Italien",
+  "Portugais",
+  "Arabe",
+  "Néerlandais",
+  "Chinois (mandarin)",
+  "Russe",
+  "Turc",
+  "Polonais",
+  "Japonais",
+  "Hindi",
+  "Coréen",
+  "Roumain",
+  "Suédois",
+  "Grec",
+  "Wolof",
+  "Créole",
+];
+
+/** Un jour d'ouverture : matin, puis après-midi si une pause déjeuner existe. */
+export type OpeningDay = {
+  day: string;
+  closed: boolean;
+  /** Matin */
+  open: string;
+  close: string;
+  /** Après-midi (après la pause) */
+  hasBreak?: boolean;
+  open2?: string;
+  close2?: string;
+};
 
 export const DEFAULT_OPENING_HOURS: OpeningDay[] = WEEK_DAYS.map((day) => ({
   day,
   closed: day === "Samedi" || day === "Dimanche",
   open: "09:00",
-  close: "18:00",
+  close: "12:30",
+  hasBreak: true,
+  open2: "14:00",
+  close2: "18:00",
 }));
 
 export function openingHoursText(hours: OpeningDay[] | null | undefined): string {
   if (!hours?.length) return "";
   return hours
-    .map((h) => (h.closed ? `${h.day} : fermé` : `${h.day} : ${h.open} – ${h.close}`))
+    .map((h) => {
+      if (h.closed) return `${h.day} : fermé`;
+      const matin = `${h.open} – ${h.close}`;
+      return h.hasBreak && h.open2 && h.close2
+        ? `${h.day} : ${matin} et ${h.open2} – ${h.close2}`
+        : `${h.day} : ${matin}`;
+    })
     .join("\n");
 }
 
@@ -137,15 +183,31 @@ export const COMPANY_GROUPS: CompanyGroup[] = [
       { key: "website", label: "Site web", type: "text", placeholder: "https://kobyde.com" },
       { key: "email", label: "Email", type: "text", placeholder: "contact@kobyde.com" },
       {
-        key: "phone_country_code",
-        label: "Indicatif téléphonique",
-        type: "select",
-        placeholder: "Choisir un indicatif",
+        key: "phone",
+        codeKey: "phone_country_code",
+        label: "Téléphone",
+        type: "phone",
+        placeholder: "1 23 45 67 89",
         options: DIAL_CODES,
       },
-      { key: "phone", label: "Téléphone", type: "text", placeholder: "1 23 45 67 89" },
-      { key: "whatsapp_phone", label: "Numéro WhatsApp", type: "text", placeholder: "6 12 34 56 78", optional: true },
-      { key: "telegram_phone", label: "Numéro Telegram", type: "text", placeholder: "6 12 34 56 78", optional: true },
+      {
+        key: "whatsapp_phone",
+        codeKey: "whatsapp_country_code",
+        label: "Numéro WhatsApp",
+        type: "phone",
+        placeholder: "6 12 34 56 78",
+        options: DIAL_CODES,
+        optional: true,
+      },
+      {
+        key: "telegram_phone",
+        codeKey: "telegram_country_code",
+        label: "Numéro Telegram",
+        type: "phone",
+        placeholder: "6 12 34 56 78",
+        options: DIAL_CODES,
+        optional: true,
+      },
     ],
   },
   {
@@ -179,7 +241,13 @@ export const COMPANY_GROUPS: CompanyGroup[] = [
         options: VAT_RATES,
       },
       { key: "currency", label: "Devise", type: "select", placeholder: "Choisir une devise", options: CURRENCIES },
-      { key: "languages", label: "Langues", type: "text", placeholder: "Français, anglais" },
+      {
+        key: "languages",
+        label: "Langues",
+        type: "multiselect",
+        placeholder: "Ajouter une langue",
+        options: opts(LANGUAGES),
+      },
     ],
   },
   {

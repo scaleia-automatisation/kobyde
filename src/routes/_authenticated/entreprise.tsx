@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Building2, Check, Clock, Sparkles, Upload } from "lucide-react";
+import { Building2, Check, Clock, Sparkles, Upload, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +70,10 @@ function CompanyPage() {
   useEffect(() => {
     if (!org) return;
     const next: Record<string, string> = {};
-    for (const f of COMPANY_FIELDS) next[f.key] = org[f.key] == null ? "" : String(org[f.key]);
+    for (const f of COMPANY_FIELDS) {
+      next[f.key] = org[f.key] == null ? "" : String(org[f.key]);
+      if (f.codeKey) next[f.codeKey] = org[f.codeKey] == null ? "" : String(org[f.codeKey]);
+    }
     setValues(next);
     setKnowledge(org["knowledge_base"] ?? "");
     const raw = org["opening_hours"];
@@ -86,6 +89,10 @@ function CompanyPage() {
     const payload: Record<string, unknown> = { opening_hours: hours, knowledge_base: knowledge.trim() || null };
     for (const f of COMPANY_FIELDS) {
       const raw = (values[f.key] ?? "").trim();
+      if (f.codeKey) {
+        const code = (values[f.codeKey] ?? "").trim();
+        payload[f.codeKey] = code === "" ? null : code;
+      }
       if (f.key === "vat_rate") payload[f.key] = raw === "" ? 0 : Number(raw);
       else if (f.type === "number") payload[f.key] = raw === "" ? 0 : Number(raw);
       else if (f.key === "name") payload[f.key] = raw || (org?.["name"] ?? "Mon entreprise");
@@ -195,6 +202,87 @@ function CompanyPage() {
                       value={values[f.key] ?? ""}
                       onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                     />
+                  ) : f.type === "phone" ? (
+                    <div className="flex gap-2">
+                      <Select
+                        value={values[f.codeKey!] ?? ""}
+                        onValueChange={(val) => setValues((v) => ({ ...v, [f.codeKey!]: val }))}
+                      >
+                        <SelectTrigger className="w-36 shrink-0" aria-label={`Indicatif ${f.label}`}>
+                          <SelectValue placeholder="Indicatif" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(f.options ?? []).map((o) => (
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id={f.key}
+                        type="tel"
+                        className="flex-1"
+                        placeholder={f.placeholder}
+                        value={values[f.key] ?? ""}
+                        onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                      />
+                    </div>
+                  ) : f.type === "multiselect" ? (
+                    <div className="space-y-2">
+                      <Select
+                        value=""
+                        onValueChange={(val) =>
+                          setValues((v) => {
+                            const list = (v[f.key] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+                            if (list.includes(val)) return v;
+                            return { ...v, [f.key]: [...list, val].join(", ") };
+                          })
+                        }
+                      >
+                        <SelectTrigger id={f.key}>
+                          <SelectValue placeholder={f.placeholder ?? "Ajouter"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(f.options ?? []).map((o) => (
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex flex-wrap gap-2">
+                        {(values[f.key] ?? "")
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean)
+                          .map((item) => (
+                            <span
+                              key={item}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm"
+                            >
+                              {item}
+                              <button
+                                type="button"
+                                aria-label={`Retirer ${item}`}
+                                onClick={() =>
+                                  setValues((v) => ({
+                                    ...v,
+                                    [f.key]: (v[f.key] ?? "")
+                                      .split(",")
+                                      .map((s) => s.trim())
+                                      .filter((s) => s && s !== item)
+                                      .join(", "),
+                                  }))
+                                }
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="size-3.5" />
+                              </button>
+                            </span>
+                          ))}
+                      </div>
+                    </div>
                   ) : f.type === "select" ? (
                     <Select
                       value={values[f.key] ?? ""}
@@ -235,38 +323,105 @@ function CompanyPage() {
           </p>
           <div className="mt-5 space-y-3">
             {hours.map((d, i) => (
-              <div key={d.day} className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[8rem_auto_1fr_1fr]">
-                <span className="text-sm font-medium">{d.day}</span>
-                <div className="flex items-center gap-2">
-                  <Switch checked={!d.closed} onCheckedChange={(c) => setHour(i, { closed: !c })} id={`open-${i}`} />
-                  <Label htmlFor={`open-${i}`} className="text-sm text-muted-foreground">
-                    {d.closed ? "Fermé" : "Ouvert"}
-                  </Label>
+              <div key={d.day} className="rounded-xl border border-border/70 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-sm font-medium">{d.day}</span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={!d.closed}
+                        onCheckedChange={(c) => setHour(i, { closed: !c })}
+                        id={`open-${i}`}
+                      />
+                      <Label htmlFor={`open-${i}`} className="text-sm text-muted-foreground">
+                        {d.closed ? "Fermé" : "Ouvert"}
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={!!d.hasBreak}
+                        disabled={d.closed}
+                        onCheckedChange={(c) =>
+                          setHour(i, { hasBreak: c, open2: d.open2 ?? "14:00", close2: d.close2 ?? "18:00" })
+                        }
+                        id={`break-${i}`}
+                      />
+                      <Label htmlFor={`break-${i}`} className="text-sm text-muted-foreground">
+                        Pause déjeuner
+                      </Label>
+                    </div>
+                  </div>
                 </div>
-                <Select value={d.open} onValueChange={(v) => setHour(i, { open: v })} disabled={d.closed}>
-                  <SelectTrigger aria-label={`Heure d'ouverture ${d.day}`}>
-                    <SelectValue placeholder="Ouverture" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HOUR_SLOTS.map((h) => (
-                      <SelectItem key={h} value={h}>
-                        {h}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={d.close} onValueChange={(v) => setHour(i, { close: v })} disabled={d.closed}>
-                  <SelectTrigger aria-label={`Heure de fermeture ${d.day}`}>
-                    <SelectValue placeholder="Fermeture" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HOUR_SLOTS.map((h) => (
-                      <SelectItem key={h} value={h}>
-                        {h}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+                {!d.closed && (
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {d.hasBreak ? "Matin" : "Journée"}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select value={d.open} onValueChange={(v) => setHour(i, { open: v })}>
+                          <SelectTrigger aria-label={`Ouverture matin ${d.day}`}>
+                            <SelectValue placeholder="Ouverture" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HOUR_SLOTS.map((h) => (
+                              <SelectItem key={h} value={h}>
+                                {h}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={d.close} onValueChange={(v) => setHour(i, { close: v })}>
+                          <SelectTrigger aria-label={`Fermeture matin ${d.day}`}>
+                            <SelectValue placeholder="Fermeture" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HOUR_SLOTS.map((h) => (
+                              <SelectItem key={h} value={h}>
+                                {h}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {d.hasBreak && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Après-midi
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Select value={d.open2 ?? "14:00"} onValueChange={(v) => setHour(i, { open2: v })}>
+                            <SelectTrigger aria-label={`Ouverture après-midi ${d.day}`}>
+                              <SelectValue placeholder="Ouverture" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOUR_SLOTS.map((h) => (
+                                <SelectItem key={h} value={h}>
+                                  {h}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select value={d.close2 ?? "18:00"} onValueChange={(v) => setHour(i, { close2: v })}>
+                            <SelectTrigger aria-label={`Fermeture après-midi ${d.day}`}>
+                              <SelectValue placeholder="Fermeture" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {HOUR_SLOTS.map((h) => (
+                                <SelectItem key={h} value={h}>
+                                  {h}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

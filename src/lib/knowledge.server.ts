@@ -58,7 +58,10 @@ export async function generateKnowledgeAI(
     content.push({ type: "text", text: `Base de connaissance existante à compléter sans rien perdre :\n${existing.slice(0, 12000)}` });
   content.push({
     type: "text",
-    text: "Rédige la base de connaissance complète de cette entreprise en Markdown.",
+    text:
+      mode === "update"
+        ? "Mets à jour la base de connaissance existante en Markdown. En cas de contradiction, la fiche entreprise fait foi et remplace l'information du site web ou de l'ancienne version. Conserve toutes les informations encore valables."
+        : "Rédige la base de connaissance complète de cette entreprise en Markdown, en t'appuyant en priorité sur le contenu du site web puis sur la fiche entreprise.",
   });
   return callAI(content);
 }

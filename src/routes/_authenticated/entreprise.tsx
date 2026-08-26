@@ -89,6 +89,10 @@ function CompanyPage() {
     const payload: Record<string, unknown> = { opening_hours: hours, knowledge_base: knowledge.trim() || null };
     for (const f of COMPANY_FIELDS) {
       const raw = (values[f.key] ?? "").trim();
+      if (f.codeKey) {
+        const code = (values[f.codeKey] ?? "").trim();
+        payload[f.codeKey] = code === "" ? null : code;
+      }
       if (f.key === "vat_rate") payload[f.key] = raw === "" ? 0 : Number(raw);
       else if (f.type === "number") payload[f.key] = raw === "" ? 0 : Number(raw);
       else if (f.key === "name") payload[f.key] = raw || (org?.["name"] ?? "Mon entreprise");

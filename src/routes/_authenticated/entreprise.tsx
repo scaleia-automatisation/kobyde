@@ -65,7 +65,24 @@ function CompanyPage() {
   const [pasted, setPasted] = useState("");
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<"generate" | "import" | null>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
+
+  const handleLogo = async (file: File) => {
+    setLogoBusy(true);
+    try {
+      const dataUrl = await prepareLogo(file);
+      setValues((v) => ({ ...v, logo_url: dataUrl }));
+      toast.success("Logo importé — n'oubliez pas d'enregistrer.");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Import du logo impossible.");
+    } finally {
+      setLogoBusy(false);
+      if (logoRef.current) logoRef.current.value = "";
+    }
+  };
+
 
   useEffect(() => {
     if (!org) return;

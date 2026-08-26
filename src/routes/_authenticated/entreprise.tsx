@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Building2, Check, Clock, Sparkles, Upload, X } from "lucide-react";
+import { Building2, Check, Clock, Globe, RefreshCw, Sparkles, Upload, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
   type OpeningDay,
 } from "@/lib/company";
 import { LOGO_ACCEPT, prepareLogo } from "@/lib/logo";
-import { generateKnowledgeBase, importKnowledgeBase } from "@/lib/knowledge.functions";
+import { fillCompanyFromWebsite, generateKnowledgeBase, importKnowledgeBase } from "@/lib/knowledge.functions";
 
 
 export const Route = createFileRoute("/_authenticated/entreprise")({
@@ -66,7 +66,7 @@ function CompanyPage() {
   const [knowledge, setKnowledge] = useState("");
   const [pasted, setPasted] = useState("");
   const [saving, setSaving] = useState(false);
-  const [busy, setBusy] = useState<"generate" | "import" | null>(null);
+  const [busy, setBusy] = useState<"generate" | "update" | "import" | "fill" | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -129,13 +129,38 @@ function CompanyPage() {
     qc.invalidateQueries();
   };
 
-  const runGenerate = async () => {
-    if (!orgId) return;
-    setBusy("generate");
+  const runFill = async () => {
+    const website = (values["website"] ?? "").trim();
+    if (!orgId || !website) return;
+    setBusy("fill");
     try {
-      const res = await generateKnowledgeBase({ data: { orgId } });
+      const res = await fillCompanyFromWebsite({ data: { orgId, website } });
+      const found = res.values as Record<string, string>;
+      const count = Object.keys(found).filter((k) => k !== "website").length;
+      setValues((v) => ({ ...v, ...found }));
+      toast.success(
+        count
+          ? `${count} information(s) trouvée(s) sur le site — vérifiez puis enregistrez.`
+          : "Aucune information exploitable trouvée sur ce site.",
+      );
+    } catch (err: any) {
+      toast.error(err?.message ?? "Lecture du site impossible.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runGenerate = async (mode: "generate" | "update") => {
+    if (!orgId) return;
+    setBusy(mode);
+    try {
+      const res = await generateKnowledgeBase({ data: { orgId, mode } });
       setKnowledge(res.knowledge);
-      toast.success("Base de connaissance générée à partir de votre fiche entreprise.");
+      toast.success(
+        mode === "update"
+          ? "Base de connaissance mise à jour — la fiche entreprise fait foi."
+          : "Base de connaissance générée à partir de votre site web.",
+      );
       await refetch();
     } catch (err: any) {
       toast.error(err?.message ?? "Génération impossible.");
@@ -234,6 +259,29 @@ function CompanyPage() {
             {saving ? "Enregistrement…" : "Enregistrer"}
           </Button>
         </section>
+
+        <section className="surface p-6">
+          <h2 className="text-lg">Lien du site internet</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kobyde lit votre site et remplit la fiche avec les informations réellement trouvées. Aucune information
+            n'est inventée : les champs introuvables restent vides.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <Input
+              id="site_url"
+              aria-label="Lien du site internet"
+              placeholder="https://votre-site.com"
+              value={values["website"] ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, website: e.target.value }))}
+              className="sm:max-w-md"
+            />
+            <Button type="button" onClick={runFill} disabled={busy !== null || !(values["website"] ?? "").trim()}>
+              <Globe className="size-4" />
+              {busy === "fill" ? "Lecture du site…" : "Remplir la fiche"}
+            </Button>
+          </div>
+        </section>
+
 
 
         {COMPANY_GROUPS.map((group) => (
@@ -487,9 +535,18 @@ function CompanyPage() {
             importez vos documents.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button type="button" onClick={runGenerate} disabled={busy !== null}>
+            <Button type="button" onClick={() => void runGenerate("generate")} disabled={busy !== null}>
               <Sparkles className="size-4" />
               {busy === "generate" ? "Génération…" : "Générer la base de connaissance"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void runGenerate("update")}
+              disabled={busy !== null}
+            >
+              <RefreshCw className="size-4" />
+              {busy === "update" ? "Mise à jour…" : "Mettre à jour la base de connaissance"}
             </Button>
             <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={busy !== null}>
               <Upload className="size-4" />

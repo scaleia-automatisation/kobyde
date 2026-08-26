@@ -10,10 +10,32 @@ const fileSchema = z.object({
   base64: z.string().min(10),
 });
 
-/** Génère la base de connaissance de l'organisation à partir de sa fiche entreprise. */
+/** Remplit la fiche entreprise à partir du site web (sans jamais inventer d'information). */
+export const fillCompanyFromWebsite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ orgId: z.string().uuid(), website: z.string().min(4) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context as any;
+    const { data: org, error } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("id", data.orgId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!org) throw new Error("Accès refusé.");
+
+    const { fillCompanyFromSite } = await import("./company-fill.server");
+    return { values: await fillCompanyFromSite(data.website.trim()) };
+  });
+
+/** Génère (ou met à jour) la base de connaissance de l'organisation. */
 export const generateKnowledgeBase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ orgId: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ orgId: z.string().uuid(), mode: z.enum(["generate", "update"]).default("generate") }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context as any;
     const { data: org, error } = await supabase
@@ -25,7 +47,7 @@ export const generateKnowledgeBase = createServerFn({ method: "POST" })
     if (!org) throw new Error("Accès refusé.");
 
     const { generateKnowledgeAI } = await import("./knowledge.server");
-    const text = await generateKnowledgeAI(org, org.knowledge_base);
+    const text = await generateKnowledgeAI(org, data.mode === "update" ? org.knowledge_base : null, data.mode);
     const { error: upErr } = await supabase
       .from("organizations")
       .update({ knowledge_base: text })

@@ -152,7 +152,7 @@ export const COMPANY_GROUPS: CompanyGroup[] = [
     description: "Ce que vos agents doivent savoir avant tout.",
     fields: [
       { key: "name", label: "Nom de l'entreprise", type: "text", placeholder: "Kobyde SAS" },
-      { key: "logo_url", label: "Logo (lien de l'image)", type: "text", placeholder: "https://…/logo.png" },
+      
       { key: "description", label: "Description", type: "textarea", placeholder: "Ce que fait votre entreprise en quelques lignes." },
       {
         key: "company_type",

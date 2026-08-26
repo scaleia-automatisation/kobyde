@@ -33,8 +33,12 @@ async function callAI(content: any[]): Promise<string> {
   return out;
 }
 
-/** Génère la base de connaissance à partir de la fiche entreprise (+ site web si renseigné). */
-export async function generateKnowledgeAI(org: Record<string, any>, existing?: string | null): Promise<string> {
+/** Génère la base de connaissance à partir du site web et de la fiche entreprise. */
+export async function generateKnowledgeAI(
+  org: Record<string, any>,
+  existing?: string | null,
+  mode: "generate" | "update" = "generate",
+): Promise<string> {
   let site = "";
   if (org["website"]) {
     try {

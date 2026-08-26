@@ -70,7 +70,10 @@ function CompanyPage() {
   useEffect(() => {
     if (!org) return;
     const next: Record<string, string> = {};
-    for (const f of COMPANY_FIELDS) next[f.key] = org[f.key] == null ? "" : String(org[f.key]);
+    for (const f of COMPANY_FIELDS) {
+      next[f.key] = org[f.key] == null ? "" : String(org[f.key]);
+      if (f.codeKey) next[f.codeKey] = org[f.codeKey] == null ? "" : String(org[f.codeKey]);
+    }
     setValues(next);
     setKnowledge(org["knowledge_base"] ?? "");
     const raw = org["opening_hours"];

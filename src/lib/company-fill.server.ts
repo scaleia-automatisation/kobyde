@@ -1,4 +1,4 @@
-import { fetchOfferFromUrl } from "./hr.server";
+
 import { COMPANY_FIELDS } from "./company";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -18,28 +18,79 @@ Règle absolue : n'invente JAMAIS. Si une information n'apparaît pas explicitem
 Ne déduis pas, ne complète pas, ne reformule pas des données factuelles (SIRET, TVA, téléphone, adresse).
 Réponds uniquement par un objet JSON valide, sans texte autour.`;
 
+/** Récupère une page et en extrait le texte lisible (sans seuil strict de longueur). */
+async function fetchPageText(url: string): Promise<string> {
+  const res = await fetch(url, {
+    redirect: "follow",
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "accept-language": "fr-FR,fr;q=0.9,en;q=0.8",
+    },
+  });
+  if (!res.ok) return "";
+  const html = await res.text();
+  const meta = Array.from(
+    html.matchAll(/<meta[^>]+(?:name|property)=["'](?:description|og:[a-z:]+)["'][^>]*content=["']([^"']+)["']/gi),
+  )
+    .map((m) => m[1])
+    .join(" ");
+  const body = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return `${meta} ${body}`.trim();
+}
+
 /** Récupère la page d'accueil et, si possible, les pages contact / à propos / mentions légales. */
 async function fetchSite(url: string): Promise<string> {
-  const base = url.startsWith("http") ? url : `https://${url}`;
-  const pages = [base];
+  const raw = url.trim();
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+
+  // Variantes d'origine : avec et sans www, https puis http.
+  const origins: string[] = [];
   try {
-    const origin = new URL(base).origin;
-    for (const p of ["/contact", "/a-propos", "/mentions-legales"]) pages.push(origin + p);
+    const u = new URL(withScheme);
+    const host = u.hostname;
+    const alt = host.startsWith("www.") ? host.slice(4) : `www.${host}`;
+    for (const h of [host, alt]) {
+      origins.push(`https://${h}`);
+      origins.push(`http://${h}`);
+    }
   } catch {
-    /* URL invalide : on garde uniquement la page fournie */
+    throw new Error("Lien du site invalide.");
   }
-  const parts = await Promise.all(
-    pages.map(async (p) => {
-      try {
-        return `\n\n--- ${p} ---\n${(await fetchOfferFromUrl(p)).slice(0, 12000)}`;
-      } catch {
-        return "";
-      }
+
+  let origin = "";
+  let home = "";
+  for (const o of origins) {
+    const text = await fetchPageText(o).catch(() => "");
+    if (text.length > 40) {
+      origin = o;
+      home = text;
+      break;
+    }
+  }
+  if (!home) {
+    throw new Error(
+      "Impossible de lire ce site (inaccessible ou entièrement généré en JavaScript). Vérifiez le lien ou remplissez la fiche manuellement.",
+    );
+  }
+
+  const extras = await Promise.all(
+    ["/contact", "/a-propos", "/about", "/mentions-legales"].map(async (p) => {
+      const text = await fetchPageText(origin + p).catch(() => "");
+      return text.length > 40 ? `\n\n--- ${origin + p} ---\n${text.slice(0, 10000)}` : "";
     }),
   );
-  const text = parts.join("").trim();
-  if (!text) throw new Error("Site inaccessible ou sans texte exploitable.");
-  return text.slice(0, 40000);
+
+  return `--- ${origin} ---\n${home.slice(0, 15000)}${extras.join("")}`.slice(0, 40000);
 }
 
 export async function fillCompanyFromSite(url: string): Promise<Record<string, string>> {

@@ -3,7 +3,9 @@ export type CompanyField = {
   key: string;
   label: string;
   hint?: string;
-  type: "text" | "textarea" | "number" | "select";
+  type: "text" | "textarea" | "number" | "select" | "phone" | "multiselect";
+  /** Pour les champs téléphone : clé de l'indicatif stocké séparément. */
+  codeKey?: string;
   placeholder?: string;
   options?: { value: string; label: string }[];
   optional?: boolean;

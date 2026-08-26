@@ -86,19 +86,63 @@ export const HOUR_SLOTS = Array.from({ length: 48 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-export type OpeningDay = { day: string; closed: boolean; open: string; close: string };
+/** Langues les plus fréquentes en premier, puis le reste par ordre alphabétique. */
+export const LANGUAGES = [
+  "Français",
+  "Anglais",
+  "Espagnol",
+  "Allemand",
+  "Italien",
+  "Portugais",
+  "Arabe",
+  "Néerlandais",
+  "Chinois (mandarin)",
+  "Russe",
+  "Turc",
+  "Polonais",
+  "Japonais",
+  "Hindi",
+  "Coréen",
+  "Roumain",
+  "Suédois",
+  "Grec",
+  "Wolof",
+  "Créole",
+];
+
+/** Un jour d'ouverture : matin, puis après-midi si une pause déjeuner existe. */
+export type OpeningDay = {
+  day: string;
+  closed: boolean;
+  /** Matin */
+  open: string;
+  close: string;
+  /** Après-midi (après la pause) */
+  hasBreak?: boolean;
+  open2?: string;
+  close2?: string;
+};
 
 export const DEFAULT_OPENING_HOURS: OpeningDay[] = WEEK_DAYS.map((day) => ({
   day,
   closed: day === "Samedi" || day === "Dimanche",
   open: "09:00",
-  close: "18:00",
+  close: "12:30",
+  hasBreak: true,
+  open2: "14:00",
+  close2: "18:00",
 }));
 
 export function openingHoursText(hours: OpeningDay[] | null | undefined): string {
   if (!hours?.length) return "";
   return hours
-    .map((h) => (h.closed ? `${h.day} : fermé` : `${h.day} : ${h.open} – ${h.close}`))
+    .map((h) => {
+      if (h.closed) return `${h.day} : fermé`;
+      const matin = `${h.open} – ${h.close}`;
+      return h.hasBreak && h.open2 && h.close2
+        ? `${h.day} : ${matin} et ${h.open2} – ${h.close2}`
+        : `${h.day} : ${matin}`;
+    })
     .join("\n");
 }
 

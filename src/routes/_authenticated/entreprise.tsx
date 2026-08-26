@@ -129,13 +129,38 @@ function CompanyPage() {
     qc.invalidateQueries();
   };
 
-  const runGenerate = async () => {
-    if (!orgId) return;
-    setBusy("generate");
+  const runFill = async () => {
+    const website = (values["website"] ?? "").trim();
+    if (!orgId || !website) return;
+    setBusy("fill");
     try {
-      const res = await generateKnowledgeBase({ data: { orgId } });
+      const res = await fillCompanyFromWebsite({ data: { orgId, website } });
+      const found = res.values as Record<string, string>;
+      const count = Object.keys(found).filter((k) => k !== "website").length;
+      setValues((v) => ({ ...v, ...found }));
+      toast.success(
+        count
+          ? `${count} information(s) trouvée(s) sur le site — vérifiez puis enregistrez.`
+          : "Aucune information exploitable trouvée sur ce site.",
+      );
+    } catch (err: any) {
+      toast.error(err?.message ?? "Lecture du site impossible.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runGenerate = async (mode: "generate" | "update") => {
+    if (!orgId) return;
+    setBusy(mode);
+    try {
+      const res = await generateKnowledgeBase({ data: { orgId, mode } });
       setKnowledge(res.knowledge);
-      toast.success("Base de connaissance générée à partir de votre fiche entreprise.");
+      toast.success(
+        mode === "update"
+          ? "Base de connaissance mise à jour — la fiche entreprise fait foi."
+          : "Base de connaissance générée à partir de votre site web.",
+      );
       await refetch();
     } catch (err: any) {
       toast.error(err?.message ?? "Génération impossible.");

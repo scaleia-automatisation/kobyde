@@ -81,7 +81,35 @@ function DevisPage() {
   const [picked, setPicked] = useState<Record<string, number>>({});
   const [dupe, setDupe] = useState<{ matches: DuplicateMatch[]; create: () => void } | null>(null);
 
+  const [filter, setFilter] = useState<StatKey>("tous");
+  const { data: events } = useRows<any>("app_events");
+
+  const norm = (s: unknown) => String(s ?? "").toLowerCase();
+  const isEnvoye = (q: any) => norm(q.status) === "envoye" || !!q.sent_at;
+  const matches = (q: any, key: StatKey) =>
+    key === "tous"
+      ? true
+      : key === "envoyes"
+        ? isEnvoye(q)
+        : key === "acceptes"
+          ? norm(q.status).startsWith("accept")
+          : key === "attente"
+            ? norm(q.status) === "envoye"
+            : norm(q.status).startsWith("refus");
+
+  const counts = Object.fromEntries(
+    STATS.map((s) => [s.key, (quotes ?? []).filter((q: any) => matches(q, s.key)).length]),
+  ) as Record<StatKey, number>;
+  const amounts = Object.fromEntries(
+    STATS.map((s) => [
+      s.key,
+      (quotes ?? []).filter((q: any) => matches(q, s.key)).reduce((t: number, q: any) => t + Number(q.total_ttc ?? 0), 0),
+    ]),
+  ) as Record<StatKey, number>;
+  const visibles = (quotes ?? []).filter((q: any) => matches(q, filter));
+
   const FINALISES = ["accepte", "accepté", "refuse", "refusé", "expire", "expiré", "annule", "annulé"];
+
 
   /** Non-duplication : un devis similaire non finalisé existe-t-il déjà ? */
   const guardQuote = (candidate: Record<string, unknown>, create: () => void) => {

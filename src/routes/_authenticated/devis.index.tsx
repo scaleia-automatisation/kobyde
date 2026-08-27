@@ -53,6 +53,15 @@ const readFile = (file: File) =>
     reader.readAsDataURL(file);
   });
 
+type StatKey = "tous" | "envoyes" | "acceptes" | "attente" | "refuses";
+
+const STATS: { key: Exclude<StatKey, "tous">; label: string }[] = [
+  { key: "envoyes", label: "Devis envoyés" },
+  { key: "acceptes", label: "Devis acceptés" },
+  { key: "attente", label: "En attente de réponse" },
+  { key: "refuses", label: "Devis refusés" },
+];
+
 function DevisPage() {
   const orgId = useOrgId();
   const navigate = useNavigate();

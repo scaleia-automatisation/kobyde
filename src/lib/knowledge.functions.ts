@@ -47,15 +47,37 @@ export const generateKnowledgeBase = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!org) throw new Error("Accès refusé.");
 
+    const [catalog, connections, docs] = await Promise.all([
+      supabase
+        .from("products")
+        .select("name,kind,description,price_ht,vat_rate,unit,category,terms")
+        .eq("org_id", data.orgId)
+        .limit(200),
+      supabase.from("oauth_connections").select("provider,account_label").eq("org_id", data.orgId).eq("is_active", true),
+      supabase.from("documents").select("name,kind").eq("org_id", data.orgId).limit(50),
+    ]);
+
+    const rows = (catalog?.data ?? []) as any[];
     const { generateKnowledgeAI } = await import("./knowledge.server");
-    const text = await generateKnowledgeAI(org, data.mode === "update" ? org.knowledge_base : null, data.mode);
+    const result = await generateKnowledgeAI(org, data.mode === "update" ? org.knowledge_base : null, data.mode, {
+      produits: rows.filter((r) => r.kind !== "service"),
+      services: rows.filter((r) => r.kind === "service"),
+      connecteurs: ((connections?.data ?? []) as any[]).map((c) => c.provider),
+      documents: ((docs?.data ?? []) as any[]).map((d) => [d.name, d.kind].filter(Boolean).join(" — ")),
+    });
+
     const { error: upErr } = await supabase
       .from("organizations")
-      .update({ knowledge_base: text })
+      .update({
+        knowledge_base: result.markdown,
+        knowledge_json: result.data,
+        knowledge_updated_at: new Date().toISOString(),
+      })
       .eq("id", data.orgId);
     if (upErr) throw new Error(upErr.message);
-    return { knowledge: text };
+    return { knowledge: result.markdown, pages: result.pages, structured: result.data };
   });
+
 
 /** Ajoute un fichier ou un texte collé à la base de connaissance. */
 export const importKnowledgeBase = createServerFn({ method: "POST" })

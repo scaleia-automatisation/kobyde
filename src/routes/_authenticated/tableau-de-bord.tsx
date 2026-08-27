@@ -234,6 +234,18 @@ function Dashboard() {
         </Button>
       }
     >
+      <div className="mb-4 flex flex-wrap gap-2">
+        <span className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+          Vue d'ensemble
+        </span>
+        <Link
+          to="/taches"
+          className="rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary"
+        >
+          Tâches
+        </Link>
+      </div>
+
       <div className="grid gap-4 stagger-children md:grid-cols-3">
         <PrimaryStat
           label="Chiffre d'affaires"
@@ -266,7 +278,7 @@ function Dashboard() {
         <MiniStat label="Prospects" value={String(PR.length)} to="/prospects" />
         <MiniStat label="Clients" value={String(C.length)} to="/clients" />
         <MiniStat label="Projets" value={String(PJ.length)} to="/projets" />
-        <MiniStat label="Tâches à faire" value={String(tachesOuvertes.length)} to="/projets" />
+        <MiniStat label="Tâches à faire" value={String(tachesOuvertes.length)} to="/taches" />
         <MiniStat label="Agents IA" value="10" to="/equipe" />
       </div>
 

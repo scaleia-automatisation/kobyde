@@ -214,6 +214,58 @@ Entre 1 et 4 tâches. agent_key doit appartenir à la liste ci-dessus.
 ${CONTEXT_RULES_PROMPT}
 Les champs "memoire_actions" et "contacts_deja_engages" de la mémoire listent ce qui a DÉJÀ été réalisé : ne redemande pas, ne recrée pas, ne relance pas ces éléments sans raison. Si une tâche a déjà été faite, dis-le et propose l'étape suivante à la place.`;
 
+/** Transforme une sortie brute qui pourrait contenir du JSON en texte lisible. */
+function humanizeOutput(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (typeof parsed === "string") return humanizeOutput(parsed);
+
+      for (const key of ["reponse", "text", "message", "answer", "content", "resume", "compte_rendu", "rapport"]) {
+        const v = parsed[key];
+        if (typeof v === "string") return humanizeOutput(v);
+      }
+
+      if (Array.isArray(parsed.emails)) {
+        return parsed.emails
+          .map((e: any) => [e.subject, e.body].filter(Boolean).join("\n"))
+          .join("\n\n");
+      }
+
+      return jsonToReadable(parsed);
+    } catch {
+      // N'est pas du JSON valide : on garde le texte tel quel.
+    }
+  }
+  return trimmed;
+}
+
+function jsonToReadable(value: unknown, prefix = ""): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    return value
+      .map((item, i) => `${prefix}${i + 1}. ${jsonToReadable(item, prefix + "  ").trimStart()}`)
+      .join("\n");
+  }
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => {
+        const label = String(k).replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          return `${prefix}${label} :\n${jsonToReadable(v, prefix + "  ")}`;
+        }
+        return `${prefix}${label} : ${jsonToReadable(v, "").replace(/\n/g, " ")}`;
+      })
+      .join("\n");
+  }
+  return String(value);
+}
+
 async function chat(messages: { role: string; content: string }[], jsonMode: boolean) {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI indisponible : clé manquante.");
@@ -272,7 +324,7 @@ ${policy}`,
     ],
     false,
   );
-  return content.trim() || "Aucun résultat produit.";
+  return humanizeOutput(content.trim()) || "Aucun résultat produit.";
 }
 
 
@@ -311,7 +363,10 @@ export async function runEric(prompt: string, memory: unknown): Promise<EricPlan
 
   const valid = new Set(AGENTS.filter((a) => !a.primary).map((a) => a.key));
   return {
-    reponse: String(parsed.reponse ?? "Je m'en occupe."),
+    reponse:
+      typeof parsed.reponse === "string"
+        ? humanizeOutput(parsed.reponse)
+        : humanizeOutput(JSON.stringify(parsed.reponse ?? "Je m'en occupe.")),
     memoire: Array.isArray(parsed.memoire) ? parsed.memoire.map(String).slice(0, 6) : [],
     taches: (Array.isArray(parsed.taches) ? parsed.taches : [])
       .filter((t: any) => valid.has(t?.agent_key))

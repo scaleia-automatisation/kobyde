@@ -173,7 +173,10 @@ export async function fetchSite(url: string): Promise<{ text: string; origin: st
   };
 }
 
-export async function fillCompanyFromSite(url: string): Promise<Record<string, string>> {
+export async function fillCompanyFromSite(
+  url: string,
+  knowledge?: { markdown?: string | null; data?: unknown },
+): Promise<Record<string, string>> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("Clé IA indisponible.");
 
@@ -185,6 +188,13 @@ export async function fillCompanyFromSite(url: string): Promise<Record<string, s
     return `- "${f.key}" : ${f.label}${allowed}${code}`;
   }).join("\n");
 
+  const kbText = String(knowledge?.markdown ?? "").trim();
+  const kbJson = knowledge?.data ? JSON.stringify(knowledge.data).slice(0, 12000) : "";
+  const kbBlock =
+    kbText || kbJson
+      ? `\n\nSOURCE PRIORITAIRE — base de connaissance de l'entreprise (déjà validée, prévaut sur le site en cas de contradiction) :\n${kbText.slice(0, 20000)}${kbJson ? `\n\nVersion structurée :\n${kbJson}` : ""}`
+      : "";
+
   const res = await fetch(GATEWAY, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
@@ -194,12 +204,13 @@ export async function fillCompanyFromSite(url: string): Promise<Record<string, s
         { role: "system", content: SYSTEM },
         {
           role: "user",
-          content: `Champs attendus dans le JSON :\n${schema}\n\nContenu du site :\n${site}\n\nRenvoie le JSON. Toute information absente du site = "".`,
+          content: `Champs attendus dans le JSON :\n${schema}${kbBlock}\n\nContenu du site :\n${site}\n\nRenvoie le JSON. Utilise la base de connaissance et le site comme sources ; toute information absente des deux = "".`,
         },
       ],
       response_format: { type: "json_object" },
     }),
   });
+
   if (res.status === 429) throw new Error("Trop de demandes d'un coup, réessayez dans un instant.");
   if (res.status === 402) throw new Error("Crédits IA épuisés.");
   if (!res.ok) throw new Error(`Erreur IA (${res.status})`);

@@ -223,3 +223,109 @@ export async function fillCompanyFromSite(url: string): Promise<Record<string, s
   return out;
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Exploration approfondie du site (base de connaissance)              */
+/* ------------------------------------------------------------------ */
+
+/** Pages généralement utiles pour comprendre une entreprise. */
+const KNOWLEDGE_PATHS = [
+  "/",
+  "/a-propos",
+  "/about",
+  "/qui-sommes-nous",
+  "/services",
+  "/prestations",
+  "/produits",
+  "/boutique",
+  "/shop",
+  "/tarifs",
+  "/pricing",
+  "/faq",
+  "/contact",
+  "/realisations",
+  "/portfolio",
+  "/references",
+  "/blog",
+  "/cgv",
+  "/mentions-legales",
+  "/politique-de-confidentialite",
+  "/equipe",
+];
+
+const RELEVANT_LINK = /(propos|about|service|prestation|produit|shop|boutique|tarif|price|pricing|faq|contact|realisation|portfolio|reference|equipe|team|cgv|mentions|confidentialite|blog|cas-client|case-stud)/i;
+
+/** Récupère le HTML brut d'une page (pour découvrir les liens internes). */
+async function fetchHtml(url: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml",
+        "accept-language": "fr-FR,fr;q=0.9,en;q=0.8",
+      },
+    });
+    if (!res.ok) return "";
+    return await res.text();
+  } catch {
+    return "";
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Explore le site en profondeur : page d'accueil + pages pertinentes
+ * (à propos, services, produits, tarifs, FAQ, contact, CGV…).
+ * Renvoie le texte agrégé, l'origine canonique et la liste des pages lues.
+ */
+export async function crawlSite(url: string, maxPages = 12): Promise<{ text: string; origin: string; pages: string[] }> {
+  const { text: home, origin } = await fetchSite(url);
+
+  const html = await fetchHtml(origin);
+  const discovered = new Set<string>();
+  for (const m of html.matchAll(/href=["']([^"'#?]+)["']/gi)) {
+    const href = m[1];
+    if (!href || href.startsWith("mailto:") || href.startsWith("tel:")) continue;
+    let abs: URL;
+    try {
+      abs = new URL(href, origin);
+    } catch {
+      continue;
+    }
+    if (abs.origin !== new URL(origin).origin) continue;
+    if (/\.(jpg|jpeg|png|gif|svg|webp|pdf|zip|mp4|css|js)$/i.test(abs.pathname)) continue;
+    if (abs.pathname === "/" ) continue;
+    if (!RELEVANT_LINK.test(abs.pathname)) continue;
+    discovered.add(abs.origin + abs.pathname.replace(/\/$/, ""));
+  }
+
+  const candidates = [
+    ...KNOWLEDGE_PATHS.filter((p) => p !== "/").map((p) => origin + p),
+    ...discovered,
+  ];
+  const unique = Array.from(new Set(candidates)).slice(0, 40);
+
+  const pages: string[] = [origin];
+  const chunks: string[] = [`--- ${origin} ---\n${home.slice(0, 15000)}`];
+
+  for (let i = 0; i < unique.length && pages.length < maxPages; i += 6) {
+    const batch = unique.slice(i, i + 6);
+    const results = await Promise.all(
+      batch.map(async (u) => ({ url: u, text: await fetchPageText(u).catch(() => "") })),
+    );
+    for (const r of results) {
+      if (pages.length >= maxPages) break;
+      if (r.text.length < 200) continue;
+      pages.push(r.url);
+      chunks.push(`--- ${r.url} ---\n${r.text.slice(0, 8000)}`);
+    }
+  }
+
+  return { origin, pages, text: chunks.join("\n\n").slice(0, 90000) };
+}

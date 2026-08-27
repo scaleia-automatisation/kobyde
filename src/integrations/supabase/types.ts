@@ -2187,6 +2187,8 @@ export type Database = {
           integrations: Json
           is_suspended: boolean
           knowledge_base: string | null
+          knowledge_json: Json | null
+          knowledge_updated_at: string | null
           languages: string | null
           linkedin_url: string | null
           logo_url: string | null
@@ -2251,6 +2253,8 @@ export type Database = {
           integrations?: Json
           is_suspended?: boolean
           knowledge_base?: string | null
+          knowledge_json?: Json | null
+          knowledge_updated_at?: string | null
           languages?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
@@ -2315,6 +2319,8 @@ export type Database = {
           integrations?: Json
           is_suspended?: boolean
           knowledge_base?: string | null
+          knowledge_json?: Json | null
+          knowledge_updated_at?: string | null
           languages?: string | null
           linkedin_url?: string | null
           logo_url?: string | null
@@ -3749,6 +3755,8 @@ export type Database = {
           integrations: Json
           is_suspended: boolean
           knowledge_base: string | null
+          knowledge_json: Json | null
+          knowledge_updated_at: string | null
           languages: string | null
           linkedin_url: string | null
           logo_url: string | null
@@ -3822,6 +3830,8 @@ export type Database = {
           integrations: Json
           is_suspended: boolean
           knowledge_base: string | null
+          knowledge_json: Json | null
+          knowledge_updated_at: string | null
           languages: string | null
           linkedin_url: string | null
           logo_url: string | null
@@ -3928,6 +3938,8 @@ export type Database = {
           integrations: Json
           is_suspended: boolean
           knowledge_base: string | null
+          knowledge_json: Json | null
+          knowledge_updated_at: string | null
           languages: string | null
           linkedin_url: string | null
           logo_url: string | null

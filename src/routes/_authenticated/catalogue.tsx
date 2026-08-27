@@ -270,7 +270,7 @@ function CataloguePage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Ajouter au catalogue</DialogTitle>
+            <DialogTitle>Ajouter une offre</DialogTitle>
             <DialogDescription>Un produit ou un service, avec son prix et ses conditions.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">

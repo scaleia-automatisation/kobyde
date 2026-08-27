@@ -27,7 +27,7 @@ type OfferType = "produit" | "service";
 
 export const Route = createFileRoute("/_authenticated/catalogue")({
   validateSearch: (search: Record<string, unknown>): { type?: OfferType } => {
-    const t = search.type;
+    const t = search["type"];
     return t === "produit" || t === "service" ? { type: t } : {};
   },
   head: () => ({

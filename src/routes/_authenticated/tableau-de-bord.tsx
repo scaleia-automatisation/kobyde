@@ -266,7 +266,7 @@ function Dashboard() {
         <MiniStat label="Prospects" value={String(PR.length)} to="/prospects" />
         <MiniStat label="Clients" value={String(C.length)} to="/clients" />
         <MiniStat label="Projets" value={String(PJ.length)} to="/projets" />
-        <MiniStat label="Tâches à faire" value={String(tachesOuvertes.length)} to="/projets" />
+        <MiniStat label="Tâches à faire" value={String(tachesOuvertes.length)} to="/taches" />
         <MiniStat label="Agents IA" value="10" to="/equipe" />
       </div>
 

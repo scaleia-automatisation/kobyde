@@ -200,7 +200,7 @@ export async function fetchOfferFromUrl(url: string): Promise<string> {
       .replace(/&amp;/g, "&")
       .replace(/\s{2,}/g, " ")
       .trim();
-    if (text.length < 120) throw new Error("Aucun texte exploitable sur ce lien. Collez plutôt le texte de l'offre.`);
+    if (text.length < 120) throw new Error("Aucun texte exploitable sur ce lien. Collez plutôt le texte de l'offre.");
     return text.slice(0, 20000);
   } finally {
     clearTimeout(timer);

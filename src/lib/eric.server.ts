@@ -324,7 +324,7 @@ ${policy}`,
     ],
     false,
   );
-  return content.trim() || "Aucun résultat produit.";
+  return humanizeOutput(content.trim()) || "Aucun résultat produit.";
 }
 
 

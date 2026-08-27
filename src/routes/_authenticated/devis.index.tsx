@@ -360,6 +360,52 @@ function DevisPage() {
         </div>
       </section>
 
+      {/* Suivi des devis : envoyés, acceptés, en attente, refusés */}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {STATS.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => setFilter((f) => (f === s.key ? "tous" : s.key))}
+            className={`surface p-4 text-left transition hover:shadow-md ${
+              filter === s.key ? "ring-2 ring-primary" : ""
+            }`}
+          >
+            <p className="text-sm text-muted-foreground">{s.label}</p>
+            <p className="font-display mt-1 text-3xl">{counts[s.key]}</p>
+            <p className="text-xs text-muted-foreground">{eur2(amounts[s.key])}</p>
+          </button>
+        ))}
+      </div>
+
+      {filter !== "tous" && (
+        <button
+          type="button"
+          onClick={() => setFilter("tous")}
+          className="mt-3 text-sm text-primary underline-offset-4 hover:underline"
+        >
+          Afficher tous les devis
+        </button>
+      )}
+
+      {events && events.length > 0 && (
+        <section className="surface mt-6 p-5">
+          <h3 className="font-display text-lg">Derniers événements écoutés</h3>
+          <p className="text-xs text-muted-foreground">
+            Emails, SMS, WhatsApp et actions du client sur ses devis, en temps réel.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {events.slice(0, 8).map((e: any) => (
+              <li key={e.id} className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge variant="outline">{e.channel}</Badge>
+                <span className="font-medium">{e.title}</span>
+                <span className="text-xs text-muted-foreground">{frDate(e.occurred_at)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="mt-6">
         {isLoading ? (
           <div className="surface p-10 text-center text-muted-foreground">Chargement…</div>
@@ -371,9 +417,14 @@ function DevisPage() {
               Démarrez avec l'un des trois parcours ci-dessus.
             </p>
           </div>
+        ) : visibles.length === 0 ? (
+          <div className="surface p-10 text-center text-muted-foreground">
+            Aucun devis dans cette catégorie.
+          </div>
         ) : (
           <div className="grid gap-3">
-            {(quotes ?? []).map((q: any) => (
+            {visibles.map((q: any) => (
+
               <div key={q.id} className="relative">
                 <Link
                   to="/devis/$id"

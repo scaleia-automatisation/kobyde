@@ -106,7 +106,7 @@ function CataloguePage() {
     const fail = (err: any) => toast.error(err.message ?? "Erreur");
     if (editing) {
       update.mutate(
-        { id: editing.id, ...payload },
+        { id: editing.id, values: payload },
         { onSuccess: () => done("Offre mise à jour"), onError: fail },
       );
     } else {
@@ -189,7 +189,11 @@ function CataloguePage() {
             { value: "produit" as const, label: "Produits" },
             { value: "service" as const, label: "Services" },
           ] as const
-        ).map((tab) => (
+        ).map((tab) => {
+          const count = (products ?? []).filter((p: any) =>
+            !tab.value ? true : (p.kind === "produit" ? "produit" : "service") === tab.value,
+          ).length;
+          return (
           <Button
             key={tab.label}
             size="sm"

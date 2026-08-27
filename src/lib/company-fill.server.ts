@@ -143,14 +143,15 @@ export async function fetchSite(url: string): Promise<{ text: string; origin: st
 
   let origin = "";
   let home = "";
-  for (const o of origins) {
+  const attempts = await Promise.all(origins.map(async (o) => {
     const directText = await fetchPageText(o).catch(() => "");
     const text = directText.length > 40 ? directText : await fetchRenderedText(o).catch(() => "");
-    if (text.length > 40) {
-      origin = o;
-      home = text;
-      break;
-    }
+    return { origin: o, text };
+  }));
+  const successful = attempts.find((attempt) => attempt.text.length > 40);
+  if (successful) {
+    origin = successful.origin;
+    home = successful.text;
   }
 
   if (!home) {

@@ -167,19 +167,44 @@ export async function removeFiles(paths: string[]) {
 /* -------------------------------- Offre d'emploi ------------------------------- */
 
 /** Récupère le texte d'une offre publiée en ligne. */
+function normalizeSiteUrl(raw: string): string {
+  const trimmed = raw.trim().replace(/\s+/g, "").replace(/\/$/, "");
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 export async function fetchOfferFromUrl(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 KobydeBot" } });
-  if (!res.ok) throw new Error(`Lien inaccessible (${res.status}). Collez plutôt le texte de l'offre.`);
-  const html = await res.text();
-  const text = html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-  if (text.length < 120) throw new Error("Aucun texte exploitable sur ce lien. Collez plutôt le texte de l'offre.");
-  return text.slice(0, 20000);
+  const target = normalizeSiteUrl(url);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(target, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "fr-FR,fr;q=0.9,en;q=0.8",
+      },
+    });
+    if (!res.ok) throw new Error(`Lien inaccessible (${res.status}). Collez plutôt le texte de l'offre.`);
+    const html = await res.text();
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+      .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+      .replace(/<canvas[\s\S]*?<\/canvas>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+    if (text.length < 120) throw new Error("Aucun texte exploitable sur ce lien. Collez plutôt le texte de l'offre.");
+    return text.slice(0, 20000);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export type JobAnalysis = {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Trash2, FileText, CreditCard, Package } from "lucide-react";
+import { Plus, Trash2, FileText, CreditCard, Package, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useCreateRow, useDeleteRow, useOrgId, useRows, eur2 } from "@/lib/db";
+import { useCreateRow, useDeleteRow, useUpdateRow, useOrgId, useRows, eur2 } from "@/lib/db";
 import { isoDate, addDays, nextNumber, round2, ttcFrom } from "@/lib/sales";
 import { PaymentRequestDialog } from "@/components/payment-request-dialog";
 
@@ -55,12 +55,28 @@ function CataloguePage() {
   const { data: products, isLoading } = useRows<any>("products");
   const { data: clients } = useRows<any>("clients");
   const create = useCreateRow("products");
+  const update = useUpdateRow("products");
   const remove = useDeleteRow("products");
 
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
   const [subs, setSubs] = useState<Sub[]>([]);
   const [quoteFor, setQuoteFor] = useState<any | null>(null);
   const [payFor, setPayFor] = useState<any | null>(null);
+
+  const openEdit = (p: any) => {
+    setEditing(p);
+    setSubs(Array.isArray(p.subservices) ? p.subservices.map((s: Sub) => ({ ...s })) : []);
+    setOpen(true);
+  };
+
+  const closeDialog = (o: boolean) => {
+    setOpen(o);
+    if (!o) {
+      setEditing(null);
+      setSubs([]);
+    }
+  };
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,31 +84,37 @@ function CataloguePage() {
     const num = (k: string, d = 0) => Number(fd.get(k) ?? d) || d;
     const priceHt = num("price_ht");
     const kind = (String(fd.get("kind") ?? "service") === "produit" ? "produit" : "service") as OfferType;
-    create.mutate(
-      {
-        name: String(fd.get("name") ?? "").trim(),
-        description: String(fd.get("description") ?? "").trim() || null,
-        kind,
-        category: String(fd.get("category") ?? "").trim() || null,
-        sku: String(fd.get("sku") ?? "").trim() || null,
-        unit: String(fd.get("unit") ?? "unité"),
-        price_ht: priceHt,
-        price: priceHt,
-        vat_rate: num("vat_rate", 20),
-        default_quantity: num("default_quantity", 1),
-        subservices: subs.filter((s) => s.nom.trim()),
-        terms: String(fd.get("terms") ?? "").trim() || null,
-      },
-      {
-        onSuccess: () => {
-          toast.success(kind === "produit" ? "Produit ajouté" : "Service ajouté");
-          setOpen(false);
-          setSubs([]);
-          void navigate({ to: "/catalogue", search: { type: kind } });
-        },
-        onError: (err: any) => toast.error(err.message ?? "Erreur"),
-      },
-    );
+    const payload = {
+      name: String(fd.get("name") ?? "").trim(),
+      description: String(fd.get("description") ?? "").trim() || null,
+      kind,
+      category: String(fd.get("category") ?? "").trim() || null,
+      sku: String(fd.get("sku") ?? "").trim() || null,
+      unit: String(fd.get("unit") ?? "unité"),
+      price_ht: priceHt,
+      price: priceHt,
+      vat_rate: num("vat_rate", 20),
+      default_quantity: num("default_quantity", 1),
+      subservices: subs.filter((s) => s.nom.trim()),
+      terms: String(fd.get("terms") ?? "").trim() || null,
+    };
+    const done = (message: string) => {
+      toast.success(message);
+      closeDialog(false);
+      void navigate({ to: "/catalogue", search: { type: kind } });
+    };
+    const fail = (err: any) => toast.error(err.message ?? "Erreur");
+    if (editing) {
+      update.mutate(
+        { id: editing.id, values: payload },
+        { onSuccess: () => done("Offre mise à jour"), onError: fail },
+      );
+    } else {
+      create.mutate(payload, {
+        onSuccess: () => done(kind === "produit" ? "Produit ajouté" : "Service ajouté"),
+        onError: fail,
+      });
+    }
   };
 
   const addToQuote = async (product: any, clientId: string, quantity: number) => {
@@ -146,8 +168,10 @@ function CataloguePage() {
     navigate({ to: "/devis/$id", params: { id: quoteId! } });
   };
 
+  const kindOf = (p: any): OfferType => (p.kind === "produit" || p.kind === "product" ? "produit" : "service");
+
   const visible = (products ?? []).filter((p: any) =>
-    !activeType ? true : (p.kind === "produit" ? "produit" : "service") === activeType,
+    !activeType ? true : kindOf(p) === activeType,
   );
 
   return (
@@ -167,7 +191,11 @@ function CataloguePage() {
             { value: "produit" as const, label: "Produits" },
             { value: "service" as const, label: "Services" },
           ] as const
-        ).map((tab) => (
+        ).map((tab) => {
+          const count = (products ?? []).filter((p: any) =>
+            !tab.value ? true : kindOf(p) === tab.value,
+          ).length;
+          return (
           <Button
             key={tab.label}
             size="sm"
@@ -175,8 +203,18 @@ function CataloguePage() {
             onClick={() => navigate({ to: "/catalogue", search: tab.value ? { type: tab.value } : {} })}
           >
             {tab.label}
+            <span
+              className={
+                activeType === tab.value
+                  ? "ml-1.5 rounded-full bg-primary-foreground/20 px-1.5 text-xs font-bold"
+                  : "ml-1.5 rounded-full bg-muted px-1.5 text-xs font-bold text-muted-foreground"
+              }
+            >
+              {count}
+            </span>
           </Button>
-        ))}
+          );
+        })}
       </div>
 
       {isLoading ? (
@@ -243,6 +281,9 @@ function CataloguePage() {
                   </div>
 
                   <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
+                    <Button size="sm" variant="outline" className="gap-2" onClick={() => openEdit(p)}>
+                      <Pencil className="size-4" /> Modifier
+                    </Button>
                     <Button size="sm" className="gap-2" onClick={() => setQuoteFor(p)}>
                       <FileText className="size-4" /> Ajouter au devis
                     </Button>
@@ -266,39 +307,42 @@ function CataloguePage() {
         </div>
       )}
 
-      {/* Ajout produit */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Ajout / modification d'une offre */}
+      <Dialog open={open} onOpenChange={closeDialog}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Ajouter une offre</DialogTitle>
-            <DialogDescription>Un produit ou un service, avec son prix et ses conditions.</DialogDescription>
+            <DialogTitle>{editing ? "Modifier l'offre" : "Ajouter une offre"}</DialogTitle>
+            <DialogDescription>
+              {editing
+                ? `Modifiez ${editing.kind === "produit" ? "le produit" : "le service"} « ${editing.name} ».`
+                : "Un produit ou un service, avec son prix et ses conditions."}
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={submit} className="space-y-4">
+          <form key={editing?.id ?? "new"} onSubmit={submit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field name="name" label="Nom" required placeholder="Création de site web" />
-              <Field name="category" label="Catégorie" placeholder="Web" />
-              <Field name="sku" label="SKU" placeholder="WEB-001" />
+              <Field name="name" label="Nom" required placeholder="Création de site web" defaultValue={editing?.name ?? undefined} />
+              <Field name="category" label="Catégorie" placeholder="Web" defaultValue={editing?.category ?? undefined} />
+              <Field name="sku" label="SKU" placeholder="WEB-001" defaultValue={editing?.sku ?? undefined} />
               <div className="space-y-1.5">
                 <Label htmlFor="kind">Type</Label>
                 <select
                   id="kind"
                   name="kind"
-                  key={activeType ?? "all"}
-                  defaultValue={activeType ?? "service"}
+                  defaultValue={editing ? kindOf(editing) : (activeType ?? "service")}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
                 >
                   <option value="service">Service</option>
                   <option value="produit">Produit</option>
                 </select>
               </div>
-              <Field name="price_ht" label="Prix HT (€)" type="number" defaultValue="0" />
-              <Field name="vat_rate" label="TVA (%)" type="number" defaultValue="20" />
-              <Field name="unit" label="Unité" defaultValue="unité" />
-              <Field name="default_quantity" label="Quantité par défaut" type="number" defaultValue="1" />
+              <Field name="price_ht" label="Prix HT (€)" type="number" defaultValue={String(editing?.price_ht ?? editing?.price ?? 0)} />
+              <Field name="vat_rate" label="TVA (%)" type="number" defaultValue={String(editing?.vat_rate ?? 20)} />
+              <Field name="unit" label="Unité" defaultValue={editing?.unit ?? "unité"} />
+              <Field name="default_quantity" label="Quantité par défaut" type="number" defaultValue={String(editing?.default_quantity ?? 1)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" rows={2} />
+              <Textarea id="description" name="description" rows={2} defaultValue={editing?.description ?? ""} />
             </div>
 
             <div className="space-y-2">
@@ -349,12 +393,16 @@ function CataloguePage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="terms">Conditions</Label>
-              <Textarea id="terms" name="terms" rows={2} placeholder="Acompte de 30 % à la commande…" />
+              <Textarea id="terms" name="terms" rows={2} placeholder="Acompte de 30 % à la commande…" defaultValue={editing?.terms ?? ""} />
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={create.isPending}>
-                {create.isPending ? "Enregistrement…" : "Enregistrer"}
+              <Button type="submit" disabled={create.isPending || update.isPending}>
+                {create.isPending || update.isPending
+                  ? "Enregistrement…"
+                  : editing
+                    ? "Mettre à jour"
+                    : "Enregistrer"}
               </Button>
             </DialogFooter>
           </form>

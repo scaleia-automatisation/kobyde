@@ -146,33 +146,62 @@ function CataloguePage() {
     navigate({ to: "/devis/$id", params: { id: quoteId! } });
   };
 
+  const visible = (products ?? []).filter((p: any) =>
+    !activeType ? true : (p.kind === "produit" ? "produit" : "service") === activeType,
+  );
+
   return (
     <AppShell
-      title="Catalogue"
+      title="Offres"
       subtitle="Ce que vous vendez : prix HT/TTC, TVA, sous-prestations et conditions."
       action={
         <Button className="gap-2" onClick={() => setOpen(true)}>
-          <Plus className="size-4" /> <span className="hidden sm:inline">Ajouter au catalogue</span>
+          <Plus className="size-4" /> <span className="hidden sm:inline">Ajouter une offre</span>
         </Button>
       }
     >
+      <div className="mb-4 flex flex-wrap gap-2">
+        {(
+          [
+            { value: undefined, label: "Toutes les offres" },
+            { value: "produit" as const, label: "Produits" },
+            { value: "service" as const, label: "Services" },
+          ] as const
+        ).map((tab) => (
+          <Button
+            key={tab.label}
+            size="sm"
+            variant={activeType === tab.value ? "default" : "outline"}
+            onClick={() => navigate({ to: "/catalogue", search: tab.value ? { type: tab.value } : {} })}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="surface p-10 text-center text-muted-foreground">Chargement…</div>
-      ) : (products ?? []).length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="surface p-12 text-center">
           <Package className="mx-auto size-8 text-muted-foreground" />
-          <p className="font-display mt-3 text-xl">Votre catalogue est vide</p>
+          <p className="font-display mt-3 text-xl">
+            {activeType === "produit"
+              ? "Aucun produit pour l'instant"
+              : activeType === "service"
+                ? "Aucun service pour l'instant"
+                : "Vous n'avez aucune offre"}
+          </p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             Ajoutez un produit ou un service : il sera insérable en un clic dans vos devis et vos demandes de
             paiement.
           </p>
           <Button className="mt-6 gap-2" onClick={() => setOpen(true)}>
-            <Plus className="size-4" /> Ajouter au catalogue
+            <Plus className="size-4" /> Ajouter une offre
           </Button>
         </div>
       ) : (
         <div className="grid gap-3">
-          {(products ?? []).map((p: any) => {
+          {visible.map((p: any) => {
             const ht = Number(p.price_ht || p.price || 0);
             const vat = Number(p.vat_rate ?? 20);
             return (

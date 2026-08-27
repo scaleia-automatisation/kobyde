@@ -160,11 +160,14 @@ function CompanyPage() {
     try {
       const res = await generateKnowledgeBase({ data: { orgId, mode } });
       setKnowledge(res.knowledge);
+      const pages = res.pages?.length ?? 0;
+      const detail = pages ? ` ${pages} page(s) du site analysée(s).` : "";
       toast.success(
-        mode === "update"
+        (mode === "update"
           ? "Base de connaissance mise à jour — la fiche entreprise fait foi."
-          : "Base de connaissance générée à partir de votre site web.",
+          : "Base de connaissance générée : fiche entreprise + site web.") + detail,
       );
+
       await refetch();
     } catch (err: any) {
       toast.error(err?.message ?? "Génération impossible.");

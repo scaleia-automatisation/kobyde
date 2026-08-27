@@ -85,9 +85,10 @@ function CataloguePage() {
       },
       {
         onSuccess: () => {
-          toast.success("Ajouté au catalogue");
+          toast.success(kind === "produit" ? "Produit ajouté" : "Service ajouté");
           setOpen(false);
           setSubs([]);
+          void navigate({ to: "/catalogue", search: { type: kind } });
         },
         onError: (err: any) => toast.error(err.message ?? "Erreur"),
       },

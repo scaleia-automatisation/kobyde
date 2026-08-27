@@ -201,8 +201,18 @@ function CataloguePage() {
             onClick={() => navigate({ to: "/catalogue", search: tab.value ? { type: tab.value } : {} })}
           >
             {tab.label}
+            <span
+              className={
+                activeType === tab.value
+                  ? "ml-1.5 rounded-full bg-primary-foreground/20 px-1.5 text-xs font-bold"
+                  : "ml-1.5 rounded-full bg-muted px-1.5 text-xs font-bold text-muted-foreground"
+              }
+            >
+              {count}
+            </span>
           </Button>
-        ))}
+          );
+        })}
       </div>
 
       {isLoading ? (

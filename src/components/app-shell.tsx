@@ -73,6 +73,7 @@ export const NAV_GROUPS: { label: string; adminOnly?: boolean; items: NavItem[] 
       { to: "/tableau-de-bord", label: "Accueil", icon: Home },
       ...AGENT_NAV_ITEMS,
       { to: "/equipe", label: "Mon équipe IA", icon: Bot },
+      { to: "/equipe-physique", label: "Mon équipe physique", icon: UsersRound },
       { to: "/taches", label: "Tâches", icon: ListChecks },
     ],
   },

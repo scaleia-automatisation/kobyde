@@ -1447,6 +1447,77 @@ export type Database = {
           },
         ]
       }
+      employees: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          missions: string | null
+          notes: string | null
+          notify_email: boolean
+          notify_sms: boolean
+          notify_whatsapp: boolean
+          org_id: string
+          phone: string | null
+          photo_url: string | null
+          role_title: string | null
+          status: string
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          missions?: string | null
+          notes?: string | null
+          notify_email?: boolean
+          notify_sms?: boolean
+          notify_whatsapp?: boolean
+          org_id: string
+          phone?: string | null
+          photo_url?: string | null
+          role_title?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          missions?: string | null
+          notes?: string | null
+          notify_email?: boolean
+          notify_sms?: boolean
+          notify_whatsapp?: boolean
+          org_id?: string
+          phone?: string | null
+          photo_url?: string | null
+          role_title?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_audit_log: {
         Row: {
           action: string

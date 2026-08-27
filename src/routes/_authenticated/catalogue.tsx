@@ -168,8 +168,10 @@ function CataloguePage() {
     navigate({ to: "/devis/$id", params: { id: quoteId! } });
   };
 
+  const kindOf = (p: any): OfferType => (p.kind === "produit" || p.kind === "product" ? "produit" : "service");
+
   const visible = (products ?? []).filter((p: any) =>
-    !activeType ? true : (p.kind === "produit" ? "produit" : "service") === activeType,
+    !activeType ? true : kindOf(p) === activeType,
   );
 
   return (
@@ -191,7 +193,7 @@ function CataloguePage() {
           ] as const
         ).map((tab) => {
           const count = (products ?? []).filter((p: any) =>
-            !tab.value ? true : (p.kind === "produit" ? "produit" : "service") === tab.value,
+            !tab.value ? true : kindOf(p) === tab.value,
           ).length;
           return (
           <Button
@@ -326,7 +328,7 @@ function CataloguePage() {
                 <select
                   id="kind"
                   name="kind"
-                  defaultValue={editing?.kind === "produit" ? "produit" : editing ? "service" : (activeType ?? "service")}
+                  defaultValue={editing ? kindOf(editing) : (activeType ?? "service")}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
                 >
                   <option value="service">Service</option>

@@ -358,7 +358,7 @@ function PhysicalTeamPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing ? "Modifier l'employé" : "Ajouter un employé"}</DialogTitle>
             <DialogDescription>

@@ -85,7 +85,7 @@ export const NAV_GROUPS: { label: string; adminOnly?: boolean; items: NavItem[] 
       { to: "/paiements", label: "Paiements", icon: CreditCard },
       { to: "/factures", label: "Factures", icon: Receipt },
       { to: "/projets", label: "Projets", icon: FolderKanban },
-      { to: "/catalogue", label: "Catalogue", icon: Package },
+      { to: "/catalogue", label: "Offres", icon: Package },
     ],
   },
   {

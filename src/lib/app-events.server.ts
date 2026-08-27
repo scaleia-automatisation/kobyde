@@ -140,9 +140,8 @@ export async function ingestEvent(supabase: SupabaseClient<any>, ev: IncomingEve
   if (quote && effect) {
     const patch: Record<string, unknown> = { last_event_at: occurredAt };
     if (effect.status) patch["status"] = effect.status;
-    if (effect.stamp) patch["stamp_placeholder"] = undefined;
     if (effect.stamp) patch[effect.stamp] = occurredAt;
-    delete patch["stamp_placeholder"];
+
     if (ev.message && (type === "quote.refused" || type === "quote.accepted")) patch["client_comment"] = ev.message;
     await (supabase.from("quotes") as any).update(patch).eq("id", quote.id).eq("org_id", ev.orgId);
   } else if (quote) {

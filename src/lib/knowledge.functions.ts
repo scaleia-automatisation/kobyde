@@ -14,7 +14,7 @@ export const fillCompanyFromWebsite = createServerFn({ method: "POST" })
     const { supabase } = context as any;
     const { data: org, error } = await supabase
       .from("organizations")
-      .select("id")
+      .select("id, knowledge_base, knowledge_json")
       .eq("id", data.orgId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -22,7 +22,14 @@ export const fillCompanyFromWebsite = createServerFn({ method: "POST" })
 
     try {
       const { fillCompanyFromSite } = await import("./company-fill.server");
-      return { ok: true as const, values: await fillCompanyFromSite(data.website.trim()) };
+      return {
+        ok: true as const,
+        values: await fillCompanyFromSite(data.website.trim(), {
+          markdown: org.knowledge_base,
+          data: org.knowledge_json,
+        }),
+      };
+
     } catch (error) {
       return {
         ok: false as const,

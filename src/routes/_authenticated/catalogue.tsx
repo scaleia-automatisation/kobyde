@@ -55,12 +55,28 @@ function CataloguePage() {
   const { data: products, isLoading } = useRows<any>("products");
   const { data: clients } = useRows<any>("clients");
   const create = useCreateRow("products");
+  const update = useUpdateRow("products");
   const remove = useDeleteRow("products");
 
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
   const [subs, setSubs] = useState<Sub[]>([]);
   const [quoteFor, setQuoteFor] = useState<any | null>(null);
   const [payFor, setPayFor] = useState<any | null>(null);
+
+  const openEdit = (p: any) => {
+    setEditing(p);
+    setSubs(Array.isArray(p.subservices) ? p.subservices.map((s: Sub) => ({ ...s })) : []);
+    setOpen(true);
+  };
+
+  const closeDialog = (o: boolean) => {
+    setOpen(o);
+    if (!o) {
+      setEditing(null);
+      setSubs([]);
+    }
+  };
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,31 +84,37 @@ function CataloguePage() {
     const num = (k: string, d = 0) => Number(fd.get(k) ?? d) || d;
     const priceHt = num("price_ht");
     const kind = (String(fd.get("kind") ?? "service") === "produit" ? "produit" : "service") as OfferType;
-    create.mutate(
-      {
-        name: String(fd.get("name") ?? "").trim(),
-        description: String(fd.get("description") ?? "").trim() || null,
-        kind,
-        category: String(fd.get("category") ?? "").trim() || null,
-        sku: String(fd.get("sku") ?? "").trim() || null,
-        unit: String(fd.get("unit") ?? "unité"),
-        price_ht: priceHt,
-        price: priceHt,
-        vat_rate: num("vat_rate", 20),
-        default_quantity: num("default_quantity", 1),
-        subservices: subs.filter((s) => s.nom.trim()),
-        terms: String(fd.get("terms") ?? "").trim() || null,
-      },
-      {
-        onSuccess: () => {
-          toast.success(kind === "produit" ? "Produit ajouté" : "Service ajouté");
-          setOpen(false);
-          setSubs([]);
-          void navigate({ to: "/catalogue", search: { type: kind } });
-        },
-        onError: (err: any) => toast.error(err.message ?? "Erreur"),
-      },
-    );
+    const payload = {
+      name: String(fd.get("name") ?? "").trim(),
+      description: String(fd.get("description") ?? "").trim() || null,
+      kind,
+      category: String(fd.get("category") ?? "").trim() || null,
+      sku: String(fd.get("sku") ?? "").trim() || null,
+      unit: String(fd.get("unit") ?? "unité"),
+      price_ht: priceHt,
+      price: priceHt,
+      vat_rate: num("vat_rate", 20),
+      default_quantity: num("default_quantity", 1),
+      subservices: subs.filter((s) => s.nom.trim()),
+      terms: String(fd.get("terms") ?? "").trim() || null,
+    };
+    const done = (message: string) => {
+      toast.success(message);
+      closeDialog(false);
+      void navigate({ to: "/catalogue", search: { type: kind } });
+    };
+    const fail = (err: any) => toast.error(err.message ?? "Erreur");
+    if (editing) {
+      update.mutate(
+        { id: editing.id, ...payload },
+        { onSuccess: () => done("Offre mise à jour"), onError: fail },
+      );
+    } else {
+      create.mutate(payload, {
+        onSuccess: () => done(kind === "produit" ? "Produit ajouté" : "Service ajouté"),
+        onError: fail,
+      });
+    }
   };
 
   const addToQuote = async (product: any, clientId: string, quantity: number) => {

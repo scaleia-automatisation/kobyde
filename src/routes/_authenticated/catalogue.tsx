@@ -279,6 +279,9 @@ function CataloguePage() {
                   </div>
 
                   <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
+                    <Button size="sm" variant="outline" className="gap-2" onClick={() => openEdit(p)}>
+                      <Pencil className="size-4" /> Modifier
+                    </Button>
                     <Button size="sm" className="gap-2" onClick={() => setQuoteFor(p)}>
                       <FileText className="size-4" /> Ajouter au devis
                     </Button>

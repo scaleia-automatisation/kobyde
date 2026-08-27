@@ -1,15 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { useRows } from "@/lib/db";
+import { Button } from "@/components/ui/button";
+import { useOrgId, useRows, useUpdateRow } from "@/lib/db";
 import { AGENTS, agentByKey } from "@/lib/agents";
+import { runTask } from "@/lib/eric.functions";
 
 export const Route = createFileRoute("/_authenticated/taches")({
   head: () => ({
     meta: [
-      { title: "Tâches des agents — Kobyde" },
-      { name: "description", content: "Suivez ce que chaque agent IA est en train de faire pour votre entreprise." },
-      { property: "og:title", content: "Tâches des agents — Kobyde" },
+      { title: "Tâches — Kobyde" },
+      {
+        name: "description",
+        content:
+          "Vos tâches à faire et terminées : envoyez-les à Éric pour qu'il les exécute, ou marquez-les faites.",
+      },
+      { property: "og:title", content: "Tâches — Kobyde" },
       { property: "og:description", content: "Le travail de votre équipe IA, en temps réel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -30,101 +39,175 @@ type AgentTask = {
   created_at: string;
 };
 
-const STATUS: Record<string, { label: string; tone: string }> = {
-  todo: { label: "En attente", tone: "bg-slate-100 text-slate-700" },
-  in_progress: { label: "En cours", tone: "bg-amber-100 text-amber-900" },
-  done: { label: "Terminée", tone: "bg-emerald-100 text-emerald-900" },
-  failed: { label: "Échouée", tone: "bg-rose-100 text-rose-900" },
-};
+const DONE = new Set(["done", "termine", "terminee"]);
 
-const FILTERS = ["tout", "todo", "in_progress", "done", "failed"] as const;
+const PERIODS = [
+  { key: "aujourdhui", label: "Aujourd'hui" },
+  { key: "hier", label: "Hier" },
+  { key: "semaine", label: "Cette semaine" },
+  { key: "tout", label: "Tout" },
+] as const;
+
+function startOfDay(d: Date) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function inPeriod(at: string, period: string) {
+  if (period === "tout") return true;
+  const d = new Date(at);
+  const today = startOfDay(new Date());
+  if (period === "aujourdhui") return d >= today;
+  if (period === "hier") {
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return d >= yesterday && d < today;
+  }
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  return d >= weekAgo;
+}
 
 function TasksPage() {
-  const { data: tasks, isLoading } = useRows<AgentTask>("agent_tasks", { order: "created_at", limit: 200 });
+  const orgId = useOrgId();
+  const { data: tasks, isLoading, refetch } = useRows<AgentTask>("agent_tasks", {
+    order: "created_at",
+    limit: 200,
+  });
   const { data: agents } = useRows<{ id: string; key: string }>("agents");
-  const [filter, setFilter] = useState("tout");
+  const updateTask = useUpdateRow("agent_tasks");
+  const execute = useServerFn(runTask);
 
-  const keyById = useMemo(
-    () => new Map((agents ?? []).map((a) => [a.id, a.key])),
-    [agents],
-  );
+  const [tab, setTab] = useState<"encours" | "terminees">("encours");
+  const [period, setPeriod] = useState<string>("semaine");
+  const [running, setRunning] = useState<string | null>(null);
 
-  const list = (tasks ?? []).filter((t) => filter === "tout" || t.status === filter);
-  const counts = (tasks ?? []).reduce<Record<string, number>>((acc, t) => {
-    acc[t.status] = (acc[t.status] ?? 0) + 1;
-    return acc;
-  }, {});
-  const credits = (tasks ?? []).reduce((s, t) => s + (t.credits_used ?? 0), 0);
+  const keyById = useMemo(() => new Map((agents ?? []).map((a) => [a.id, a.key])), [agents]);
+
+  const scoped = (tasks ?? []).filter((t) => inPeriod(t.created_at, period));
+  const pending = scoped.filter((t) => !DONE.has(t.status));
+  const finished = scoped.filter((t) => DONE.has(t.status));
+  const list = tab === "encours" ? pending : finished;
+
+  async function sendToEric(t: AgentTask) {
+    if (!orgId) return;
+    setRunning(t.id);
+    try {
+      await execute({
+        data: {
+          taskId: t.id,
+          orgId,
+          idempotencyKey: `task-${t.id}-${Date.now()}`.slice(0, 64),
+        },
+      });
+      toast.success("Éric a exécuté la tâche.");
+      await refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Échec de l'exécution");
+    } finally {
+      setRunning(null);
+    }
+  }
+
+  async function markDone(t: AgentTask) {
+    await updateTask.mutateAsync({ id: t.id, values: { status: "done" } });
+    toast.success("Tâche marquée comme terminée.");
+  }
 
   return (
-    <AppShell title="Tâches des agents" subtitle="Ce que votre équipe IA a fait, fait et va faire.">
-      <div className="mb-5 grid gap-3 sm:grid-cols-4">
-        {[
-          { label: "Total", value: tasks?.length ?? 0 },
-          { label: "En cours", value: counts["in_progress"] ?? 0 },
-          { label: "Terminées", value: counts["done"] ?? 0 },
-          { label: "Crédits utilisés", value: credits },
-        ].map((s) => (
-          <div key={s.label} className="surface p-4">
-            <p className="text-sm text-muted-foreground">{s.label}</p>
-            <p className="text-2xl font-bold">{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mb-4 flex flex-wrap gap-2">
-        {FILTERS.map((s) => (
+    <AppShell
+      title="Tâches"
+      subtitle="Vos tâches à faire, exécutables par vos agents en un clic."
+    >
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {(
+          [
+            { key: "encours", label: `Tâches en cours (${pending.length})` },
+            { key: "terminees", label: `Tâches terminées (${finished.length})` },
+          ] as const
+        ).map((s) => (
           <button
-            key={s}
-            onClick={() => setFilter(s)}
-            className={`rounded-full px-3 py-1.5 text-sm ${
-              filter === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            key={s.key}
+            onClick={() => setTab(s.key)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              tab === s.key
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-secondary"
             }`}
           >
-            {s === "tout" ? "Toutes" : STATUS[s]!.label}
+            {s.label}
+          </button>
+        ))}
+        <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+        {PERIODS.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => setPeriod(p.key)}
+            className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
+              period === p.key ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60"
+            }`}
+          >
+            {p.label}
           </button>
         ))}
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
+
       {!isLoading && list.length === 0 && (
         <div className="surface p-8 text-center">
-          <p className="font-medium">Aucune tâche pour l'instant.</p>
+          <p className="font-medium">Aucune tâche sur cette période.</p>
           <p className="text-sm text-muted-foreground">
             Demandez quelque chose à Éric : il distribuera le travail aux {AGENTS.length - 1} autres agents.
           </p>
         </div>
       )}
 
-      <div className="space-y-2">
+      <ul className="space-y-2">
         {list.map((t) => {
           const agent = agentByKey(keyById.get(t.agent_id ?? "") ?? "directeur");
-          const st = STATUS[t.status] ?? STATUS["todo"]!;
+          const done = DONE.has(t.status);
           return (
-            <article key={t.id} className="surface flex items-start gap-4 p-4">
-              <span className={`grid size-10 shrink-0 place-items-center rounded-xl text-lg ring-2 ${agent.ring}`}>
-                {agent.emoji}
-              </span>
+            <li key={t.id} className="surface flex flex-wrap items-start gap-3 p-4">
+              <span
+                className="mt-2 size-2 shrink-0 rounded-full bg-primary"
+                aria-hidden
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{t.title}</p>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${st.tone}`}>{st.label}</span>
+                  <p className={`font-medium ${done ? "text-muted-foreground line-through" : ""}`}>
+                    {t.title}
+                  </p>
                   <span className="text-[11px] text-muted-foreground">
-                    {agent.name} · {t.credits_used} crédit(s)
+                    {agent.emoji} {agent.name} · {new Date(t.created_at).toLocaleString("fr-FR")}
                   </span>
                 </div>
                 {t.detail && <p className="mt-1 text-sm text-muted-foreground">{t.detail}</p>}
                 {t.result && (
                   <p className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/60 p-3 text-sm">{t.result}</p>
                 )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {new Date(t.created_at).toLocaleString("fr-FR")}
-                </p>
               </div>
-            </article>
+              {!done && (
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <Button size="sm" className="gap-1.5" disabled={running === t.id} onClick={() => sendToEric(t)}>
+                    {running === t.id ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Send className="size-4" />
+                    )}
+                    Envoyer à l'agent
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => markDone(t)}>
+                    <CheckCircle2 className="size-4" />
+                    Terminée
+                  </Button>
+                </div>
+              )}
+            </li>
           );
         })}
-      </div>
+      </ul>
     </AppShell>
   );
 }

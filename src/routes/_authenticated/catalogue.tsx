@@ -391,12 +391,16 @@ function CataloguePage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="terms">Conditions</Label>
-              <Textarea id="terms" name="terms" rows={2} placeholder="Acompte de 30 % à la commande…" />
+              <Textarea id="terms" name="terms" rows={2} placeholder="Acompte de 30 % à la commande…" defaultValue={editing?.terms ?? ""} />
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={create.isPending}>
-                {create.isPending ? "Enregistrement…" : "Enregistrer"}
+              <Button type="submit" disabled={create.isPending || update.isPending}>
+                {create.isPending || update.isPending
+                  ? "Enregistrement…"
+                  : editing
+                    ? "Mettre à jour"
+                    : "Enregistrer"}
               </Button>
             </DialogFooter>
           </form>

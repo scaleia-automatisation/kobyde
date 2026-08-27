@@ -85,7 +85,7 @@ export const NAV_GROUPS: { label: string; adminOnly?: boolean; items: NavItem[] 
       { to: "/paiements", label: "Paiements", icon: CreditCard },
       { to: "/factures", label: "Factures", icon: Receipt },
       { to: "/projets", label: "Projets", icon: FolderKanban },
-      { to: "/catalogue", label: "Catalogue", icon: Package },
+      { to: "/catalogue", label: "Offres", icon: Package },
     ],
   },
   {
@@ -160,7 +160,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             {group.items.map((item) => {
               const active = pathname === item.to || pathname.startsWith(item.to + "/");
               const isAgent = "agent" in item;
-              return (
+              const node = (
                 <Link
                   key={item.to}
                   to={item.to}
@@ -203,6 +203,33 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                     </>
                   )}
                 </Link>
+              );
+
+              if (item.to !== "/catalogue") return node;
+
+              return (
+                <div key={item.to}>
+                  {node}
+                  <div className="ml-8 space-y-0.5 border-l border-sidebar-border pl-2">
+                    {(
+                      [
+                        { type: "produit", label: "Produits" },
+                        { type: "service", label: "Services" },
+                      ] as const
+                    ).map((sub) => (
+                      <Link
+                        key={sub.type}
+                        to="/catalogue"
+                        search={{ type: sub.type }}
+                        onClick={onNavigate}
+                        className="block truncate rounded-lg px-3 py-1.5 text-[0.75rem] font-semibold text-black/70 transition-colors hover:bg-sidebar-accent/50 hover:text-black"
+                        activeProps={{ className: "bg-sidebar-accent text-black" }}
+                      >
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               );
             })}
           </div>

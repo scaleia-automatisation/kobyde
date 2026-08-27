@@ -23,15 +23,21 @@ import { PaymentRequestDialog } from "@/components/payment-request-dialog";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+type OfferType = "produit" | "service";
+
 export const Route = createFileRoute("/_authenticated/catalogue")({
+  validateSearch: (search: Record<string, unknown>): { type?: OfferType } => {
+    const t = search["type"];
+    return t === "produit" || t === "service" ? { type: t } : {};
+  },
   head: () => ({
     meta: [
-      { title: "Catalogue — Kobyde" },
+      { title: "Offres — Kobyde" },
       {
         name: "description",
-        content: "Vos produits et services : prix HT/TTC, TVA, SKU, sous-prestations et conditions.",
+        content: "Vos offres, produits et services : prix HT/TTC, TVA, SKU, sous-prestations et conditions.",
       },
-      { property: "og:title", content: "Catalogue — Kobyde" },
+      { property: "og:title", content: "Offres — Kobyde" },
       { property: "og:description", content: "Vos produits et services, prêts pour vos devis." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -45,6 +51,7 @@ type Sub = { nom: string; prix: number };
 function CataloguePage() {
   const orgId = useOrgId();
   const navigate = useNavigate();
+  const { type: activeType } = Route.useSearch();
   const { data: products, isLoading } = useRows<any>("products");
   const { data: clients } = useRows<any>("clients");
   const create = useCreateRow("products");
@@ -60,11 +67,12 @@ function CataloguePage() {
     const fd = new FormData(e.currentTarget);
     const num = (k: string, d = 0) => Number(fd.get(k) ?? d) || d;
     const priceHt = num("price_ht");
+    const kind = (String(fd.get("kind") ?? "service") === "produit" ? "produit" : "service") as OfferType;
     create.mutate(
       {
         name: String(fd.get("name") ?? "").trim(),
         description: String(fd.get("description") ?? "").trim() || null,
-        kind: String(fd.get("kind") ?? "service"),
+        kind,
         category: String(fd.get("category") ?? "").trim() || null,
         sku: String(fd.get("sku") ?? "").trim() || null,
         unit: String(fd.get("unit") ?? "unité"),
@@ -77,9 +85,10 @@ function CataloguePage() {
       },
       {
         onSuccess: () => {
-          toast.success("Ajouté au catalogue");
+          toast.success(kind === "produit" ? "Produit ajouté" : "Service ajouté");
           setOpen(false);
           setSubs([]);
+          void navigate({ to: "/catalogue", search: { type: kind } });
         },
         onError: (err: any) => toast.error(err.message ?? "Erreur"),
       },
@@ -137,33 +146,62 @@ function CataloguePage() {
     navigate({ to: "/devis/$id", params: { id: quoteId! } });
   };
 
+  const visible = (products ?? []).filter((p: any) =>
+    !activeType ? true : (p.kind === "produit" ? "produit" : "service") === activeType,
+  );
+
   return (
     <AppShell
-      title="Catalogue"
+      title="Offres"
       subtitle="Ce que vous vendez : prix HT/TTC, TVA, sous-prestations et conditions."
       action={
         <Button className="gap-2" onClick={() => setOpen(true)}>
-          <Plus className="size-4" /> <span className="hidden sm:inline">Ajouter au catalogue</span>
+          <Plus className="size-4" /> <span className="hidden sm:inline">Ajouter une offre</span>
         </Button>
       }
     >
+      <div className="mb-4 flex flex-wrap gap-2">
+        {(
+          [
+            { value: undefined, label: "Toutes les offres" },
+            { value: "produit" as const, label: "Produits" },
+            { value: "service" as const, label: "Services" },
+          ] as const
+        ).map((tab) => (
+          <Button
+            key={tab.label}
+            size="sm"
+            variant={activeType === tab.value ? "default" : "outline"}
+            onClick={() => navigate({ to: "/catalogue", search: tab.value ? { type: tab.value } : {} })}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="surface p-10 text-center text-muted-foreground">Chargement…</div>
-      ) : (products ?? []).length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="surface p-12 text-center">
           <Package className="mx-auto size-8 text-muted-foreground" />
-          <p className="font-display mt-3 text-xl">Votre catalogue est vide</p>
+          <p className="font-display mt-3 text-xl">
+            {activeType === "produit"
+              ? "Aucun produit pour l'instant"
+              : activeType === "service"
+                ? "Aucun service pour l'instant"
+                : "Vous n'avez aucune offre"}
+          </p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             Ajoutez un produit ou un service : il sera insérable en un clic dans vos devis et vos demandes de
             paiement.
           </p>
           <Button className="mt-6 gap-2" onClick={() => setOpen(true)}>
-            <Plus className="size-4" /> Ajouter au catalogue
+            <Plus className="size-4" /> Ajouter une offre
           </Button>
         </div>
       ) : (
         <div className="grid gap-3">
-          {(products ?? []).map((p: any) => {
+          {visible.map((p: any) => {
             const ht = Number(p.price_ht || p.price || 0);
             const vat = Number(p.vat_rate ?? 20);
             return (
@@ -232,7 +270,7 @@ function CataloguePage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Ajouter au catalogue</DialogTitle>
+            <DialogTitle>Ajouter une offre</DialogTitle>
             <DialogDescription>Un produit ou un service, avec son prix et ses conditions.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
@@ -245,7 +283,8 @@ function CataloguePage() {
                 <select
                   id="kind"
                   name="kind"
-                  defaultValue="service"
+                  key={activeType ?? "all"}
+                  defaultValue={activeType ?? "service"}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
                 >
                   <option value="service">Service</option>

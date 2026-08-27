@@ -283,7 +283,8 @@ function CataloguePage() {
                 <select
                   id="kind"
                   name="kind"
-                  defaultValue="service"
+                  key={activeType ?? "all"}
+                  defaultValue={activeType ?? "service"}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
                 >
                   <option value="service">Service</option>

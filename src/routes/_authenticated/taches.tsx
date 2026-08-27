@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Send } from "lucide-react";
+import { CheckCircle2, Loader2, Send, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { useOrgId, useRows, useUpdateRow } from "@/lib/db";
+import { useOrgId, useRows, useUpdateRow, useDeleteRow, useDeleteAllRows } from "@/lib/db";
 import { AGENTS, agentByKey } from "@/lib/agents";
 import { runTask } from "@/lib/eric.functions";
 
@@ -77,6 +77,8 @@ function TasksPage() {
   });
   const { data: agents } = useRows<{ id: string; key: string }>("agents");
   const updateTask = useUpdateRow("agent_tasks");
+  const deleteTask = useDeleteRow("agent_tasks");
+  const deleteAllTasks = useDeleteAllRows("agent_tasks");
   const execute = useServerFn(runTask);
 
   const [tab, setTab] = useState<"encours" | "terminees">("encours");
@@ -115,6 +117,17 @@ function TasksPage() {
     toast.success("Tâche marquée comme terminée.");
   }
 
+  async function removeOne(t: AgentTask) {
+    await deleteTask.mutateAsync(t.id);
+    toast.success("Tâche supprimée.");
+  }
+
+  async function removeAll() {
+    if (!confirm("Supprimer toutes les tâches de cette organisation ?")) return;
+    await deleteAllTasks.mutateAsync();
+    toast.success("Toutes les tâches ont été supprimées.");
+  }
+
   return (
     <AppShell
       title="Tâches"
@@ -151,6 +164,16 @@ function TasksPage() {
             {p.label}
           </button>
         ))}
+        <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={removeAll}
+        >
+          <X className="size-4" />
+          Tout supprimer
+        </Button>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
@@ -204,6 +227,14 @@ function TasksPage() {
                   </Button>
                 </div>
               )}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="ml-1 size-7 text-muted-foreground hover:text-destructive"
+                onClick={() => removeOne(t)}
+              >
+                <X className="size-4" />
+              </Button>
             </li>
           );
         })}

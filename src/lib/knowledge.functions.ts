@@ -110,15 +110,20 @@ export const importKnowledgeBase = createServerFn({ method: "POST" })
     if (!org) throw new Error("Accès refusé.");
 
     const { importKnowledgeAI } = await import("./knowledge.server");
-    const text = await importKnowledgeAI({
+    const result = await importKnowledgeAI({
       existing: org.knowledge_base,
       pasted: data.pasted ?? null,
       file: data.file ?? null,
     });
     const { error: upErr } = await supabase
       .from("organizations")
-      .update({ knowledge_base: text })
+      .update({
+        knowledge_base: result.markdown,
+        knowledge_json: result.data,
+        knowledge_updated_at: new Date().toISOString(),
+      })
       .eq("id", data.orgId);
     if (upErr) throw new Error(upErr.message);
-    return { knowledge: text };
+    return { knowledge: result.markdown };
   });
+

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { useOrgId, useRows, useUpdateRow } from "@/lib/db";
+import { useOrgId, useRows, useUpdateRow, useDeleteRow, useDeleteAllRows } from "@/lib/db";
 import { AGENTS, agentByKey } from "@/lib/agents";
 import { runTask } from "@/lib/eric.functions";
 

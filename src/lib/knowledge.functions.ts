@@ -26,8 +26,15 @@ export const fillCompanyFromWebsite = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!org) throw new Error("Accès refusé.");
 
-    const { fillCompanyFromSite } = await import("./company-fill.server");
-    return { values: await fillCompanyFromSite(data.website.trim()) };
+    try {
+      const { fillCompanyFromSite } = await import("./company-fill.server");
+      return { ok: true as const, values: await fillCompanyFromSite(data.website.trim()) };
+    } catch (error) {
+      return {
+        ok: false as const,
+        error: error instanceof Error ? error.message : "Lecture du site impossible.",
+      };
+    }
   });
 
 /** Génère (ou met à jour) la base de connaissance de l'organisation. */

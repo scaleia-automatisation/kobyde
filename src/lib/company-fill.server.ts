@@ -4,6 +4,7 @@ import { COMPANY_FIELDS } from "./company";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const FETCH_TIMEOUT_MS = 8000;
+const READER_PREFIX = "https://r.jina.ai/http://";
 
 /** Champs remplissables automatiquement depuis un site web (texte et listes uniquement). */
 const FILLABLE = COMPANY_FIELDS.filter((f) => f.type !== "multiselect").map((f) => ({
@@ -92,6 +93,36 @@ async function fetchPageText(url: string): Promise<string> {
   }
 }
 
+/** Lecture de secours pour les sites dont le contenu est rendu côté navigateur. */
+async function fetchRenderedText(url: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const target = new URL(url);
+    const readerUrl = `${READER_PREFIX}${target.host}${target.pathname}${target.search}`;
+    const res = await fetch(readerUrl, {
+      redirect: "follow",
+      signal: controller.signal,
+      headers: { accept: "text/plain;charset=utf-8" },
+    });
+    if (!res.ok) return "";
+
+    const text = (await res.text()).trim();
+    if (
+      text.length < 40 ||
+      /(?:Target URL returned error 4\d\d|Title:\s*(?:404|Not Found)|Page not found)/i.test(text)
+    ) {
+      return "";
+    }
+    return text;
+  } catch {
+    return "";
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Récupère la page d'accueil et, si possible, les pages contact / à propos / mentions légales. */
 export async function fetchSite(url: string): Promise<{ text: string; origin: string }> {
   const raw = normalizeInput(url);
@@ -113,7 +144,8 @@ export async function fetchSite(url: string): Promise<{ text: string; origin: st
   let origin = "";
   let home = "";
   for (const o of origins) {
-    const text = await fetchPageText(o).catch(() => "");
+    const directText = await fetchPageText(o).catch(() => "");
+    const text = directText.length > 40 ? directText : await fetchRenderedText(o).catch(() => "");
     if (text.length > 40) {
       origin = o;
       home = text;

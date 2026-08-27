@@ -10,8 +10,11 @@ import {
   RefreshCw,
   Send,
   Sparkles,
+  Trash2,
   Wand2,
+  X,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";

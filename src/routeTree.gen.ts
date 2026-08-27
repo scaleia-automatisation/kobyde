@@ -61,6 +61,7 @@ import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDevisIdRouteImport } from './routes/_authenticated/devis.$id'
 import { Route as AuthenticatedProjetsIndexRouteImport } from './routes/_authenticated/projets.index'
 import { Route as AuthenticatedProjetsIdRouteImport } from './routes/_authenticated/projets.$id'
+import { Route as ApiPublicEventsWebhookRouteImport } from './routes/api/public/events/webhook'
 import { Route as ApiPublicMetaDeauthRouteImport } from './routes/api/public/meta/deauth'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
@@ -332,6 +333,11 @@ const AuthenticatedProjetsIdRoute = AuthenticatedProjetsIdRouteImport.update({
   path: '/projets/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicEventsWebhookRoute = ApiPublicEventsWebhookRouteImport.update({
+  id: '/api/public/events/webhook',
+  path: '/api/public/events/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMetaDeauthRoute = ApiPublicMetaDeauthRouteImport.update({
   id: '/api/public/meta/deauth',
   path: '/api/public/meta/deauth',
@@ -412,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/devis/': typeof AuthenticatedDevisIndexRoute
   '/projets/': typeof AuthenticatedProjetsIndexRoute
+  '/api/public/events/webhook': typeof ApiPublicEventsWebhookRoute
   '/api/public/meta/deauth': typeof ApiPublicMetaDeauthRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
@@ -470,6 +477,7 @@ export interface FileRoutesByTo {
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/devis': typeof AuthenticatedDevisIndexRoute
   '/projets': typeof AuthenticatedProjetsIndexRoute
+  '/api/public/events/webhook': typeof ApiPublicEventsWebhookRoute
   '/api/public/meta/deauth': typeof ApiPublicMetaDeauthRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
@@ -530,6 +538,7 @@ export interface FileRoutesById {
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
   '/_authenticated/projets/': typeof AuthenticatedProjetsIndexRoute
+  '/api/public/events/webhook': typeof ApiPublicEventsWebhookRoute
   '/api/public/meta/deauth': typeof ApiPublicMetaDeauthRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
@@ -590,6 +599,7 @@ export interface FileRouteTypes {
     | '/clients/'
     | '/devis/'
     | '/projets/'
+    | '/api/public/events/webhook'
     | '/api/public/meta/deauth'
     | '/api/public/payments/webhook'
     | '/api/public/stripe/webhook'
@@ -648,6 +658,7 @@ export interface FileRouteTypes {
     | '/clients'
     | '/devis'
     | '/projets'
+    | '/api/public/events/webhook'
     | '/api/public/meta/deauth'
     | '/api/public/payments/webhook'
     | '/api/public/stripe/webhook'
@@ -707,6 +718,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clients/'
     | '/_authenticated/devis/'
     | '/_authenticated/projets/'
+    | '/api/public/events/webhook'
     | '/api/public/meta/deauth'
     | '/api/public/payments/webhook'
     | '/api/public/stripe/webhook'
@@ -729,6 +741,7 @@ export interface RootRouteChildren {
   EspaceTokenRoute: typeof EspaceTokenRoute
   PayerTokenRoute: typeof PayerTokenRoute
   BlogIndexRoute: typeof BlogIndexRoute
+  ApiPublicEventsWebhookRoute: typeof ApiPublicEventsWebhookRoute
   ApiPublicMetaDeauthRoute: typeof ApiPublicMetaDeauthRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -1102,6 +1115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjetsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/events/webhook': {
+      id: '/api/public/events/webhook'
+      path: '/api/public/events/webhook'
+      fullPath: '/api/public/events/webhook'
+      preLoaderRoute: typeof ApiPublicEventsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/meta/deauth': {
       id: '/api/public/meta/deauth'
       path: '/api/public/meta/deauth'
@@ -1240,6 +1260,7 @@ const rootRouteChildren: RootRouteChildren = {
   EspaceTokenRoute: EspaceTokenRoute,
   PayerTokenRoute: PayerTokenRoute,
   BlogIndexRoute: BlogIndexRoute,
+  ApiPublicEventsWebhookRoute: ApiPublicEventsWebhookRoute,
   ApiPublicMetaDeauthRoute: ApiPublicMetaDeauthRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,

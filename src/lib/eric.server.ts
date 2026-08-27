@@ -19,7 +19,32 @@ export type EricPlan = {
 };
 
 /** Mémoire centrale partagée : synthèse de tout ce que l'entreprise sait déjà. */
-export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: string) {
+const AGENT_KNOWLEDGE_SCOPE: Record<string, string[]> = {
+  jason: ["identite", "activite", "services", "produits", "prix", "cibles", "positionnement", "marketing"],
+  michael: ["identite", "coordonnees", "administratif", "services", "produits", "prix", "conditions"],
+  lamine: ["identite", "cibles", "positionnement", "valeurs", "marketing", "produits", "services", "reseaux_sociaux"],
+  enzo: ["identite", "activite", "services", "produits", "seo", "coordonnees", "marketing"],
+  marieme: ["identite", "produits", "services", "horaires", "coordonnees", "conditions", "seo"],
+  jennifer: ["identite", "produits", "services", "conditions", "horaires", "coordonnees"],
+  clara: ["identite", "services", "produits", "prix", "conditions", "marketing"],
+  audrey: ["identite", "administratif", "prix", "conditions", "coordonnees"],
+  chloe: ["identite", "services", "produits", "conditions", "equipe"],
+  ethan: ["identite", "activite", "positionnement", "cibles", "prix", "marketing", "seo"],
+};
+
+/** Extrait de la base de connaissance structurée uniquement ce qui sert à un agent donné. */
+export function knowledgeForAgent(knowledge: any, agentKey?: string) {
+  if (!knowledge || typeof knowledge !== "object") return null;
+  const scope = agentKey ? AGENT_KNOWLEDGE_SCOPE[agentKey] : null;
+  if (!scope) return knowledge;
+  const out: Record<string, any> = {};
+  for (const key of scope) if (knowledge[key] !== undefined) out[key] = knowledge[key];
+  if (knowledge.incoherences) out["incoherences"] = knowledge.incoherences;
+  if (knowledge.sources) out["sources"] = knowledge.sources;
+  return out;
+}
+
+export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: string, agentKey?: string) {
   const pick = async (table: string, cols: string, limit = 8) => {
     const { data } = await (supabase.from(table as any) as any)
       .select(cols)
@@ -60,6 +85,8 @@ export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: st
         google_my_business: o.google_business_url,
         horaires_ouverture: o.opening_hours,
         base_de_connaissance: typeof o.knowledge_base === "string" ? o.knowledge_base.slice(0, 8000) : null,
+        base_de_connaissance_structuree: knowledgeForAgent(o.knowledge_json, agentKey),
+        base_de_connaissance_maj: o.knowledge_updated_at ?? null,
         positionnement: o.positioning, valeurs: o.values_text, cible: o.target_audience,
         produits: o.products_text, services: o.services_text, prix: o.pricing_text,
         conditions: o.terms_text, equipe: o.team_text,

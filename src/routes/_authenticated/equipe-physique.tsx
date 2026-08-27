@@ -429,14 +429,16 @@ function PhysicalTeamPage() {
                   onChange={(ev) => set("email", ev.target.value)}
                 />
               </div>
-              <div>
-                <Label>Téléphone</Label>
-                <Input value={form.phone} onChange={(ev) => set("phone", ev.target.value)} />
-              </div>
-              <div>
-                <Label>WhatsApp</Label>
-                <Input value={form.whatsapp} onChange={(ev) => set("whatsapp", ev.target.value)} />
-              </div>
+              <PhoneField
+                label="Téléphone"
+                value={form.phone}
+                onChange={(v) => set("phone", v)}
+              />
+              <PhoneField
+                label="WhatsApp"
+                value={form.whatsapp}
+                onChange={(v) => set("whatsapp", v)}
+              />
               <div>
                 <Label>Adresse</Label>
                 <Input value={form.address} onChange={(ev) => set("address", ev.target.value)} />

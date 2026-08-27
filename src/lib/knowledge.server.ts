@@ -158,8 +158,27 @@ export type KnowledgeResult = {
 };
 
 function normalize(out: any, pages: string[], origin: string): KnowledgeResult {
-  const markdown = String(out?.markdown ?? "").trim();
-  if (!markdown) throw new Error("La base de connaissance n'a pas pu être générée.");
+  let markdown = String(out?.markdown ?? "").trim();
+  // Si le modèle a renvoyé le JSON complet dans "markdown", on extrait le vrai contenu texte.
+  if (markdown.startsWith("{")) {
+    try {
+      const inner = JSON.parse(markdown);
+      if (inner && typeof inner.markdown === "string") markdown = inner.markdown.trim();
+    } catch {
+      const s = markdown.indexOf('"markdown"');
+      if (s >= 0) {
+        const m2 = markdown.slice(s).match(/"markdown"\s*:\s*"([\s\S]*?)",\s*"data"/);
+        if (m2?.[1]) {
+          try {
+            markdown = JSON.parse(`"${m2[1]}"`);
+          } catch {
+            markdown = m2[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
+          }
+        }
+      }
+    }
+  }
+  if (!markdown || markdown.startsWith("{")) throw new Error("La base de connaissance n'a pas pu être générée.");
   const data = (out?.data && typeof out.data === "object" ? out.data : {}) as KnowledgeStructured;
   if (Array.isArray(out?.incoherences) && out.incoherences.length) data.incoherences = out.incoherences;
   const sources = Array.isArray(data.sources) ? data.sources : [];

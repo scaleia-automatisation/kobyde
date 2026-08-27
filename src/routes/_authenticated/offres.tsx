@@ -25,7 +25,7 @@ import { PaymentRequestDialog } from "@/components/payment-request-dialog";
 
 type OfferType = "produit" | "service";
 
-export const Route = createFileRoute("/_authenticated/catalogue")({
+export const Route = createFileRoute("/_authenticated/offres")({
   validateSearch: (search: Record<string, unknown>): { type?: OfferType } => {
     const t = search["type"];
     return t === "produit" || t === "service" ? { type: t } : {};
@@ -43,12 +43,12 @@ export const Route = createFileRoute("/_authenticated/catalogue")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: CataloguePage,
+  component: OffresPage,
 });
 
 type Sub = { nom: string; prix: number };
 
-function CataloguePage() {
+function OffresPage() {
   const orgId = useOrgId();
   const navigate = useNavigate();
   const { type: activeType } = Route.useSearch();
@@ -101,7 +101,7 @@ function CataloguePage() {
     const done = (message: string) => {
       toast.success(message);
       closeDialog(false);
-      void navigate({ to: "/catalogue", search: { type: kind } });
+      void navigate({ to: "/offres", search: { type: kind } });
     };
     const fail = (err: any) => toast.error(err.message ?? "Erreur");
     if (editing) {
@@ -200,7 +200,7 @@ function CataloguePage() {
             key={tab.label}
             size="sm"
             variant={activeType === tab.value ? "default" : "outline"}
-            onClick={() => navigate({ to: "/catalogue", search: tab.value ? { type: tab.value } : {} })}
+            onClick={() => navigate({ to: "/offres", search: tab.value ? { type: tab.value } : {} })}
           >
             {tab.label}
             <span

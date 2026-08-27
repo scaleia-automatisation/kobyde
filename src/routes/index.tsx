@@ -458,7 +458,7 @@ function Landing() {
             {
               icon: FileText,
               title: "Vendre et encaisser",
-              text: "Devis, catalogue, TVA, relances, paiement en ligne et facture automatique.",
+              text: "Devis, offres, TVA, relances, paiement en ligne et facture automatique.",
             },
             {
               icon: ShieldCheck,

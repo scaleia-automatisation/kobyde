@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/devis/")({
       {
         name: "description",
         content:
-          "Créez vos devis en quelques clics : depuis un audio, une transcription de réunion ou directement depuis votre catalogue.",
+          "Créez vos devis en quelques clics : depuis un audio, une transcription de réunion ou directement depuis vos offres.",
       },
       { property: "og:title", content: "Devis — Kobyde" },
       { property: "og:description", content: "Devis, versions, validation et envoi au client." },
@@ -351,7 +351,7 @@ function DevisPage() {
           >
             <Package className="mt-0.5 size-5 text-primary" />
             <span>
-              <span className="block font-medium">À partir du catalogue</span>
+              <span className="block font-medium">À partir des offres</span>
               <span className="block text-xs text-muted-foreground">
                 Choisissez les produits ou services et le client.
               </span>
@@ -576,7 +576,7 @@ function DevisPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Depuis le catalogue */}
+      {/* Depuis vos offres */}
       <Dialog open={catalog} onOpenChange={setCatalog}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
@@ -603,7 +603,7 @@ function DevisPage() {
 
             {(products ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Votre catalogue est vide. Ajoutez d'abord des produits ou services depuis la page Catalogue.
+                Vos offres sont vides. Ajoutez d'abord des produits ou services depuis la page Offres.
               </p>
             ) : (
               <ul className="grid gap-2">

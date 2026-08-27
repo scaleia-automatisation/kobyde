@@ -775,3 +775,114 @@ function Result({
     </Card>
   );
 }
+
+/* --------------------------------- Historique -------------------------------- */
+
+const HISTORY_FILTERS: { key: "tout" | ContentKind; label: string }[] = [
+  { key: "tout", label: "Tous les contenus" },
+  { key: "image", label: "Images" },
+  { key: "carrousel", label: "Carrousels" },
+  { key: "video", label: "Vidéos" },
+];
+
+function History({ onOpen, currentId }: { onOpen: (c: any) => void; currentId: string | null }) {
+  const { data, isLoading } = useRows<any>("content_creations");
+  const remove = useDeleteRow("content_creations");
+  const removeAll = useDeleteAllRows("content_creations");
+  const [filter, setFilter] = useState<"tout" | ContentKind>("tout");
+
+  const rows = (data ?? []).filter((c: any) => filter === "tout" || c.kind === filter);
+  const count = (k: "tout" | ContentKind) =>
+    k === "tout" ? (data ?? []).length : (data ?? []).filter((c: any) => c.kind === k).length;
+
+  return (
+    <Card className="p-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-bold text-black">Historique des contenus</h2>
+        {(data ?? []).length ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={removeAll.isPending}
+            onClick={() => {
+              if (!window.confirm("Supprimer tout l'historique des contenus générés ?")) return;
+              removeAll.mutate(undefined, { onSuccess: () => toast.success("Historique supprimé.") });
+            }}
+          >
+            <Trash2 className="size-3.5" /> Tout supprimer
+          </Button>
+        ) : null}
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {HISTORY_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            className={cn(CHIP, filter === f.key && CHIP_ON)}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label} ({count(f.key)})
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Chargement…</p>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Aucun contenu généré pour ce filtre.</p>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {rows.map((c: any) => {
+            const asset = (c.assets ?? []).find((a: any) => a?.url);
+            return (
+              <div
+                key={c.id}
+                className={cn(
+                  "relative overflow-hidden rounded-xl border p-3",
+                  currentId === c.id && "border-primary bg-primary/5",
+                )}
+              >
+                <button
+                  type="button"
+                  aria-label="Supprimer ce contenu"
+                  className="absolute right-2 top-2 rounded-full bg-background/90 p-1 text-muted-foreground shadow-sm hover:text-destructive"
+                  onClick={() =>
+                    remove.mutate(c.id, { onSuccess: () => toast.success("Contenu supprimé.") })
+                  }
+                >
+                  <X className="size-4" />
+                </button>
+                <button type="button" className="block w-full text-left" onClick={() => onOpen(c)}>
+                  {asset ? (
+                    c.kind === "video" ? (
+                      <video src={asset.url} className="mb-2 h-32 w-full rounded-lg border object-cover" muted />
+                    ) : (
+                      <img
+                        src={asset.url}
+                        alt={c.strategy?.concept ?? "Contenu généré"}
+                        className="mb-2 h-32 w-full rounded-lg border object-cover"
+                      />
+                    )
+                  ) : (
+                    <div className="mb-2 flex h-32 w-full items-center justify-center rounded-lg border bg-muted/40 text-xs text-muted-foreground">
+                      {c.status === "en_cours" ? "Génération en cours…" : "Pas d'aperçu"}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{KIND_LABEL[c.kind as ContentKind] ?? c.kind}</Badge>
+                    <span className="text-xs text-muted-foreground">{frDate(c.created_at)}</span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                    {c.strategy?.concept ?? c.objective ?? ""}
+                  </p>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}

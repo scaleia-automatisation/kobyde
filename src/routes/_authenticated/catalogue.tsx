@@ -72,7 +72,7 @@ function CataloguePage() {
       {
         name: String(fd.get("name") ?? "").trim(),
         description: String(fd.get("description") ?? "").trim() || null,
-        kind: String(fd.get("kind") ?? "service"),
+        kind,
         category: String(fd.get("category") ?? "").trim() || null,
         sku: String(fd.get("sku") ?? "").trim() || null,
         unit: String(fd.get("unit") ?? "unité"),

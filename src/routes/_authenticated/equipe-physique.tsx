@@ -146,21 +146,30 @@ function PhysicalTeamPage() {
     }
   };
 
-  const sendNotification = (channel: "email" | "sms" | "whatsapp") => {
+  const sendNotification = (channel: "email" | "sms" | "whatsapp"): void => {
     const e = notifying;
     if (!e) return;
     const text = message.trim() || "Bonjour, message de l'équipe.";
     if (channel === "email") {
-      if (!e.email) return toast.error("Aucun email renseigné");
+      if (!e.email) {
+        toast.error("Aucun email renseigné");
+        return;
+      }
       window.open(
         `mailto:${e.email}?subject=${encodeURIComponent("Message de votre équipe")}&body=${encodeURIComponent(text)}`,
       );
     } else if (channel === "sms") {
-      if (!e.phone) return toast.error("Aucun téléphone renseigné");
+      if (!e.phone) {
+        toast.error("Aucun téléphone renseigné");
+        return;
+      }
       window.open(`sms:${digits(e.phone)}?&body=${encodeURIComponent(text)}`);
     } else {
       const num = digits(e.whatsapp || e.phone || "").replace(/\D/g, "");
-      if (!num) return toast.error("Aucun numéro WhatsApp renseigné");
+      if (!num) {
+        toast.error("Aucun numéro WhatsApp renseigné");
+        return;
+      }
       window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
     }
   };

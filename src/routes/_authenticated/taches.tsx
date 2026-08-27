@@ -164,6 +164,16 @@ function TasksPage() {
             {p.label}
           </button>
         ))}
+        <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={removeAll}
+        >
+          <X className="size-4" />
+          Tout supprimer
+        </Button>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}

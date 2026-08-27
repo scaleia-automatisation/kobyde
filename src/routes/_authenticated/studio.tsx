@@ -517,7 +517,9 @@ function StudioPage() {
               </div>
             </Section>
           ) : null}
+          <History onOpen={setCreation} currentId={creation?.id ?? null} />
         </div>
+
 
         {/* --------------------------- Récapitulatif --------------------------- */}
         <div className="space-y-5 lg:sticky lg:top-4 lg:self-start">

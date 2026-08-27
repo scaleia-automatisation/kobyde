@@ -266,7 +266,7 @@ ${policy}`,
       },
       {
         role: "user",
-        content: `Mémoire centrale (JSON) :\n${JSON.stringify(memory).slice(0, 10000)}\n\nTâche : ${task.title}\nDétail : ${task.detail}`,
+        content: `Mémoire centrale (JSON) :\n${serializeMemory(memory, 20000)}\n\nTâche : ${task.title}\nDétail : ${task.detail}`,
       },
     ],
     false,
@@ -288,7 +288,7 @@ export async function runEric(prompt: string, memory: unknown): Promise<EricPlan
         { role: "system", content: SYSTEM },
         {
           role: "user",
-          content: `Mémoire centrale de l'entreprise (JSON) :\n${JSON.stringify(memory).slice(0, 12000)}\n\nDemande : ${prompt}`,
+          content: `Mémoire centrale de l'entreprise (JSON) :\n${serializeMemory(memory, 24000)}\n\nDemande : ${prompt}`,
         },
       ],
       response_format: { type: "json_object" },

@@ -67,6 +67,7 @@ function CataloguePage() {
     const fd = new FormData(e.currentTarget);
     const num = (k: string, d = 0) => Number(fd.get(k) ?? d) || d;
     const priceHt = num("price_ht");
+    const kind = (String(fd.get("kind") ?? "service") === "produit" ? "produit" : "service") as OfferType;
     create.mutate(
       {
         name: String(fd.get("name") ?? "").trim(),

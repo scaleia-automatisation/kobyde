@@ -69,7 +69,7 @@ export const Route = createFileRoute("/api/public/events/webhook")({
                 orgId: e.org_id,
                 type: e.type,
                 source: e.source ?? "webhook",
-                channel: e.channel ?? undefined,
+                ...(e.channel ? { channel: e.channel } : {}),
                 quoteId: e.quote_id ?? null,
                 quoteNumber: e.quote_number ?? null,
                 contact: e.contact ?? null,

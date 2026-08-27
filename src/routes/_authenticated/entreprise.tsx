@@ -277,7 +277,6 @@ function CompanyPage() {
             <Input
               id="site_url"
               aria-label="Lien du site internet"
-              placeholder="https://votre-site.com"
               value={values["website"] ?? ""}
               onChange={(e) => setValues((v) => ({ ...v, website: e.target.value }))}
               className="sm:max-w-md"
@@ -302,11 +301,11 @@ function CompanyPage() {
                     {f.label}
                     {(values[f.key] ?? "").trim() !== "" && <Check className="size-3.5 text-primary" />}
                   </Label>
+                  {f.placeholder && <p className="text-xs text-muted-foreground">{f.placeholder}</p>}
                   {f.type === "textarea" ? (
                     <Textarea
                       id={f.key}
                       rows={3}
-                      placeholder={f.placeholder}
                       value={values[f.key] ?? ""}
                       onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                     />
@@ -317,7 +316,7 @@ function CompanyPage() {
                         onValueChange={(val) => setValues((v) => ({ ...v, [f.codeKey!]: val }))}
                       >
                         <SelectTrigger className="w-36 shrink-0" aria-label={`Indicatif ${f.label}`}>
-                          <SelectValue placeholder="Indicatif" />
+                          <SelectValue placeholder="—" />
                         </SelectTrigger>
                         <SelectContent>
                           {(f.options ?? []).map((o) => (
@@ -331,7 +330,6 @@ function CompanyPage() {
                         id={f.key}
                         type="tel"
                         className="flex-1"
-                        placeholder={f.placeholder}
                         value={values[f.key] ?? ""}
                         onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                       />
@@ -349,7 +347,7 @@ function CompanyPage() {
                         }
                       >
                         <SelectTrigger id={f.key}>
-                          <SelectValue placeholder={f.placeholder ?? "Ajouter"} />
+                          <SelectValue placeholder="—" />
                         </SelectTrigger>
                         <SelectContent>
                           {(f.options ?? []).map((o) => (
@@ -397,7 +395,7 @@ function CompanyPage() {
                       onValueChange={(val) => setValues((v) => ({ ...v, [f.key]: val }))}
                     >
                       <SelectTrigger id={f.key}>
-                        <SelectValue placeholder={f.placeholder ?? "Choisir"} />
+                        <SelectValue placeholder="—" />
                       </SelectTrigger>
                       <SelectContent>
                         {(f.options ?? []).map((o) => (
@@ -411,7 +409,6 @@ function CompanyPage() {
                     <Input
                       id={f.key}
                       type="text"
-                      placeholder={f.placeholder}
                       value={values[f.key] ?? ""}
                       onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
                     />

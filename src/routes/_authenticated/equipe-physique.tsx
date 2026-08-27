@@ -11,6 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DIAL_CODES } from "@/lib/company";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -76,6 +84,57 @@ const EMPTY = {
 };
 
 const digits = (v: string) => v.replace(/[^\d+]/g, "");
+
+/** Sépare un numéro stocké en indicatif + reste du numéro. */
+const splitPhone = (value: string): { code: string; rest: string } => {
+  const v = (value ?? "").trim();
+  const match = [...DIAL_CODES]
+    .map((c) => c.value)
+    .sort((a, b) => b.length - a.length)
+    .find((c) => v.startsWith(c));
+  if (!match) return { code: "+33", rest: v };
+  return { code: match, rest: v.slice(match.length).trim() };
+};
+
+function PhoneField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const { code, rest } = splitPhone(value);
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="flex gap-2">
+        <Select value={code} onValueChange={(c) => onChange(rest ? `${c} ${rest}` : c)}>
+          <SelectTrigger className="w-[120px] shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-64">
+            {DIAL_CODES.map((c) => (
+              <SelectItem key={c.value} value={c.value}>
+                {c.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          inputMode="tel"
+          placeholder="6 12 34 56 78"
+          value={rest}
+          onChange={(ev) => {
+            const r = ev.target.value;
+            onChange(r.trim() ? `${code} ${r}` : "");
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function PhysicalTeamPage() {
   const { data: employees, isLoading } = useRows<Employee>("employees");
@@ -370,14 +429,16 @@ function PhysicalTeamPage() {
                   onChange={(ev) => set("email", ev.target.value)}
                 />
               </div>
-              <div>
-                <Label>Téléphone</Label>
-                <Input value={form.phone} onChange={(ev) => set("phone", ev.target.value)} />
-              </div>
-              <div>
-                <Label>WhatsApp</Label>
-                <Input value={form.whatsapp} onChange={(ev) => set("whatsapp", ev.target.value)} />
-              </div>
+              <PhoneField
+                label="Téléphone"
+                value={form.phone}
+                onChange={(v) => set("phone", v)}
+              />
+              <PhoneField
+                label="WhatsApp"
+                value={form.whatsapp}
+                onChange={(v) => set("whatsapp", v)}
+              />
               <div>
                 <Label>Adresse</Label>
                 <Input value={form.address} onChange={(ev) => set("address", ev.target.value)} />

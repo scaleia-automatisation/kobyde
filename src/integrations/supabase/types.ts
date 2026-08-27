@@ -353,6 +353,62 @@ export type Database = {
           },
         ]
       }
+      app_events: {
+        Row: {
+          channel: string
+          contact: string | null
+          created_at: string
+          detail: string | null
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          occurred_at: string
+          org_id: string
+          payload: Json
+          source: string
+          title: string
+        }
+        Insert: {
+          channel?: string
+          contact?: string | null
+          created_at?: string
+          detail?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          occurred_at?: string
+          org_id: string
+          payload?: Json
+          source?: string
+          title: string
+        }
+        Update: {
+          channel?: string
+          contact?: string | null
+          created_at?: string
+          detail?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          org_id?: string
+          payload?: Json
+          source?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -3393,6 +3449,7 @@ export type Database = {
           discount_type: string
           discount_value: number
           id: string
+          last_event_at: string | null
           meeting_id: string | null
           notes: string | null
           number: string
@@ -3411,6 +3468,7 @@ export type Database = {
           validity_days: number
           vat_rate: number
           version: number
+          viewed_at: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -3422,6 +3480,7 @@ export type Database = {
           discount_type?: string
           discount_value?: number
           id?: string
+          last_event_at?: string | null
           meeting_id?: string | null
           notes?: string | null
           number: string
@@ -3440,6 +3499,7 @@ export type Database = {
           validity_days?: number
           vat_rate?: number
           version?: number
+          viewed_at?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -3451,6 +3511,7 @@ export type Database = {
           discount_type?: string
           discount_value?: number
           id?: string
+          last_event_at?: string | null
           meeting_id?: string | null
           notes?: string | null
           number?: string
@@ -3469,6 +3530,7 @@ export type Database = {
           validity_days?: number
           vat_rate?: number
           version?: number
+          viewed_at?: string | null
         }
         Relationships: [
           {

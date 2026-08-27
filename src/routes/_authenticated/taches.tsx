@@ -227,6 +227,14 @@ function TasksPage() {
                   </Button>
                 </div>
               )}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="ml-1 size-7 text-muted-foreground hover:text-destructive"
+                onClick={() => removeOne(t)}
+              >
+                <X className="size-4" />
+              </Button>
             </li>
           );
         })}

@@ -310,13 +310,13 @@ function QuoteDetail() {
               <h2 className="font-display text-lg">Lignes du devis</h2>
               <div className="flex items-center gap-2">
                 <select
-                  aria-label="Ajouter une ligne depuis le catalogue"
+                  aria-label="Ajouter une ligne depuis vos offres"
                   className="h-9 rounded-xl border border-input bg-background px-3 text-sm"
                   value=""
                   onChange={(e) => e.target.value && addLine(e.target.value)}
                   disabled={locked}
                 >
-                  <option value="">Depuis le catalogue…</option>
+                  <option value="">depuis vos offres…</option>
                   {(products ?? []).map((p: any) => (
                     <option key={p.id} value={p.id}>
                       {p.name}

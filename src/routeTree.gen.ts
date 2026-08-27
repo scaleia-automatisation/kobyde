@@ -22,7 +22,6 @@ import { Route as AuthenticatedAideRouteImport } from './routes/_authenticated/a
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAutomatisationsRouteImport } from './routes/_authenticated/automatisations'
 import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authenticated/bienvenue'
-import { Route as AuthenticatedCatalogueRouteImport } from './routes/_authenticated/catalogue'
 import { Route as AuthenticatedConnexionsRouteImport } from './routes/_authenticated/connexions'
 import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
@@ -38,6 +37,7 @@ import { Route as AuthenticatedLamineRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedMerciRouteImport } from './routes/_authenticated/merci'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedOffresRouteImport } from './routes/_authenticated/offres'
 import { Route as AuthenticatedPaiementRouteImport } from './routes/_authenticated/paiement'
 import { Route as AuthenticatedPaiementsRouteImport } from './routes/_authenticated/paiements'
 import { Route as AuthenticatedParametresRouteImport } from './routes/_authenticated/parametres'
@@ -131,11 +131,6 @@ const AuthenticatedBienvenueRoute = AuthenticatedBienvenueRouteImport.update({
   path: '/bienvenue',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCatalogueRoute = AuthenticatedCatalogueRouteImport.update({
-  id: '/catalogue',
-  path: '/catalogue',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedConnexionsRoute = AuthenticatedConnexionsRouteImport.update({
   id: '/connexions',
   path: '/connexions',
@@ -212,6 +207,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOffresRoute = AuthenticatedOffresRouteImport.update({
+  id: '/offres',
+  path: '/offres',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPaiementRoute = AuthenticatedPaiementRouteImport.update({
   id: '/paiement',
   path: '/paiement',
@@ -366,7 +366,6 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/bienvenue': typeof AuthenticatedBienvenueRoute
-  '/catalogue': typeof AuthenticatedCatalogueRoute
   '/connexions': typeof AuthenticatedConnexionsRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -382,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/marketing': typeof AuthenticatedMarketingRoute
   '/merci': typeof AuthenticatedMerciRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/offres': typeof AuthenticatedOffresRoute
   '/paiement': typeof AuthenticatedPaiementRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -423,7 +423,6 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/bienvenue': typeof AuthenticatedBienvenueRoute
-  '/catalogue': typeof AuthenticatedCatalogueRoute
   '/connexions': typeof AuthenticatedConnexionsRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -439,6 +438,7 @@ export interface FileRoutesByTo {
   '/marketing': typeof AuthenticatedMarketingRoute
   '/merci': typeof AuthenticatedMerciRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/offres': typeof AuthenticatedOffresRoute
   '/paiement': typeof AuthenticatedPaiementRoute
   '/paiements': typeof AuthenticatedPaiementsRoute
   '/parametres': typeof AuthenticatedParametresRoute
@@ -482,7 +482,6 @@ export interface FileRoutesById {
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/automatisations': typeof AuthenticatedAutomatisationsRoute
   '/_authenticated/bienvenue': typeof AuthenticatedBienvenueRoute
-  '/_authenticated/catalogue': typeof AuthenticatedCatalogueRoute
   '/_authenticated/connexions': typeof AuthenticatedConnexionsRoute
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
@@ -498,6 +497,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/merci': typeof AuthenticatedMerciRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/offres': typeof AuthenticatedOffresRoute
   '/_authenticated/paiement': typeof AuthenticatedPaiementRoute
   '/_authenticated/paiements': typeof AuthenticatedPaiementsRoute
   '/_authenticated/parametres': typeof AuthenticatedParametresRoute
@@ -541,7 +541,6 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automatisations'
     | '/bienvenue'
-    | '/catalogue'
     | '/connexions'
     | '/credits'
     | '/documents'
@@ -557,6 +556,7 @@ export interface FileRouteTypes {
     | '/marketing'
     | '/merci'
     | '/notifications'
+    | '/offres'
     | '/paiement'
     | '/paiements'
     | '/parametres'
@@ -598,7 +598,6 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/automatisations'
     | '/bienvenue'
-    | '/catalogue'
     | '/connexions'
     | '/credits'
     | '/documents'
@@ -614,6 +613,7 @@ export interface FileRouteTypes {
     | '/marketing'
     | '/merci'
     | '/notifications'
+    | '/offres'
     | '/paiement'
     | '/paiements'
     | '/parametres'
@@ -656,7 +656,6 @@ export interface FileRouteTypes {
     | '/_authenticated/analytics'
     | '/_authenticated/automatisations'
     | '/_authenticated/bienvenue'
-    | '/_authenticated/catalogue'
     | '/_authenticated/connexions'
     | '/_authenticated/credits'
     | '/_authenticated/documents'
@@ -672,6 +671,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing'
     | '/_authenticated/merci'
     | '/_authenticated/notifications'
+    | '/_authenticated/offres'
     | '/_authenticated/paiement'
     | '/_authenticated/paiements'
     | '/_authenticated/parametres'
@@ -816,13 +816,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBienvenueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/catalogue': {
-      id: '/_authenticated/catalogue'
-      path: '/catalogue'
-      fullPath: '/catalogue'
-      preLoaderRoute: typeof AuthenticatedCatalogueRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/connexions': {
       id: '/_authenticated/connexions'
       path: '/connexions'
@@ -926,6 +919,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/offres': {
+      id: '/_authenticated/offres'
+      path: '/offres'
+      fullPath: '/offres'
+      preLoaderRoute: typeof AuthenticatedOffresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/paiement': {
@@ -1125,7 +1125,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedAutomatisationsRoute: typeof AuthenticatedAutomatisationsRoute
   AuthenticatedBienvenueRoute: typeof AuthenticatedBienvenueRoute
-  AuthenticatedCatalogueRoute: typeof AuthenticatedCatalogueRoute
   AuthenticatedConnexionsRoute: typeof AuthenticatedConnexionsRoute
   AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
@@ -1141,6 +1140,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedMerciRoute: typeof AuthenticatedMerciRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedOffresRoute: typeof AuthenticatedOffresRoute
   AuthenticatedPaiementRoute: typeof AuthenticatedPaiementRoute
   AuthenticatedPaiementsRoute: typeof AuthenticatedPaiementsRoute
   AuthenticatedParametresRoute: typeof AuthenticatedParametresRoute
@@ -1165,7 +1165,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedAutomatisationsRoute: AuthenticatedAutomatisationsRoute,
   AuthenticatedBienvenueRoute: AuthenticatedBienvenueRoute,
-  AuthenticatedCatalogueRoute: AuthenticatedCatalogueRoute,
   AuthenticatedConnexionsRoute: AuthenticatedConnexionsRoute,
   AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
@@ -1181,6 +1180,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedMerciRoute: AuthenticatedMerciRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedOffresRoute: AuthenticatedOffresRoute,
   AuthenticatedPaiementRoute: AuthenticatedPaiementRoute,
   AuthenticatedPaiementsRoute: AuthenticatedPaiementsRoute,
   AuthenticatedParametresRoute: AuthenticatedParametresRoute,

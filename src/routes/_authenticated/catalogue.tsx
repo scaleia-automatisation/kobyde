@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Trash2, FileText, CreditCard, Package } from "lucide-react";
+import { Plus, Trash2, FileText, CreditCard, Package, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useCreateRow, useDeleteRow, useOrgId, useRows, eur2 } from "@/lib/db";
+import { useCreateRow, useDeleteRow, useUpdateRow, useOrgId, useRows, eur2 } from "@/lib/db";
 import { isoDate, addDays, nextNumber, round2, ttcFrom } from "@/lib/sales";
 import { PaymentRequestDialog } from "@/components/payment-request-dialog";
 

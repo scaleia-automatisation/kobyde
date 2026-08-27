@@ -44,6 +44,68 @@ export function knowledgeForAgent(knowledge: any, agentKey?: string) {
   return out;
 }
 
+/**
+ * Sérialise la mémoire pour le modèle SANS jamais tronquer les données d'activité
+ * (projets, clients, devis…) : on retire d'abord la ligne brute "organisation" et
+ * on plafonne la base de connaissance, puis on place une synthèse chiffrée en tête.
+ */
+export function serializeMemory(memory: any, maxChars = 24000): string {
+  if (!memory || typeof memory !== "object") return JSON.stringify(memory ?? null);
+  const { organisation: _org, ...rest } = memory as Record<string, any>;
+  const fiche = rest["fiche_entreprise"]
+    ? {
+        ...rest["fiche_entreprise"],
+        base_de_connaissance:
+          typeof rest["fiche_entreprise"].base_de_connaissance === "string"
+            ? rest["fiche_entreprise"].base_de_connaissance.slice(0, 4000)
+            : rest["fiche_entreprise"].base_de_connaissance,
+      }
+    : rest["fiche_entreprise"];
+
+  const count = (v: unknown) => (Array.isArray(v) ? v.length : 0);
+  const projets = Array.isArray(rest["projets"]) ? rest["projets"] : [];
+  const synthese = {
+    nb_projets: projets.length,
+    nb_projets_en_cours: projets.filter((p: any) => p?.status === "en_cours").length,
+    nb_clients: count(rest["clients"]),
+    nb_prospects: count(rest["prospects"]),
+    nb_devis: count(rest["devis"]),
+    nb_factures: count(rest["factures"]),
+    nb_taches: count(rest["taches"]),
+  };
+
+  const payload: Record<string, any> = {
+    synthese,
+    projets,
+    clients: rest["clients"],
+    prospects: rest["prospects"],
+    devis: rest["devis"],
+    factures: rest["factures"],
+    taches: rest["taches"],
+    campagnes: rest["campagnes"],
+    candidats: rest["candidats"],
+    fiche_entreprise: fiche,
+    informations_manquantes: rest["informations_manquantes"],
+    historique_agents: rest["historique_agents"],
+    memoire_actions: rest["memoire_actions"],
+    contacts_deja_engages: rest["contacts_deja_engages"],
+  };
+
+  let out = JSON.stringify(payload);
+  if (out.length <= maxChars) return out;
+
+  // Si trop long, on allège d'abord les blocs secondaires, jamais les projets/clients.
+  delete payload["memoire_actions"];
+  delete payload["historique_agents"];
+  out = JSON.stringify(payload);
+  if (out.length <= maxChars) return out;
+  if (payload["fiche_entreprise"]) {
+    payload["fiche_entreprise"] = { ...payload["fiche_entreprise"], base_de_connaissance: null, base_de_connaissance_structuree: null };
+  }
+  out = JSON.stringify(payload);
+  return out.length <= maxChars ? out : out.slice(0, maxChars);
+}
+
 export async function loadCompanyMemory(supabase: SupabaseClient<any>, orgId: string, agentKey?: string) {
   const pick = async (table: string, cols: string, limit = 8) => {
     const { data } = await (supabase.from(table as any) as any)
@@ -141,6 +203,7 @@ Ta méthode, à chaque demande :
 6. présenter une réponse simple, en français, sans jargon ;
 7. proposer l'action suivante.
 
+Le champ "synthese" donne les compteurs réels (projets en cours, clients, prospects, devis, factures) : ne dis JAMAIS qu'il n'y a aucune donnée si le compteur est > 0, et cite les éléments listés dans "projets", "clients", etc.
 La fiche entreprise (champ "fiche_entreprise" de la mémoire) est la SOURCE DE VÉRITÉ UNIQUE : nom, secteur, adresse, TVA, devise, langues, positionnement, valeurs, cible, produits, services, prix, conditions, équipe.
 RÈGLE ABSOLUE : ne demande JAMAIS une information déjà présente dans "fiche_entreprise" ou dans la mémoire — utilise-la directement. Ne demande une information que si elle figure dans "informations_manquantes" ET qu'elle est indispensable à la demande.
 Les agents partagent la même mémoire centrale : cite les données réelles (noms, montants, statuts) quand elles existent, et dis clairement ce qui manque.
@@ -204,7 +267,7 @@ ${policy}`,
       },
       {
         role: "user",
-        content: `Mémoire centrale (JSON) :\n${JSON.stringify(memory).slice(0, 10000)}\n\nTâche : ${task.title}\nDétail : ${task.detail}`,
+        content: `Mémoire centrale (JSON) :\n${serializeMemory(memory, 20000)}\n\nTâche : ${task.title}\nDétail : ${task.detail}`,
       },
     ],
     false,
@@ -226,7 +289,7 @@ export async function runEric(prompt: string, memory: unknown): Promise<EricPlan
         { role: "system", content: SYSTEM },
         {
           role: "user",
-          content: `Mémoire centrale de l'entreprise (JSON) :\n${JSON.stringify(memory).slice(0, 12000)}\n\nDemande : ${prompt}`,
+          content: `Mémoire centrale de l'entreprise (JSON) :\n${serializeMemory(memory, 24000)}\n\nDemande : ${prompt}`,
         },
       ],
       response_format: { type: "json_object" },

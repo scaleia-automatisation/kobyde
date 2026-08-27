@@ -52,7 +52,30 @@ Réponds UNIQUEMENT par un objet JSON valide :
   "incoherences": ["..."]
 }
 
-"markdown" doit suivre exactement cette structure, avec titres, listes à puces et emojis, en omettant les sous-points sans information :
+"markdown" doit être du TEXTE STRUCTURÉ LISIBLE (pas de JSON, pas de syntaxe markdown ** ni ##). Format OBLIGATOIRE pour chaque section : un titre en MAJUSCULES précédé d'un emoji, une ligne vide, puis chaque information sur sa propre ligne sous la forme « - Libellé : valeur » (listes à puces simples), avec une ligne vide entre chaque section. Exemple :
+
+🏢 IDENTITÉ
+
+- Nom : Baobab Shop
+- Description : ...
+- Type d'entreprise : ...
+- Secteur d'activité : ...
+- SIRET : ...
+- SIREN : ...
+- Numéro de TVA : ...
+
+📍 COORDONNÉES
+
+- Adresse : ...
+- Ville : ...
+- Pays : ...
+- Site internet : ...
+- Email : ...
+- Téléphone : ...
+- WhatsApp : ...
+- Telegram : ...
+
+Structure complète des sections à produire (omettre toute ligne ou section sans information, ne jamais écrire « non renseigné ») :
 🏢 1. IDENTITÉ DE L'ENTREPRISE (nom, descriptions, secteur, type, zone géographique, résumé : ce qu'elle fait, pour qui, comment elle crée de la valeur, ce qui la différencie)
 🎯 2. ACTIVITÉ ET EXPERTISE
 🛍️ 3. PRODUITS
@@ -135,8 +158,27 @@ export type KnowledgeResult = {
 };
 
 function normalize(out: any, pages: string[], origin: string): KnowledgeResult {
-  const markdown = String(out?.markdown ?? "").trim();
-  if (!markdown) throw new Error("La base de connaissance n'a pas pu être générée.");
+  let markdown = String(out?.markdown ?? "").trim();
+  // Si le modèle a renvoyé le JSON complet dans "markdown", on extrait le vrai contenu texte.
+  if (markdown.startsWith("{")) {
+    try {
+      const inner = JSON.parse(markdown);
+      if (inner && typeof inner.markdown === "string") markdown = inner.markdown.trim();
+    } catch {
+      const s = markdown.indexOf('"markdown"');
+      if (s >= 0) {
+        const m2 = markdown.slice(s).match(/"markdown"\s*:\s*"([\s\S]*?)",\s*"data"/);
+        if (m2?.[1]) {
+          try {
+            markdown = JSON.parse(`"${m2[1]}"`);
+          } catch {
+            markdown = m2[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
+          }
+        }
+      }
+    }
+  }
+  if (!markdown || markdown.startsWith("{")) throw new Error("La base de connaissance n'a pas pu être générée.");
   const data = (out?.data && typeof out.data === "object" ? out.data : {}) as KnowledgeStructured;
   if (Array.isArray(out?.incoherences) && out.incoherences.length) data.incoherences = out.incoherences;
   const sources = Array.isArray(data.sources) ? data.sources : [];

@@ -126,12 +126,16 @@ function PhoneField({
           inputMode="tel"
           placeholder="6 12 34 56 78"
           value={rest}
+          className="min-w-0 flex-1"
           onChange={(ev) => {
             const r = ev.target.value;
             onChange(r.trim() ? `${code} ${r}` : "");
           }}
         />
       </div>
+      <p className="mt-1 text-[12px] text-muted-foreground">
+        Numéro complet : {value || "—"}
+      </p>
     </div>
   );
 }

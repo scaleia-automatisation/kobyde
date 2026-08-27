@@ -135,6 +135,10 @@ function CompanyPage() {
     setBusy("fill");
     try {
       const res = await fillCompanyFromWebsite({ data: { orgId, website } });
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
       const found = res.values as Record<string, string>;
       const count = Object.keys(found).filter((k) => k !== "website").length;
       setValues((v) => ({ ...v, ...found }));

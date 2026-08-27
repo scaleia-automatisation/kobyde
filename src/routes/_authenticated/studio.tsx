@@ -520,7 +520,7 @@ function StudioPage() {
               </div>
             </Section>
           ) : null}
-          <History onOpen={setCreation} currentId={creation?.id ?? null} />
+          <ContentHistory onOpen={setCreation} currentId={creation?.id ?? null} />
         </div>
 
 
@@ -785,7 +785,7 @@ const HISTORY_FILTERS: { key: "tout" | ContentKind; label: string }[] = [
   { key: "video", label: "Vidéos" },
 ];
 
-function History({ onOpen, currentId }: { onOpen: (c: any) => void; currentId: string | null }) {
+function ContentHistory({ onOpen, currentId }: { onOpen: (c: any) => void; currentId: string | null }) {
   const { data, isLoading } = useRows<any>("content_creations");
   const remove = useDeleteRow("content_creations");
   const removeAll = useDeleteAllRows("content_creations");

@@ -305,39 +305,42 @@ function CataloguePage() {
         </div>
       )}
 
-      {/* Ajout produit */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Ajout / modification d'une offre */}
+      <Dialog open={open} onOpenChange={closeDialog}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Ajouter une offre</DialogTitle>
-            <DialogDescription>Un produit ou un service, avec son prix et ses conditions.</DialogDescription>
+            <DialogTitle>{editing ? "Modifier l'offre" : "Ajouter une offre"}</DialogTitle>
+            <DialogDescription>
+              {editing
+                ? `Modifiez ${editing.kind === "produit" ? "le produit" : "le service"} « ${editing.name} ».`
+                : "Un produit ou un service, avec son prix et ses conditions."}
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={submit} className="space-y-4">
+          <form key={editing?.id ?? "new"} onSubmit={submit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field name="name" label="Nom" required placeholder="Création de site web" />
-              <Field name="category" label="Catégorie" placeholder="Web" />
-              <Field name="sku" label="SKU" placeholder="WEB-001" />
+              <Field name="name" label="Nom" required placeholder="Création de site web" defaultValue={editing?.name ?? undefined} />
+              <Field name="category" label="Catégorie" placeholder="Web" defaultValue={editing?.category ?? undefined} />
+              <Field name="sku" label="SKU" placeholder="WEB-001" defaultValue={editing?.sku ?? undefined} />
               <div className="space-y-1.5">
                 <Label htmlFor="kind">Type</Label>
                 <select
                   id="kind"
                   name="kind"
-                  key={activeType ?? "all"}
-                  defaultValue={activeType ?? "service"}
+                  defaultValue={editing?.kind === "produit" ? "produit" : editing ? "service" : (activeType ?? "service")}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
                 >
                   <option value="service">Service</option>
                   <option value="produit">Produit</option>
                 </select>
               </div>
-              <Field name="price_ht" label="Prix HT (€)" type="number" defaultValue="0" />
-              <Field name="vat_rate" label="TVA (%)" type="number" defaultValue="20" />
-              <Field name="unit" label="Unité" defaultValue="unité" />
-              <Field name="default_quantity" label="Quantité par défaut" type="number" defaultValue="1" />
+              <Field name="price_ht" label="Prix HT (€)" type="number" defaultValue={String(editing?.price_ht ?? editing?.price ?? 0)} />
+              <Field name="vat_rate" label="TVA (%)" type="number" defaultValue={String(editing?.vat_rate ?? 20)} />
+              <Field name="unit" label="Unité" defaultValue={editing?.unit ?? "unité"} />
+              <Field name="default_quantity" label="Quantité par défaut" type="number" defaultValue={String(editing?.default_quantity ?? 1)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" rows={2} />
+              <Textarea id="description" name="description" rows={2} defaultValue={editing?.description ?? ""} />
             </div>
 
             <div className="space-y-2">

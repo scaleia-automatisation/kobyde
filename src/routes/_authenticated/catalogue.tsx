@@ -23,15 +23,21 @@ import { PaymentRequestDialog } from "@/components/payment-request-dialog";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+type OfferType = "produit" | "service";
+
 export const Route = createFileRoute("/_authenticated/catalogue")({
+  validateSearch: (search: Record<string, unknown>): { type?: OfferType } => {
+    const t = search.type;
+    return t === "produit" || t === "service" ? { type: t } : {};
+  },
   head: () => ({
     meta: [
-      { title: "Catalogue — Kobyde" },
+      { title: "Offres — Kobyde" },
       {
         name: "description",
-        content: "Vos produits et services : prix HT/TTC, TVA, SKU, sous-prestations et conditions.",
+        content: "Vos offres, produits et services : prix HT/TTC, TVA, SKU, sous-prestations et conditions.",
       },
-      { property: "og:title", content: "Catalogue — Kobyde" },
+      { property: "og:title", content: "Offres — Kobyde" },
       { property: "og:description", content: "Vos produits et services, prêts pour vos devis." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -45,6 +51,7 @@ type Sub = { nom: string; prix: number };
 function CataloguePage() {
   const orgId = useOrgId();
   const navigate = useNavigate();
+  const { type: activeType } = Route.useSearch();
   const { data: products, isLoading } = useRows<any>("products");
   const { data: clients } = useRows<any>("clients");
   const create = useCreateRow("products");

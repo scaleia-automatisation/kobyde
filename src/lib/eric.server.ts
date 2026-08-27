@@ -363,7 +363,10 @@ export async function runEric(prompt: string, memory: unknown): Promise<EricPlan
 
   const valid = new Set(AGENTS.filter((a) => !a.primary).map((a) => a.key));
   return {
-    reponse: String(parsed.reponse ?? "Je m'en occupe."),
+    reponse:
+      typeof parsed.reponse === "string"
+        ? humanizeOutput(parsed.reponse)
+        : humanizeOutput(JSON.stringify(parsed.reponse ?? "Je m'en occupe.")),
     memoire: Array.isArray(parsed.memoire) ? parsed.memoire.map(String).slice(0, 6) : [],
     taches: (Array.isArray(parsed.taches) ? parsed.taches : [])
       .filter((t: any) => valid.has(t?.agent_key))

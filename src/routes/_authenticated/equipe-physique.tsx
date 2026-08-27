@@ -77,6 +77,57 @@ const EMPTY = {
 
 const digits = (v: string) => v.replace(/[^\d+]/g, "");
 
+/** Sépare un numéro stocké en indicatif + reste du numéro. */
+const splitPhone = (value: string): { code: string; rest: string } => {
+  const v = (value ?? "").trim();
+  const match = [...DIAL_CODES]
+    .map((c) => c.value)
+    .sort((a, b) => b.length - a.length)
+    .find((c) => v.startsWith(c));
+  if (!match) return { code: "+33", rest: v };
+  return { code: match, rest: v.slice(match.length).trim() };
+};
+
+function PhoneField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const { code, rest } = splitPhone(value);
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="flex gap-2">
+        <Select value={code} onValueChange={(c) => onChange(rest ? `${c} ${rest}` : c)}>
+          <SelectTrigger className="w-[120px] shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-64">
+            {DIAL_CODES.map((c) => (
+              <SelectItem key={c.value} value={c.value}>
+                {c.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          inputMode="tel"
+          placeholder="6 12 34 56 78"
+          value={rest}
+          onChange={(ev) => {
+            const r = ev.target.value;
+            onChange(r.trim() ? `${code} ${r}` : "");
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function PhysicalTeamPage() {
   const { data: employees, isLoading } = useRows<Employee>("employees");
   const create = useCreateRow("employees");

@@ -160,7 +160,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             {group.items.map((item) => {
               const active = pathname === item.to || pathname.startsWith(item.to + "/");
               const isAgent = "agent" in item;
-              return (
+              const node = (
                 <Link
                   key={item.to}
                   to={item.to}

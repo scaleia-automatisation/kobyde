@@ -77,6 +77,8 @@ function TasksPage() {
   });
   const { data: agents } = useRows<{ id: string; key: string }>("agents");
   const updateTask = useUpdateRow("agent_tasks");
+  const deleteTask = useDeleteRow("agent_tasks");
+  const deleteAllTasks = useDeleteAllRows("agent_tasks");
   const execute = useServerFn(runTask);
 
   const [tab, setTab] = useState<"encours" | "terminees">("encours");

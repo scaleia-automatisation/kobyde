@@ -117,6 +117,17 @@ function TasksPage() {
     toast.success("Tâche marquée comme terminée.");
   }
 
+  async function removeOne(t: AgentTask) {
+    await deleteTask.mutateAsync(t.id);
+    toast.success("Tâche supprimée.");
+  }
+
+  async function removeAll() {
+    if (!confirm("Supprimer toutes les tâches de cette organisation ?")) return;
+    await deleteAllTasks.mutateAsync();
+    toast.success("Toutes les tâches ont été supprimées.");
+  }
+
   return (
     <AppShell
       title="Tâches"

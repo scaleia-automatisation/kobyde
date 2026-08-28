@@ -39,7 +39,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { amIPlatformAdmin } from "@/lib/admin.functions";
 import { useSessionTracking } from "@/lib/user-events";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile, useRows } from "@/lib/db";
+import { useMyRole, useProfile, useRows } from "@/lib/db";
 import { useMonthlyRenewal, usePlan } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
@@ -57,7 +57,12 @@ import { AGENTS } from "@/lib/agents";
 import type { AgentMeta } from "@/lib/agents";
 
 type NavItem =
-  | { to: string; label: string; icon: React.ComponentType<{ className?: string }> }
+  | {
+      to: string;
+      label: string;
+      icon: React.ComponentType<{ className?: string }>;
+      adminOnly?: boolean;
+    }
   | { to: string; label: string; agent: AgentMeta };
 
 const AGENT_NAV_ITEMS: { to: string; label: string; agent: AgentMeta }[] = AGENTS.map((agent) => ({
@@ -115,7 +120,7 @@ export const NAV_GROUPS: { label: string; adminOnly?: boolean; items: NavItem[] 
       { to: "/credits", label: "Crédits IA", icon: Coins },
       { to: "/plans", label: "Formules", icon: BadgeEuro },
       { to: "/entreprise", label: "Fiche entreprise", icon: Building2 },
-      { to: "/connexions", label: "Mes connexions", icon: Link2 },
+      { to: "/connexions", label: "Connecteurs", icon: Link2, adminOnly: true },
       { to: "/parametres", label: "Paramètres", icon: Settings },
     ],
   },
@@ -148,7 +153,15 @@ function useIsAdmin() {
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = useIsAdmin();
-  const groups = NAV_GROUPS.filter((g) => isAdmin || !("adminOnly" in g && g.adminOnly));
+  const { data: myRole } = useMyRole();
+  const canSeeAdminItems =
+    isAdmin || myRole?.isPlatformAdmin === true || myRole?.role === "admin" || myRole?.role === "owner";
+  const groups = NAV_GROUPS.filter((g) => isAdmin || !("adminOnly" in g && g.adminOnly)).map((g) => ({
+    ...g,
+    items: g.items.filter(
+      (i) => canSeeAdminItems || !("adminOnly" in i && (i as { adminOnly?: boolean }).adminOnly),
+    ),
+  }));
 
   return (
     <nav className="space-y-5">

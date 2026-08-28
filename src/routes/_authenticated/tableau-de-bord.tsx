@@ -14,7 +14,7 @@ import {
 
 import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { euros, useProfile, useRows } from "@/lib/db";
+import { euros, useMyRole, useProfile, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/ui/states";
 import { cn } from "@/lib/utils";
@@ -128,6 +128,8 @@ function Dashboard() {
   const prospectsChauds = PR.filter((p) => Number(p.score ?? 0) >= 70);
   const tachesOuvertes = T.filter((t) => t.status !== "termine" && t.status !== "fait");
   const firstName = (profile?.full_name ?? "").split(" ")[0] || "vous";
+  const { data: myRole } = useMyRole();
+  const roleLabel = myRole?.label ?? null;
 
   const recos: { title: string; desc: string; cta: string; to: string; search?: Record<string, unknown> }[] = [];
   if (devisEnAttente.length > 0)
@@ -224,7 +226,11 @@ function Dashboard() {
   return (
     <AppShell
       title={`Bonjour, ${firstName}`}
-      subtitle="Voici le résumé de votre activité aujourd'hui."
+      subtitle={
+        roleLabel
+          ? `${roleLabel} · Voici le résumé de votre activité aujourd'hui.`
+          : "Voici le résumé de votre activité aujourd'hui."
+      }
       action={
         <Button asChild className="gap-2">
           <Link to="/eric" search={{ agent: undefined }}>

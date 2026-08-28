@@ -44,6 +44,43 @@ export function useOrgId() {
   return (data?.current_org_id as string | undefined) ?? undefined;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Propriétaire",
+  admin: "Administrateur",
+  member: "Membre",
+  viewer: "Lecteur",
+};
+
+/** Rôle de l'utilisateur courant dans son entreprise (+ super admin plateforme). */
+export function useMyRole() {
+  const { user } = useSession();
+  const orgId = useOrgId();
+  return useQuery({
+    queryKey: ["my-role", user?.id, orgId],
+    enabled: !!user,
+    queryFn: async () => {
+      const [membership, platform] = await Promise.all([
+        orgId
+          ? supabase
+              .from("memberships")
+              .select("role")
+              .eq("user_id", user!.id)
+              .eq("org_id", orgId)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        supabase.rpc("is_platform_admin"),
+      ]);
+      const role = (membership as { data: { role?: string } | null }).data?.role ?? null;
+      const isPlatformAdmin = Boolean((platform as { data?: unknown }).data);
+      return {
+        role,
+        isPlatformAdmin,
+        label: isPlatformAdmin ? "Super administrateur" : (role ? ROLE_LABELS[role] ?? role : null),
+      };
+    },
+  });
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function useRows<T = any>(table: string, opts?: { order?: string; limit?: number }) {
   const orgId = useOrgId();

@@ -14,7 +14,7 @@ import {
 
 import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { euros, useProfile, useRows } from "@/lib/db";
+import { euros, useMyRole, useProfile, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/ui/states";
 import { cn } from "@/lib/utils";

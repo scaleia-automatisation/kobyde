@@ -82,9 +82,13 @@ function ConnexionsPage() {
   const [saving, setSaving] = useState(false);
 
   const openDialog = (key: string) => {
-    setValues({});
+    const existing = (list.data ?? []).find((c) => c.key === key) as
+      | { savedValues?: Record<string, string> }
+      | undefined;
+    setValues({ ...(existing?.savedValues ?? {}) });
     setDialogKey(key);
   };
+
 
   const connect = async (key: string) => {
     try {

@@ -11,6 +11,15 @@ export type ConnectorField = {
   placeholder?: string;
 };
 
+export type ScopeOption = {
+  /** Valeur technique du scope envoyée au fournisseur */
+  scope: string;
+  /** Libellé lisible pour l'utilisateur */
+  label: string;
+  /** Scope obligatoire (toujours coché, non décochable) */
+  required?: boolean;
+};
+
 export type ConnectorDef = {
   key: string;
   name: string;

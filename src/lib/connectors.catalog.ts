@@ -36,7 +36,14 @@ export type ConnectorDef = {
   userConnect?: boolean;
   /** Le connecteur reçoit des webhooks */
   webhook?: boolean;
-  oauth?: { authorizeUrl: string; tokenUrl: string; scopeSeparator?: string; defaultScopes: string[] };
+  oauth?: {
+    authorizeUrl: string;
+    tokenUrl: string;
+    scopeSeparator?: string;
+    defaultScopes: string[];
+    /** Autorisations cochables par l'utilisateur avant de connecter son compte */
+    scopeCatalog?: ScopeOption[];
+  };
 };
 
 const f = (key: string, label: string, secret = true, required = true): ConnectorField => ({

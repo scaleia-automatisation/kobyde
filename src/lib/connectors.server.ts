@@ -634,50 +634,75 @@ export async function testUserConnection(userId: string, connectorKey: string) {
       );
     }
 
-    if (connectorKey === "meta") {
-      const r = await fetch(`https://graph.facebook.com/v20.0/me?access_token=${encodeURIComponent(accessToken)}`);
-      return finish(r.ok, r.ok ? "Connexion Meta valide." : `Meta a répondu ${r.status}.`);
+    // Connecteurs par clé API (saisie manuelle par l'utilisateur).
+    const apiKey = values["api_key"] ?? values["secret_key"] ?? values["api_token"] ?? (accessToken || "");
+    if (connectorKey === "gemini") {
+      const p = await probe(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+      if (!p.ok) return finish(false, providerError("Gemini", p));
+      const n = Array.isArray(p.json?.models) ? p.json.models.length : 0;
+      return finish(true, `Appel API Gemini réussi (200) — ${n} modèles disponibles.`);
     }
-    if (connectorKey === "google" || connectorKey === "google_ads" || connectorKey === "youtube") {
-      const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    if (connectorKey === "openai") {
+      const p = await probe("https://api.openai.com/v1/models", { headers: { Authorization: `Bearer ${apiKey}` } });
+      if (!p.ok) return finish(false, providerError("OpenAI", p));
+      const n = Array.isArray(p.json?.data) ? p.json.data.length : 0;
+      return finish(true, `Appel API OpenAI réussi (200) — ${n} modèles disponibles.`);
+    }
+    if (connectorKey === "resend") {
+      const p = await probe("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${apiKey}` } });
+      if (!p.ok) return finish(false, providerError("Resend", p));
+      return finish(true, "Appel API Resend réussi (200).");
+    }
+    if (connectorKey === "apify") {
+      const p = await probe(`https://api.apify.com/v2/users/me?token=${encodeURIComponent(apiKey)}`);
+      if (!p.ok) return finish(false, providerError("Apify", p));
+      return finish(true, `Appel API Apify réussi (200)${p.json?.data?.username ? ` — compte ${p.json.data.username}` : ""}.`);
+    }
+    if (connectorKey === "meta") {
+      const p = await probe(`https://graph.facebook.com/v20.0/me?access_token=${encodeURIComponent(accessToken)}`);
+      if (!p.ok) return finish(false, providerError("Meta", p));
+      return finish(true, `Appel API Meta réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
+    }
+    if (connectorKey === "google" || connectorKey === "google_ads" || connectorKey === "youtube" || connectorKey === "google_business") {
+      const p = await probe("https://www.googleapis.com/oauth2/v3/userinfo", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      return finish(
-        r.ok,
-        r.ok ? "Connexion Google valide." : `Google a répondu ${r.status} : le jeton d'accès est invalide ou expiré.`,
-      );
+      if (!p.ok) return finish(false, providerError("Google", p));
+      return finish(true, `Appel API Google réussi (200)${p.json?.email ? ` — ${p.json.email}` : ""}.`);
     }
     if (connectorKey === "linkedin") {
-      const r = await fetch("https://api.linkedin.com/v2/userinfo", {
+      const p = await probe("https://api.linkedin.com/v2/userinfo", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      return finish(r.ok, r.ok ? "Connexion LinkedIn valide." : `LinkedIn a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("LinkedIn", p));
+      return finish(true, `Appel API LinkedIn réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
     }
-
     if (connectorKey === "microsoft" || connectorKey === "outlook") {
-      const r = await fetch("https://graph.microsoft.com/v1.0/me", {
+      const p = await probe("https://graph.microsoft.com/v1.0/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      return finish(r.ok, r.ok ? "Connexion Microsoft valide." : `Microsoft a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("Microsoft", p));
+      return finish(true, `Appel API Microsoft réussi (200)${p.json?.displayName ? ` — ${p.json.displayName}` : ""}.`);
     }
     if (connectorKey === "slack") {
-      const r = await fetch("https://slack.com/api/auth.test", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      return finish(Boolean(j.ok), j.ok ? "Connexion Slack valide." : `Slack : ${j.error ?? "échec"}.`);
+      const p = await probe("https://slack.com/api/auth.test", { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (!p.json?.ok) return finish(false, `Slack a répondu ${p.status} : ${p.json?.error ?? "échec"}.`);
+      return finish(true, `Appel API Slack réussi (200) — espace ${p.json?.team ?? ""}.`);
     }
     if (connectorKey === "stripe") {
-      const r = await fetch("https://api.stripe.com/v1/balance", { headers: { Authorization: `Bearer ${accessToken}` } });
-      return finish(r.ok, r.ok ? "Connexion Stripe valide." : `Stripe a répondu ${r.status}.`);
+      const p = await probe("https://api.stripe.com/v1/balance", { headers: { Authorization: `Bearer ${apiKey}` } });
+      if (!p.ok) return finish(false, providerError("Stripe", p));
+      return finish(true, "Appel API Stripe réussi (200).");
     }
     if (connectorKey === "notion") {
-      const r = await fetch("https://api.notion.com/v1/users/me", {
-        headers: { Authorization: `Bearer ${accessToken}`, "Notion-Version": "2022-06-28" },
+      const p = await probe("https://api.notion.com/v1/users/me", {
+        headers: { Authorization: `Bearer ${accessToken || apiKey}`, "Notion-Version": "2022-06-28" },
       });
-      return finish(r.ok, r.ok ? "Connexion Notion valide." : `Notion a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("Notion", p));
+      return finish(true, `Appel API Notion réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
     }
-    return finish(true, `Identifiants ${def?.name ?? connectorKey} enregistrés (test automatique indisponible).`);
+    return finish(true, `Identifiants ${def?.name ?? connectorKey} enregistrés (aucun appel API de test disponible).`);
+
   } catch (e) {
     return finish(false, e instanceof Error ? e.message : "Erreur de connexion.");
   }

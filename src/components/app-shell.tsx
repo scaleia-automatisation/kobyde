@@ -57,7 +57,12 @@ import { AGENTS } from "@/lib/agents";
 import type { AgentMeta } from "@/lib/agents";
 
 type NavItem =
-  | { to: string; label: string; icon: React.ComponentType<{ className?: string }> }
+  | {
+      to: string;
+      label: string;
+      icon: React.ComponentType<{ className?: string }>;
+      adminOnly?: boolean;
+    }
   | { to: string; label: string; agent: AgentMeta };
 
 const AGENT_NAV_ITEMS: { to: string; label: string; agent: AgentMeta }[] = AGENTS.map((agent) => ({

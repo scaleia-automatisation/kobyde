@@ -89,10 +89,10 @@ function MiniStat({
   return (
     <Link
       to={to}
-      className="flex items-baseline justify-between gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex flex-col rounded-xl px-4 py-3 transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span className="truncate text-body text-muted-foreground">{label}</span>
-      <span className="font-display text-lg leading-none tracking-tight">{value}</span>
+      <span className="mt-auto pt-4 font-display text-2xl leading-none tracking-tight">{value}</span>
     </Link>
   );
 }

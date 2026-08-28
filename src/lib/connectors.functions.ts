@@ -227,8 +227,14 @@ export const myConnections = createServerFn({ method: "POST" })
 
 export const startConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { connectorKey: string; origin?: string }) =>
-    z.object({ connectorKey: z.string().min(1).max(64), origin: z.string().max(200).optional() }).parse(d),
+  .inputValidator((d: { connectorKey: string; origin?: string; scopes?: string[] }) =>
+    z
+      .object({
+        connectorKey: z.string().min(1).max(64),
+        origin: z.string().max(200).optional(),
+        scopes: z.array(z.string().max(200)).max(50).optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { data: profile } = await (context.supabase as any)

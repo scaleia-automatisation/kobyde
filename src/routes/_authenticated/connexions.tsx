@@ -62,7 +62,8 @@ function ConnexionsPage() {
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
   const qc = useQueryClient();
   const myRole = useMyRole();
-  const isAdmin = Boolean(myRole.data?.isPlatformAdmin || myRole.data?.role === "owner" || myRole.data?.role === "admin");
+  // Le panneau d'administration appelle des server functions réservées aux admins plateforme.
+  const isAdmin = myRole.isSuccess && Boolean(myRole.data?.isPlatformAdmin);
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
 

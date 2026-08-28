@@ -172,15 +172,22 @@ function ConnexionsPage() {
                   {CATEGORY_LABELS[c.category as keyof typeof CATEGORY_LABELS] ?? c.category}
                 </p>
               </div>
-              {c.connected && (
+              {c.available !== false && (
                 <div className="flex shrink-0 items-center gap-2">
                   <Label htmlFor={`toggle-${c.key}`} className="text-xs text-muted-foreground">
                     {c.isActive ? "Activé" : "Désactivé"}
                   </Label>
                   <Switch
                     id={`toggle-${c.key}`}
-                    checked={c.isActive}
-                    onCheckedChange={(v) => void toggleActive(c.key, v)}
+                    checked={Boolean(c.isActive)}
+                    disabled={connecting === c.key}
+                    onCheckedChange={(v) => {
+                      if (!c.connected) {
+                        if (v) void connect(c.key);
+                        return;
+                      }
+                      void toggleActive(c.key, v);
+                    }}
                   />
                 </div>
               )}

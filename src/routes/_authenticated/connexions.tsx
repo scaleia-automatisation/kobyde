@@ -8,26 +8,17 @@ import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   disconnectConnection,
+  enableManagedConnection,
   myConnections,
-  saveMyManualConnection,
   startConnection,
   testMyConnection,
   toggleMyConnection,
 } from "@/lib/connectors.functions";
-import { CATEGORY_LABELS, CONNECTOR_MAP, type ConnectorField } from "@/lib/connectors.catalog";
+import { CATEGORY_LABELS, CONNECTOR_MAP } from "@/lib/connectors.catalog";
 
 
 type Search = { connexion?: string | undefined; connecteur?: string | undefined; message?: string | undefined };
@@ -76,49 +67,33 @@ function ConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message]);
 
-  const saveFn = useServerFn(saveMyManualConnection);
-  const [dialogKey, setDialogKey] = useState<string | null>(null);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [currentSaved, setCurrentSaved] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
+  const enableFn = useServerFn(enableManagedConnection);
+  const [connecting, setConnecting] = useState<string | null>(null);
 
-  const openDialog = (key: string) => {
-    const existing = (list.data ?? []).find((c) => c.key === key) as
-      | { savedValues?: Record<string, string> }
-      | undefined;
-    const saved = { ...(existing?.savedValues ?? {}) };
-    setCurrentSaved(saved);
-    // Champs secrets : on ne pré-remplit pas l'input (illisible en password),
-    // la valeur actuelle est affichée en indice sous le champ ; vide = conservé.
-    const defForKey = CONNECTOR_MAP.get(key);
-    const secretKeys = new Set(
-      [...(defForKey?.fields ?? []), ...(defForKey?.optionalFields ?? [])]
-        .filter((f) => f.secret)
-        .map((f) => f.key),
-    );
-    setValues(
-      Object.fromEntries(Object.entries(saved).filter(([k]) => !secretKeys.has(k))),
-    );
-    setDialogKey(key);
-  };
-
-
+  // L'utilisateur ne saisit jamais d'identifiants (OAuth, clé API, MCP) :
+  // la configuration de l'administrateur est toujours utilisée, de façon invisible.
   const connect = async (key: string) => {
     const isOauth = CONNECTOR_MAP.get(key)?.authType === "oauth";
+    setConnecting(key);
     try {
-      const res = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
-      if (res?.url) {
-        window.location.href = res.url;
+      if (isOauth) {
+        const res = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
+        if (res?.url) {
+          window.location.href = res.url;
+          return;
+        }
+        toast.error("Ce service n'est pas encore disponible. Rien à renseigner de votre côté.");
         return;
       }
-      if (isOauth) openDialog(key);
-      else toast.error("Ce service est configuré par votre administrateur : rien à renseigner de votre côté.");
+      await enableFn({ data: { connectorKey: key } });
+      toast.success("Service activé pour vos agents IA.");
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
     } catch (e) {
-      if (isOauth) openDialog(key);
-      else toast.error(e instanceof Error ? e.message : "Connexion impossible.");
+      toast.error(e instanceof Error ? e.message : "Connexion impossible.");
+    } finally {
+      setConnecting(null);
     }
   };
-
 
   const toggleActive = async (key: string, active: boolean) => {
     try {
@@ -147,27 +122,6 @@ function ConnexionsPage() {
     }
   };
 
-  const def = dialogKey ? CONNECTOR_MAP.get(dialogKey) : undefined;
-  const dialogFields: ConnectorField[] = def ? [...(def.fields ?? []), ...(def.optionalFields ?? [])] : [];
-  const dialogItem = (list.data ?? []).find((c) => c.key === dialogKey) as
-    | { managedByAdmin?: boolean; connected?: boolean }
-    | undefined;
-
-  const submitManual = async () => {
-    if (!dialogKey) return;
-    setSaving(true);
-    try {
-      await saveFn({ data: { connectorKey: dialogKey, values } });
-      toast.success("Compte connecté avec succès.");
-      setDialogKey(null);
-      void qc.invalidateQueries({ queryKey: ["my-connections"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Connexion impossible.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const items = list.data ?? [];
 
   return (
@@ -193,7 +147,7 @@ function ConnexionsPage() {
                   ) : c.available ? (
                     <Badge variant="secondary">Disponible</Badge>
                   ) : (
-                    <Badge variant="outline">Configuration manuelle</Badge>
+                    <Badge variant="outline">Bientôt disponible</Badge>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
@@ -237,12 +191,6 @@ function ConnexionsPage() {
               </Button>
               {c.connected ? (
                 <>
-                  {((CONNECTOR_MAP.get(c.key)?.fields?.length ?? 0) +
-                    (CONNECTOR_MAP.get(c.key)?.optionalFields?.length ?? 0)) > 0 && (
-                    <Button variant="outline" onClick={() => openDialog(c.key)}>
-                      Modifier mes identifiants
-                    </Button>
-                  )}
                   <Button
                     variant="outline"
                     onClick={async () => {
@@ -255,15 +203,9 @@ function ConnexionsPage() {
                   </Button>
                 </>
               ) : (
-                <>
-                  <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
-                  {((CONNECTOR_MAP.get(c.key)?.fields?.length ?? 0) +
-                    (CONNECTOR_MAP.get(c.key)?.optionalFields?.length ?? 0)) > 0 && (
-                    <Button variant="outline" onClick={() => openDialog(c.key)}>
-                      Saisir mes identifiants
-                    </Button>
-                  )}
-                </>
+                <Button disabled={connecting === c.key} onClick={() => void connect(c.key)}>
+                  {connecting === c.key ? "Connexion…" : "Connecter mon compte"}
+                </Button>
               )}
 
             </div>
@@ -283,65 +225,6 @@ function ConnexionsPage() {
         )}
       </div>
 
-      <Dialog open={dialogKey !== null} onOpenChange={(o) => !o && setDialogKey(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{def?.name ?? "Connexion"}</DialogTitle>
-            <DialogDescription>
-              Renseignez les informations demandées par la plateforme (clé API, jeton, client ID, secret…).
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
-            {dialogItem?.managedByAdmin && (
-              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                Ce connecteur utilise la configuration de votre administrateur. Les champs
-                ci-dessous servent uniquement si vous souhaitez utiliser vos propres identifiants.
-              </p>
-            )}
-            {dialogFields.map((fd) => (
-              <div key={fd.key} className="space-y-1.5">
-                <Label htmlFor={`f-${fd.key}`}>
-                  {fd.label}
-                  {fd.required !== false && <span className="text-destructive"> *</span>}
-                </Label>
-                {currentSaved[fd.key] && (
-                  <p className="text-xs text-muted-foreground">
-                    Valeur actuelle : <span className="font-mono">{currentSaved[fd.key]}</span>
-                    {" — laissez vide pour la conserver."}
-                  </p>
-                )}
-                <Input
-                  id={`f-${fd.key}`}
-                  type={fd.secret ? "password" : "text"}
-                  autoComplete="off"
-                  placeholder={currentSaved[fd.key] ? "••••••••  (valeur enregistrée)" : (fd.placeholder ?? "")}
-                  value={values[fd.key] ?? ""}
-                  onChange={(e) => setValues((v) => ({ ...v, [fd.key]: e.target.value }))}
-                />
-              </div>
-            ))}
-            <div className="space-y-1.5">
-              <Label htmlFor="f-account_label">Nom du compte (facultatif)</Label>
-              <Input
-                id="f-account_label"
-                value={values["account_label"] ?? ""}
-                onChange={(e) => setValues((v) => ({ ...v, account_label: e.target.value }))}
-                placeholder="ex. contact@monentreprise.fr"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogKey(null)}>
-              Annuler
-            </Button>
-            <Button disabled={saving} onClick={() => void submitManual()}>
-              {saving ? "Enregistrement…" : "Enregistrer et connecter"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AppShell>
 
   );

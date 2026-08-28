@@ -472,10 +472,10 @@ export async function listUserConnections(userId: string) {
 
   const connectors = await listConnectors();
   return connectors
-    // Côté utilisateur : tout connecteur activé et configuré par l'administrateur.
+    // Côté utilisateur : tous les connecteurs du catalogue destinés aux utilisateurs.
     // Les clés API, identifiants client/secret et serveurs MCP restent gérés
     // exclusivement par l'administrateur dans l'onglet Connecteurs.
-    .filter((c) => c.isEnabled && c.status === "configure")
+    .filter((c) => c.userConnect || c.isEnabled)
     .map((c) => {
       const row = rows.get(c.key);
       return {

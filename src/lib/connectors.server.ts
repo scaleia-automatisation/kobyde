@@ -466,7 +466,7 @@ export async function listUserConnections(userId: string) {
   const supabase = await db();
   const { data } = await supabase
     .from("oauth_connections")
-    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at")
+    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at,metadata")
     .eq("user_id", userId);
   const rows = new Map<string, any>((data ?? []).map((r: any) => [r.connector_key ?? r.provider, r]));
 
@@ -478,6 +478,15 @@ export async function listUserConnections(userId: string) {
     .filter((c) => c.userConnect || c.isEnabled)
     .map((c) => {
       const row = rows.get(c.key);
+      const saved = ((row?.metadata as any)?.values ?? {}) as Record<string, string>;
+      const def = CONNECTOR_MAP.get(c.key);
+      const savedValues: Record<string, string> = {};
+      [...(def?.fields ?? []), ...(def?.optionalFields ?? [])].forEach((fd) => {
+        const v = saved[fd.key];
+        if (!v) return;
+        savedValues[fd.key] = fd.secret ? maskSecret(v) : v;
+      });
+      if (row?.account_label) savedValues["account_label"] = row.account_label;
       return {
         key: c.key,
         name: c.name,
@@ -490,6 +499,8 @@ export async function listUserConnections(userId: string) {
         connected: Boolean(row && !row.revoked),
         isActive: row ? row.is_active !== false : false,
         lastError: (row?.metadata as any)?.last_error ?? null,
+        managedByAdmin: Boolean((row?.metadata as any)?.managed_by_admin),
+        savedValues,
         account: row?.account_label ?? row?.provider_email ?? null,
         scopes: row?.scopes ?? "",
         expiresAt: row?.expires_at ?? null,
@@ -497,6 +508,7 @@ export async function listUserConnections(userId: string) {
         services: c.servicesCatalog,
       };
     });
+
 }
 
 /**
@@ -571,9 +583,24 @@ export async function saveUserManualConnection(input: {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def) throw new Error("Connecteur inconnu.");
 
-  const values = Object.fromEntries(
-    Object.entries(input.values).map(([k, v]) => [k, (v ?? "").trim()]).filter(([, v]) => v !== ""),
+  const supabase = await db();
+
+  const { data: existingRow } = await supabase
+    .from("oauth_connections")
+    .select("metadata, account_label, access_token")
+    .eq("user_id", input.userId)
+    .eq("provider", input.connectorKey)
+    .maybeSingle();
+  const previous = ((existingRow?.metadata as any)?.values ?? {}) as Record<string, string>;
+
+  const incoming = Object.fromEntries(
+    Object.entries(input.values)
+      .map(([k, v]) => [k, (v ?? "").trim()] as const)
+      .filter(([, v]) => v !== "" && !v.includes("•")),
   ) as Record<string, string>;
+
+  // Champ laissé vide ou valeur masquée = on conserve l'ancienne valeur.
+  const values = { ...previous, ...incoming };
 
   const missing = (def.fields ?? [])
     .filter((fd) => fd.required !== false && !values[fd.key])
@@ -583,9 +610,8 @@ export async function saveUserManualConnection(input: {
   const token =
     values["access_token"] ?? values["api_key"] ?? values["api_token"] ?? values["client_secret"] ??
     values["app_secret"] ?? Object.values(values)[0] ?? "";
-  const label = values["account_label"] ?? values["email"] ?? null;
+  const label = values["account_label"] ?? values["email"] ?? existingRow?.account_label ?? null;
 
-  const supabase = await db();
   const { error } = await supabase.from("oauth_connections").upsert(
     {
       user_id: input.userId,
@@ -595,6 +621,7 @@ export async function saveUserManualConnection(input: {
       provider_user_id: input.userId,
       access_token: token,
       account_label: label,
+
       status: "active",
       revoked: false,
       is_active: true,

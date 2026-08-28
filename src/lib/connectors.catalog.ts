@@ -80,6 +80,21 @@ export const CONNECTORS: ConnectorDef[] = [
     optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
   },
   {
+    key: "apify",
+    name: "Apify",
+    category: "recherche",
+    description: "Scraping web, extraction de données et automatisation via des milliers d'Actors Apify (Google Maps, LinkedIn, réseaux sociaux…).",
+    authType: "api_key",
+    userConnect: true,
+    fields: [f("api_key", "API Token Apify")],
+    services: [
+      { key: "actors", label: "Lancer des Actors (scraping & automatisation)" },
+      { key: "datasets", label: "Lire les datasets de résultats" },
+      { key: "leads", label: "Prospection (Google Maps, annuaires, réseaux sociaux)" },
+    ],
+    optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
+  },
+  {
     key: "notion",
     name: "Notion",
     category: "productivite",

@@ -491,7 +491,8 @@ export async function listUserConnections(userId: string) {
           return;
         }
         // Repli sur la configuration admin du connecteur (déjà masquée pour les secrets).
-        if (globalValues[fd.key]) savedValues[fd.key] = globalValues[fd.key];
+        const g = globalValues[fd.key];
+        if (g) savedValues[fd.key] = g;
       });
       if (row?.account_label) savedValues["account_label"] = row.account_label;
       return {

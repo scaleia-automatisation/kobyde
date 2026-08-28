@@ -480,11 +480,18 @@ export async function listUserConnections(userId: string) {
       const row = rows.get(c.key);
       const saved = ((row?.metadata as any)?.values ?? {}) as Record<string, string>;
       const def = CONNECTOR_MAP.get(c.key);
+      // Valeurs de la configuration globale (admin) déjà masquées — utilisées en repli
+      // quand l'utilisateur n'a pas d'identifiants propres, pour pré-remplir le formulaire.
+      const globalValues = ((c as any).values ?? {}) as Record<string, string>;
       const savedValues: Record<string, string> = {};
       [...(def?.fields ?? []), ...(def?.optionalFields ?? [])].forEach((fd) => {
         const v = saved[fd.key];
-        if (!v) return;
-        savedValues[fd.key] = fd.secret ? maskSecret(v) : v;
+        if (v) {
+          savedValues[fd.key] = fd.secret ? maskSecret(v) : v;
+          return;
+        }
+        // Repli sur la configuration admin du connecteur (déjà masquée pour les secrets).
+        if (globalValues[fd.key]) savedValues[fd.key] = globalValues[fd.key];
       });
       if (row?.account_label) savedValues["account_label"] = row.account_label;
       return {

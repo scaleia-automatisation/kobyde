@@ -79,13 +79,26 @@ function ConnexionsPage() {
   const saveFn = useServerFn(saveMyManualConnection);
   const [dialogKey, setDialogKey] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [currentSaved, setCurrentSaved] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const openDialog = (key: string) => {
     const existing = (list.data ?? []).find((c) => c.key === key) as
       | { savedValues?: Record<string, string> }
       | undefined;
-    setValues({ ...(existing?.savedValues ?? {}) });
+    const saved = { ...(existing?.savedValues ?? {}) };
+    setCurrentSaved(saved);
+    // Champs secrets : on ne pré-remplit pas l'input (illisible en password),
+    // la valeur actuelle est affichée en indice sous le champ ; vide = conservé.
+    const defForKey = CONNECTOR_MAP.get(key);
+    const secretKeys = new Set(
+      [...(defForKey?.fields ?? []), ...(defForKey?.optionalFields ?? [])]
+        .filter((f) => f.secret)
+        .map((f) => f.key),
+    );
+    setValues(
+      Object.fromEntries(Object.entries(saved).filter(([k]) => !secretKeys.has(k))),
+    );
     setDialogKey(key);
   };
 

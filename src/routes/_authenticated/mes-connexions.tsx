@@ -149,7 +149,7 @@ function MesConnexionsPage() {
           const cdef = CONNECTOR_MAP.get(c.key);
           const catalog = c.oauth
             ? (cdef?.oauth?.scopeCatalog ?? [])
-            : (cdef?.services ?? []).map((sv) => ({ scope: sv.key, label: sv.label }));
+            : (cdef?.services ?? []).map((sv) => ({ scope: sv.key, label: sv.label, required: false }));
           const chosen = selected[c.key] ?? [];
           return (
             <Card key={c.key} className="space-y-4 p-5">

@@ -288,13 +288,22 @@ export const saveMyManualConnection = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // Les clés API, identifiants client/secret OAuth et serveurs MCP sont gérés
-    // uniquement par l'administrateur : l'utilisateur ne saisit jamais d'identifiants.
+    // uniquement par l'administrateur : un utilisateur standard ne saisit jamais
+    // d'identifiants pour ces services. Un admin/super admin, lui, peut les
+    // modifier depuis l'onglet Connecteurs : ils sont alors enregistrés dans la
+    // configuration globale du connecteur.
     const { CONNECTOR_MAP } = await import("./connectors.catalog");
     const def = CONNECTOR_MAP.get(data.connectorKey);
-    if (!def || def.authType !== "oauth") {
-      throw new Error(
-        "Les identifiants de ce service sont gérés par l'administrateur. Vous n'avez rien à renseigner.",
-      );
+    if (!def) throw new Error("Connecteur inconnu.");
+    if (def.authType !== "oauth") {
+      const { data: isAdmin } = await (context.supabase as any).rpc("is_platform_admin");
+      if (!isAdmin) {
+        throw new Error(
+          "Les identifiants de ce service sont gérés par l'administrateur. Vous n'avez rien à renseigner.",
+        );
+      }
+      const { saveConnector } = await import("./connectors.server");
+      return saveConnector({ key: data.connectorKey, values: data.values, isEnabled: true });
     }
     const { data: profile } = await (context.supabase as any)
       .from("profiles")

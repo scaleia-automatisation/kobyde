@@ -240,9 +240,11 @@ function ConnexionsPage() {
               ) : (
                 <>
                   <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Saisir mes identifiants
-                  </Button>
+                  {isOauth(c.key) && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Saisir mes identifiants
+                    </Button>
+                  )}
                 </>
               )}
             </div>

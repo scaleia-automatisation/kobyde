@@ -115,7 +115,7 @@ export const NAV_GROUPS: { label: string; adminOnly?: boolean; items: NavItem[] 
       { to: "/credits", label: "Crédits IA", icon: Coins },
       { to: "/plans", label: "Formules", icon: BadgeEuro },
       { to: "/entreprise", label: "Fiche entreprise", icon: Building2 },
-      { to: "/connexions", label: "Mes connexions", icon: Link2 },
+      { to: "/connexions", label: "Connecteurs", icon: Link2, adminOnly: true },
       { to: "/parametres", label: "Paramètres", icon: Settings },
     ],
   },

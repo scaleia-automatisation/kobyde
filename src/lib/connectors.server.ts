@@ -612,8 +612,14 @@ export async function saveUserManualConnection(input: {
   // Champ laissé vide ou valeur masquée = on conserve l'ancienne valeur.
   const values = { ...previous, ...incoming };
 
+  // Un champ requis est aussi satisfait s'il existe dans la configuration globale (admin) :
+  // l'utilisateur n'a alors rien à renseigner, l'appel utilisera la clé centrale.
+  const global = await getConnectorConfig(input.connectorKey);
+  const globalHas = (k: string) =>
+    Boolean(global?.secrets?.[k] ?? global?.config?.[k]);
+
   const missing = (def.fields ?? [])
-    .filter((fd) => fd.required !== false && !values[fd.key])
+    .filter((fd) => fd.required !== false && !values[fd.key] && !globalHas(fd.key))
     .map((fd) => fd.label);
   if (missing.length) throw new Error(`Champs obligatoires manquants : ${missing.join(", ")}.`);
 

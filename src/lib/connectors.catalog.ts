@@ -111,8 +111,8 @@ export const CONNECTORS: ConnectorDef[] = [
       scopeCatalog: [
         { scope: "chat:write", label: "Envoyer des messages", required: true },
         { scope: "channels:read", label: "Lire la liste des canaux" },
-        { scope: "channels:history", label: "Lire l"historique des canaux" },
-        { scope: "users:read", label: "Voir les membres de l"espace" },
+        { scope: "channels:history", label: "Lire l'historique des canaux" },
+        { scope: "users:read", label: "Voir les membres de l'espace" },
         { scope: "files:write", label: "Partager des fichiers" },
       ],
     },

@@ -63,8 +63,9 @@ const f = (
   label,
   secret,
   required,
-  hint,
+  ...(hint ? { hint } : {}),
 });
+
 
 
 export const CONNECTORS: ConnectorDef[] = [

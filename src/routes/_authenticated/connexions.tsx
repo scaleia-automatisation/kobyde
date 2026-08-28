@@ -19,6 +19,8 @@ import {
   toggleMyConnection,
 } from "@/lib/connectors.functions";
 import { CATEGORY_LABELS, CONNECTOR_MAP } from "@/lib/connectors.catalog";
+import { ConnectorsPanel } from "@/components/admin/connectors-panel";
+import { useMyRole } from "@/lib/db";
 
 
 type Search = { connexion?: string | undefined; connecteur?: string | undefined; message?: string | undefined };
@@ -59,6 +61,8 @@ function ConnexionsPage() {
   const [testing, setTesting] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
   const qc = useQueryClient();
+  const myRole = useMyRole();
+  const isAdmin = Boolean(myRole.data?.isPlatformAdmin || myRole.data?.role === "owner" || myRole.data?.role === "admin");
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
 
@@ -126,6 +130,18 @@ function ConnexionsPage() {
 
   return (
     <AppShell title="Connecteurs" subtitle="Autorisez vos agents à agir dans vos outils, en votre nom">
+      {isAdmin && (
+        <section className="mb-8 space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">Administration des connecteurs</h2>
+            <p className="text-sm text-muted-foreground">
+              Activez chaque connecteur avec son interrupteur, puis renseignez les champs requis par son API.
+            </p>
+          </div>
+          <ConnectorsPanel />
+        </section>
+      )}
+
       <div className="flex flex-col gap-4">
         {items.map((c) => (
           <Card key={c.key} className="space-y-3 p-5">

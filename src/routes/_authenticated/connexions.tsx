@@ -221,9 +221,11 @@ function ConnexionsPage() {
               </Button>
               {c.connected ? (
                 <>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Modifier mes identifiants
-                  </Button>
+                  {isOauth(c.key) && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Modifier mes identifiants
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={async () => {

@@ -148,7 +148,15 @@ function useIsAdmin() {
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = useIsAdmin();
-  const groups = NAV_GROUPS.filter((g) => isAdmin || !("adminOnly" in g && g.adminOnly));
+  const { data: myRole } = useMyRole();
+  const canSeeAdminItems =
+    isAdmin || myRole?.isPlatformAdmin === true || myRole?.role === "admin" || myRole?.role === "owner";
+  const groups = NAV_GROUPS.filter((g) => isAdmin || !("adminOnly" in g && g.adminOnly)).map((g) => ({
+    ...g,
+    items: g.items.filter(
+      (i) => canSeeAdminItems || !("adminOnly" in i && (i as { adminOnly?: boolean }).adminOnly),
+    ),
+  }));
 
   return (
     <nav className="space-y-5">

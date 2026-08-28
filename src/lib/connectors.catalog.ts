@@ -86,7 +86,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Scraping web, extraction de données et automatisation via des milliers d'Actors Apify (Google Maps, LinkedIn, réseaux sociaux…).",
     authType: "api_key",
     userConnect: true,
-    fields: [f("api_key", "API Token Apify")],
+    fields: [f("api_token", "API Token Apify")],
     services: [
       { key: "actors", label: "Lancer des Actors (scraping & automatisation)" },
       { key: "datasets", label: "Lire les datasets de résultats" },

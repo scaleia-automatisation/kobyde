@@ -91,17 +91,21 @@ function ConnexionsPage() {
 
 
   const connect = async (key: string) => {
+    const isOauth = CONNECTOR_MAP.get(key)?.authType === "oauth";
     try {
       const res = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
       if (res?.url) {
         window.location.href = res.url;
         return;
       }
-      openDialog(key);
-    } catch {
-      openDialog(key);
+      if (isOauth) openDialog(key);
+      else toast.error("Ce service est configuré par votre administrateur : rien à renseigner de votre côté.");
+    } catch (e) {
+      if (isOauth) openDialog(key);
+      else toast.error(e instanceof Error ? e.message : "Connexion impossible.");
     }
   };
+
 
   const toggleActive = async (key: string, active: boolean) => {
     try {

@@ -9,25 +9,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   disconnectConnection,
   myConnections,
-  saveMyManualConnection,
   startConnection,
   toggleMyConnection,
 } from "@/lib/connectors.functions";
-import { CATEGORY_LABELS, CONNECTOR_MAP, type ConnectorField } from "@/lib/connectors.catalog";
+import { CATEGORY_LABELS, CONNECTOR_MAP } from "@/lib/connectors.catalog";
 
 type Search = { connexion?: string | undefined; message?: string | undefined };
 
@@ -62,7 +52,6 @@ function MesConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
-  const saveFn = useServerFn(saveMyManualConnection);
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
@@ -70,9 +59,6 @@ function MesConnexionsPage() {
 
   const [selected, setSelected] = useState<Record<string, string[]>>({});
   const [connecting, setConnecting] = useState<string | null>(null);
-  const [dialogKey, setDialogKey] = useState<string | null>(null);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (search.connexion === "ok") toast.success("Compte connecté avec succès.");
@@ -101,11 +87,6 @@ function MesConnexionsPage() {
       return { ...prev, [key]: on ? Array.from(new Set([...current, scope])) : current.filter((s) => s !== scope) };
     });
 
-  const openDialog = (key: string) => {
-    setValues({});
-    setDialogKey(key);
-  };
-
   const connect = async (key: string) => {
     setConnecting(key);
     try {
@@ -116,9 +97,12 @@ function MesConnexionsPage() {
         window.location.href = res.url;
         return;
       }
-      openDialog(key);
+      toast.error(
+        res?.error ??
+          "Ce service n'est pas encore activé par votre administrateur. Aucune information n'est à saisir de votre côté.",
+      );
     } catch {
-      openDialog(key);
+      toast.error("Ce service n'est pas encore activé par votre administrateur.");
     } finally {
       setConnecting(null);
     }
@@ -134,24 +118,6 @@ function MesConnexionsPage() {
     }
   };
 
-  const def = dialogKey ? CONNECTOR_MAP.get(dialogKey) : undefined;
-  const dialogFields: ConnectorField[] = def ? [...(def.fields ?? []), ...(def.optionalFields ?? [])] : [];
-
-  const submitManual = async () => {
-    if (!dialogKey) return;
-    setSaving(true);
-    try {
-      await saveFn({ data: { connectorKey: dialogKey, values } });
-      toast.success("Compte connecté avec succès.");
-      setDialogKey(null);
-      void qc.invalidateQueries({ queryKey: ["my-connections"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Connexion impossible.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <AppShell
       title="Mes connexions"
@@ -161,8 +127,9 @@ function MesConnexionsPage() {
         <Card className="flex items-start gap-3 p-4 text-sm text-muted-foreground">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-600" />
           <p>
-            Vous autorisez la connexion une seule fois sur la page officielle du fournisseur. Kobyde n'accède qu'aux
-            autorisations que vous cochez et vous pouvez retirer l'accès à tout moment.
+            Vous n'avez aucune clé API ni identifiant à renseigner : tout est configuré par votre administrateur. Vous
+            autorisez simplement la connexion, une seule fois, sur la page officielle du fournisseur. Kobyde n'accède
+            qu'aux autorisations que vous cochez et vous pouvez retirer l'accès à tout moment.
           </p>
         </Card>
 
@@ -271,51 +238,6 @@ function MesConnexionsPage() {
         )}
       </div>
 
-      <Dialog open={dialogKey !== null} onOpenChange={(o) => !o && setDialogKey(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{def?.name ?? "Connexion"}</DialogTitle>
-            <DialogDescription>
-              La connexion automatique n'est pas disponible pour ce compte. Renseignez vos identifiants pour l'activer.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
-            {dialogFields.map((fd) => (
-              <div key={fd.key} className="space-y-1.5">
-                <Label htmlFor={`mc-f-${fd.key}`}>
-                  {fd.label}
-                  {fd.required !== false && <span className="text-destructive"> *</span>}
-                </Label>
-                <Input
-                  id={`mc-f-${fd.key}`}
-                  type={fd.secret ? "password" : "text"}
-                  autoComplete="off"
-                  value={values[fd.key] ?? ""}
-                  onChange={(e) => setValues((v) => ({ ...v, [fd.key]: e.target.value }))}
-                />
-              </div>
-            ))}
-            <div className="space-y-1.5">
-              <Label htmlFor="mc-f-account_label">Nom du compte (facultatif)</Label>
-              <Input
-                id="mc-f-account_label"
-                value={values["account_label"] ?? ""}
-                onChange={(e) => setValues((v) => ({ ...v, account_label: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogKey(null)}>
-              Annuler
-            </Button>
-            <Button disabled={saving} onClick={() => void submitManual()}>
-              {saving ? "Enregistrement…" : "Enregistrer et connecter"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AppShell>
   );
 }

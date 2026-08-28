@@ -287,6 +287,15 @@ export const saveMyManualConnection = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    // Les clés API, identifiants client/secret OAuth et serveurs MCP sont gérés
+    // uniquement par l'administrateur : l'utilisateur ne saisit jamais d'identifiants.
+    const { CONNECTOR_MAP } = await import("./connectors.catalog");
+    const def = CONNECTOR_MAP.get(data.connectorKey);
+    if (!def || def.authType !== "oauth") {
+      throw new Error(
+        "Les identifiants de ce service sont gérés par l'administrateur. Vous n'avez rien à renseigner.",
+      );
+    }
     const { data: profile } = await (context.supabase as any)
       .from("profiles")
       .select("current_org_id")
@@ -300,6 +309,7 @@ export const saveMyManualConnection = createServerFn({ method: "POST" })
       values: data.values,
     });
   });
+
 
 export const testMyConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

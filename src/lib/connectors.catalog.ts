@@ -295,9 +295,15 @@ export const CONNECTORS: ConnectorDef[] = [
     key: "apify",
     name: "Apify",
     category: "recherche",
-    description: "Recherche Google Maps, collecte de données publiques et recherche de prospects.",
+    description: "Scraping web et automatisation via des milliers d'Actors Apify : Google Maps, LinkedIn, réseaux sociaux, recherche de prospects.",
     authType: "api_key",
+    userConnect: true,
     fields: [f("api_token", "Apify API Token")],
+    services: [
+      { key: "actors", label: "Lancer des Actors (scraping & automatisation)" },
+      { key: "datasets", label: "Lire les datasets de résultats" },
+      { key: "leads", label: "Prospection (Google Maps, annuaires, réseaux sociaux)" },
+    ],
     optionalFields: [
       { key: "allowed_actors", label: "Actors autorisés (séparés par une virgule)", secret: false },
       { key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false },

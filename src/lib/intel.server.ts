@@ -4,6 +4,8 @@ import { WATCH_AXES, type Source } from "./intel";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { aiFetch } from "./ai-provider.server";
+
 const ETHAN = `Tu es Ethan, l'agent IA « Analyse et veille » de Kobyde.
 Tu écris en français, de façon factuelle, structurée et actionnable, sans jargon inutile.
 Règle absolue : tu n'inventes JAMAIS une donnée, un chiffre, un prix, une levée de fonds ni un concurrent.
@@ -29,7 +31,7 @@ async function chat(system: string, user: string, grounded = false): Promise<any
     body["response_format"] = { type: "json_object" };
   }
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify(body),

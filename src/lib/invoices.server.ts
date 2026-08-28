@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { aiFetch } from "./ai-provider.server";
+
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 const SYSTEM = `Tu es Audrey, agent IA Gestion (comptabilité et facturation) du SaaS Kobyde.
@@ -20,7 +22,7 @@ export async function writeInvoiceDocument(input: {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("IA indisponible : clé manquante.");
 
-  const res = await fetch(GATEWAY, {
+  const res = await aiFetch(GATEWAY, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({

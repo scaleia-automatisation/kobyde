@@ -2,6 +2,8 @@ import { COMPANY_FIELDS } from "./company";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { aiFetch } from "./ai-provider.server";
+
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const FETCH_TIMEOUT_MS = 8000;
 const READER_PREFIX = "https://r.jina.ai/http://";
@@ -195,7 +197,7 @@ export async function fillCompanyFromSite(
       ? `\n\nSOURCE PRIORITAIRE — base de connaissance de l'entreprise (déjà validée, prévaut sur le site en cas de contradiction) :\n${kbText.slice(0, 20000)}${kbJson ? `\n\nVersion structurée :\n${kbJson}` : ""}`
       : "";
 
-  const res = await fetch(GATEWAY, {
+  const res = await aiFetch(GATEWAY, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({

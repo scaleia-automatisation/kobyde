@@ -1,5 +1,7 @@
 import type { ImportedProspect } from "./prospect-import";
 
+import { aiFetch } from "./ai-provider.server";
+
 const SYSTEM = `Tu extrais une liste de prospects à partir de données brutes (tableau CSV, texte collé ou capture d'écran).
 RÈGLES ABSOLUES :
 - N'invente JAMAIS une donnée. Si une information est absente, laisse le champ vide ("").
@@ -15,7 +17,7 @@ async function askGateway(blocks: Block[]): Promise<ImportedProspect[]> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("IA indisponible : clé manquante.");
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({

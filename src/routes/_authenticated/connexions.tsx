@@ -81,7 +81,15 @@ function ConnexionsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  const isOauth = (key: string) => CONNECTOR_MAP.get(key)?.authType === "oauth";
+
   const openDialog = (key: string) => {
+    if (!isOauth(key)) {
+      toast.info(
+        "Les identifiants de ce service sont gérés dans l'administration (onglet Connecteurs). Rien à saisir ici.",
+      );
+      return;
+    }
     setValues({});
     setDialogKey(key);
   };

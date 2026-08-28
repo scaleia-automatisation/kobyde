@@ -590,14 +590,34 @@ export async function saveUserManualConnection(input: {
   const missing = (def.fields ?? [])
     .filter((fd) => fd.required !== false && !values[fd.key])
     .map((fd) => fd.label);
+  const supabase = await db();
+  const { data: existingRow } = await supabase
+    .from("oauth_connections")
+    .select("metadata, account_label, access_token")
+    .eq("user_id", input.userId)
+    .eq("provider", input.connectorKey)
+    .maybeSingle();
+  const previous = ((existingRow?.metadata as any)?.values ?? {}) as Record<string, string>;
+
+  const incoming = Object.fromEntries(
+    Object.entries(input.values)
+      .map(([k, v]) => [k, (v ?? "").trim()] as const)
+      .filter(([, v]) => v !== "" && !v.includes("•")),
+  ) as Record<string, string>;
+
+  // Champ laissé vide ou valeur masquée = on conserve l'ancienne valeur.
+  const values = { ...previous, ...incoming };
+
+  const missing = (def.fields ?? [])
+    .filter((fd) => fd.required !== false && !values[fd.key])
+    .map((fd) => fd.label);
   if (missing.length) throw new Error(`Champs obligatoires manquants : ${missing.join(", ")}.`);
 
   const token =
     values["access_token"] ?? values["api_key"] ?? values["api_token"] ?? values["client_secret"] ??
     values["app_secret"] ?? Object.values(values)[0] ?? "";
-  const label = values["account_label"] ?? values["email"] ?? null;
+  const label = values["account_label"] ?? values["email"] ?? existingRow?.account_label ?? null;
 
-  const supabase = await db();
   const { error } = await supabase.from("oauth_connections").upsert(
     {
       user_id: input.userId,
@@ -607,6 +627,7 @@ export async function saveUserManualConnection(input: {
       provider_user_id: input.userId,
       access_token: token,
       account_label: label,
+
       status: "active",
       revoked: false,
       is_active: true,

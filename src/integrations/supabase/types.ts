@@ -2201,6 +2201,7 @@ export type Database = {
           expires_at: string
           org_id: string | null
           redirect_to: string | null
+          scopes: string | null
           state: string
           user_id: string
         }
@@ -2210,6 +2211,7 @@ export type Database = {
           expires_at?: string
           org_id?: string | null
           redirect_to?: string | null
+          scopes?: string | null
           state: string
           user_id: string
         }
@@ -2219,6 +2221,7 @@ export type Database = {
           expires_at?: string
           org_id?: string | null
           redirect_to?: string | null
+          scopes?: string | null
           state?: string
           user_id?: string
         }

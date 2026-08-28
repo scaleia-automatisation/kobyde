@@ -11,6 +11,15 @@ export type ConnectorField = {
   placeholder?: string;
 };
 
+export type ScopeOption = {
+  /** Valeur technique du scope envoyée au fournisseur */
+  scope: string;
+  /** Libellé lisible pour l'utilisateur */
+  label: string;
+  /** Scope obligatoire (toujours coché, non décochable) */
+  required?: boolean;
+};
+
 export type ConnectorDef = {
   key: string;
   name: string;
@@ -27,7 +36,14 @@ export type ConnectorDef = {
   userConnect?: boolean;
   /** Le connecteur reçoit des webhooks */
   webhook?: boolean;
-  oauth?: { authorizeUrl: string; tokenUrl: string; scopeSeparator?: string; defaultScopes: string[] };
+  oauth?: {
+    authorizeUrl: string;
+    tokenUrl: string;
+    scopeSeparator?: string;
+    defaultScopes: string[];
+    /** Autorisations cochables par l'utilisateur avant de connecter son compte */
+    scopeCatalog?: ScopeOption[];
+  };
 };
 
 const f = (key: string, label: string, secret = true, required = true): ConnectorField => ({
@@ -92,6 +108,13 @@ export const CONNECTORS: ConnectorDef[] = [
       tokenUrl: "https://slack.com/api/oauth.v2.access",
       scopeSeparator: ",",
       defaultScopes: ["chat:write", "channels:read", "users:read"],
+      scopeCatalog: [
+        { scope: "chat:write", label: "Envoyer des messages", required: true },
+        { scope: "channels:read", label: "Lire la liste des canaux" },
+        { scope: "channels:history", label: "Lire l'historique des canaux" },
+        { scope: "users:read", label: "Voir les membres de l'espace" },
+        { scope: "files:write", label: "Partager des fichiers" },
+      ],
     },
   },
   {
@@ -119,6 +142,18 @@ export const CONNECTORS: ConnectorDef[] = [
         "https://www.googleapis.com/auth/gmail.send",
         "https://www.googleapis.com/auth/calendar.events",
       ],
+      scopeCatalog: [
+        { scope: "openid", label: "Identité du compte Google", required: true },
+        { scope: "email", label: "Adresse email", required: true },
+        { scope: "profile", label: "Profil (nom, photo)", required: true },
+        { scope: "https://www.googleapis.com/auth/gmail.send", label: "Gmail — envoyer des emails" },
+        { scope: "https://www.googleapis.com/auth/gmail.readonly", label: "Gmail — lire les emails" },
+        { scope: "https://www.googleapis.com/auth/calendar.events", label: "Agenda — créer et modifier des événements" },
+        { scope: "https://www.googleapis.com/auth/calendar.readonly", label: "Agenda — consulter le planning" },
+        { scope: "https://www.googleapis.com/auth/drive.file", label: "Drive — gérer les fichiers créés par Kobyde" },
+        { scope: "https://www.googleapis.com/auth/documents", label: "Docs — créer et modifier des documents" },
+        { scope: "https://www.googleapis.com/auth/spreadsheets", label: "Sheets — créer et modifier des feuilles" },
+      ],
     },
   },
   {
@@ -138,6 +173,13 @@ export const CONNECTORS: ConnectorDef[] = [
       authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       defaultScopes: ["openid", "email", "https://www.googleapis.com/auth/business.manage"],
+      scopeCatalog: [
+        { scope: "openid", label: "Identité du compte Google", required: true },
+        { scope: "email", label: "Adresse email", required: true },
+        { scope: "https://www.googleapis.com/auth/business.manage", label: "Google Business Profile — gérer la fiche" },
+        { scope: "https://www.googleapis.com/auth/webmasters.readonly", label: "Search Console — consulter les performances" },
+        { scope: "https://www.googleapis.com/auth/analytics.readonly", label: "Google Analytics — consulter les statistiques" },
+      ],
     },
   },
   {
@@ -159,6 +201,17 @@ export const CONNECTORS: ConnectorDef[] = [
       tokenUrl: "https://graph.facebook.com/v20.0/oauth/access_token",
       scopeSeparator: ",",
       defaultScopes: ["public_profile", "email", "pages_show_list", "pages_manage_posts"],
+      scopeCatalog: [
+        { scope: "public_profile", label: "Profil public", required: true },
+        { scope: "email", label: "Adresse email", required: true },
+        { scope: "pages_show_list", label: "Voir mes pages Facebook" },
+        { scope: "pages_manage_posts", label: "Publier sur mes pages" },
+        { scope: "pages_read_engagement", label: "Lire les statistiques des pages" },
+        { scope: "pages_messaging", label: "Répondre aux messages des pages" },
+        { scope: "instagram_basic", label: "Instagram — accès au compte professionnel" },
+        { scope: "instagram_content_publish", label: "Instagram — publier des contenus" },
+        { scope: "instagram_manage_insights", label: "Instagram — statistiques" },
+      ],
     },
   },
   {
@@ -173,6 +226,12 @@ export const CONNECTORS: ConnectorDef[] = [
       authorizeUrl: "https://www.linkedin.com/oauth/v2/authorization",
       tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
       defaultScopes: ["openid", "profile", "email", "w_member_social"],
+      scopeCatalog: [
+        { scope: "openid", label: "Identité LinkedIn", required: true },
+        { scope: "profile", label: "Profil (nom, photo)", required: true },
+        { scope: "email", label: "Adresse email" },
+        { scope: "w_member_social", label: "Publier des posts en mon nom" },
+      ],
     },
   },
   {
@@ -188,6 +247,12 @@ export const CONNECTORS: ConnectorDef[] = [
       tokenUrl: "https://open.tiktokapis.com/v2/oauth/token/",
       scopeSeparator: ",",
       defaultScopes: ["user.info.basic", "video.publish"],
+      scopeCatalog: [
+        { scope: "user.info.basic", label: "Informations de base du compte", required: true },
+        { scope: "video.list", label: "Voir mes vidéos publiées" },
+        { scope: "video.upload", label: "Préparer des vidéos" },
+        { scope: "video.publish", label: "Publier des vidéos" },
+      ],
     },
   },
   {
@@ -208,6 +273,16 @@ export const CONNECTORS: ConnectorDef[] = [
       authorizeUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
       tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
       defaultScopes: ["offline_access", "openid", "email", "Mail.Send", "Calendars.ReadWrite"],
+      scopeCatalog: [
+        { scope: "offline_access", label: "Maintenir la connexion active", required: true },
+        { scope: "openid", label: "Identité Microsoft", required: true },
+        { scope: "email", label: "Adresse email", required: true },
+        { scope: "Mail.Send", label: "Outlook — envoyer des emails" },
+        { scope: "Mail.Read", label: "Outlook — lire les emails" },
+        { scope: "Calendars.ReadWrite", label: "Calendrier — créer et modifier des événements" },
+        { scope: "Files.ReadWrite", label: "OneDrive — gérer les fichiers" },
+        { scope: "ChannelMessage.Send", label: "Teams — envoyer des messages" },
+      ],
     },
   },
   {

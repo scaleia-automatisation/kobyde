@@ -61,7 +61,7 @@ export async function aiFetch(url: string, init: RequestInit): Promise<Response>
         body: JSON.stringify({ ...body, model }),
       });
     }
-    if (path.startsWith("/v1/images/generations")) {
+    if (path.startsWith("/v1/images/generations") && typeof body.prompt === "string") {
       const { model: _ignored, response_format: _rf, ...rest } = body;
       return fetch(`${OPENAI}/v1/images/generations`, {
         method: "POST",

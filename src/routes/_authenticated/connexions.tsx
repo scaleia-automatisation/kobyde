@@ -8,19 +8,26 @@ import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   disconnectConnection,
-  enableManagedConnection,
   myConnections,
+  saveMyManualConnection,
   startConnection,
   testMyConnection,
   toggleMyConnection,
 } from "@/lib/connectors.functions";
-import { CATEGORY_LABELS, CONNECTOR_MAP } from "@/lib/connectors.catalog";
-import { ConnectorsPanel } from "@/components/admin/connectors-panel";
-import { useMyRole } from "@/lib/db";
+import { CATEGORY_LABELS, CONNECTOR_MAP, type ConnectorField } from "@/lib/connectors.catalog";
 
 
 type Search = { connexion?: string | undefined; connecteur?: string | undefined; message?: string | undefined };
@@ -61,9 +68,6 @@ function ConnexionsPage() {
   const [testing, setTesting] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
   const qc = useQueryClient();
-  const myRole = useMyRole();
-  // Le panneau d'administration appelle des server functions réservées aux admins plateforme.
-  const isAdmin = myRole.isSuccess && Boolean(myRole.data?.isPlatformAdmin);
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
 
@@ -72,31 +76,26 @@ function ConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message]);
 
-  const enableFn = useServerFn(enableManagedConnection);
-  const [connecting, setConnecting] = useState<string | null>(null);
+  const saveFn = useServerFn(saveMyManualConnection);
+  const [dialogKey, setDialogKey] = useState<string | null>(null);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  // L'utilisateur ne saisit jamais d'identifiants (OAuth, clé API, MCP) :
-  // la configuration de l'administrateur est toujours utilisée, de façon invisible.
+  const openDialog = (key: string) => {
+    setValues({});
+    setDialogKey(key);
+  };
+
   const connect = async (key: string) => {
-    const isOauth = CONNECTOR_MAP.get(key)?.authType === "oauth";
-    setConnecting(key);
     try {
-      if (isOauth) {
-        const res = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
-        if (res?.url) {
-          window.location.href = res.url;
-          return;
-        }
-        toast.error("Ce service n'est pas encore disponible. Rien à renseigner de votre côté.");
+      const res = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
+      if (res?.url) {
+        window.location.href = res.url;
         return;
       }
-      await enableFn({ data: { connectorKey: key } });
-      toast.success("Service activé pour vos agents IA.");
-      void qc.invalidateQueries({ queryKey: ["my-connections"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Connexion impossible.");
-    } finally {
-      setConnecting(null);
+      openDialog(key);
+    } catch {
+      openDialog(key);
     }
   };
 
@@ -127,22 +126,28 @@ function ConnexionsPage() {
     }
   };
 
+  const def = dialogKey ? CONNECTOR_MAP.get(dialogKey) : undefined;
+  const dialogFields: ConnectorField[] = def ? [...(def.fields ?? []), ...(def.optionalFields ?? [])] : [];
+
+  const submitManual = async () => {
+    if (!dialogKey) return;
+    setSaving(true);
+    try {
+      await saveFn({ data: { connectorKey: dialogKey, values } });
+      toast.success("Compte connecté avec succès.");
+      setDialogKey(null);
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Connexion impossible.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const items = list.data ?? [];
 
   return (
     <AppShell title="Connecteurs" subtitle="Autorisez vos agents à agir dans vos outils, en votre nom">
-      {isAdmin && (
-        <section className="mb-8 space-y-3">
-          <div>
-            <h2 className="text-lg font-semibold">Administration des connecteurs</h2>
-            <p className="text-sm text-muted-foreground">
-              Activez chaque connecteur avec son interrupteur, puis renseignez les champs requis par son API.
-            </p>
-          </div>
-          <ConnectorsPanel />
-        </section>
-      )}
-
       <div className="flex flex-col gap-4">
         {items.map((c) => (
           <Card key={c.key} className="space-y-3 p-5">
@@ -164,7 +169,7 @@ function ConnexionsPage() {
                   ) : c.available ? (
                     <Badge variant="secondary">Disponible</Badge>
                   ) : (
-                    <Badge variant="outline">Bientôt disponible</Badge>
+                    <Badge variant="outline">Configuration manuelle</Badge>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
@@ -172,22 +177,15 @@ function ConnexionsPage() {
                   {CATEGORY_LABELS[c.category as keyof typeof CATEGORY_LABELS] ?? c.category}
                 </p>
               </div>
-              {c.available !== false && (
+              {c.connected && (
                 <div className="flex shrink-0 items-center gap-2">
                   <Label htmlFor={`toggle-${c.key}`} className="text-xs text-muted-foreground">
                     {c.isActive ? "Activé" : "Désactivé"}
                   </Label>
                   <Switch
                     id={`toggle-${c.key}`}
-                    checked={Boolean(c.isActive)}
-                    disabled={connecting === c.key}
-                    onCheckedChange={(v) => {
-                      if (!c.connected) {
-                        if (v) void connect(c.key);
-                        return;
-                      }
-                      void toggleActive(c.key, v);
-                    }}
+                    checked={c.isActive}
+                    onCheckedChange={(v) => void toggleActive(c.key, v)}
                   />
                 </div>
               )}
@@ -215,6 +213,9 @@ function ConnexionsPage() {
               </Button>
               {c.connected ? (
                 <>
+                  <Button variant="outline" onClick={() => openDialog(c.key)}>
+                    Modifier mes identifiants
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={async () => {
@@ -227,11 +228,13 @@ function ConnexionsPage() {
                   </Button>
                 </>
               ) : (
-                <Button disabled={connecting === c.key} onClick={() => void connect(c.key)}>
-                  {connecting === c.key ? "Connexion…" : "Connecter mon compte"}
-                </Button>
+                <>
+                  <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
+                  <Button variant="outline" onClick={() => openDialog(c.key)}>
+                    Saisir mes identifiants
+                  </Button>
+                </>
               )}
-
             </div>
 
             {results[c.key] && (
@@ -249,6 +252,53 @@ function ConnexionsPage() {
         )}
       </div>
 
+      <Dialog open={dialogKey !== null} onOpenChange={(o) => !o && setDialogKey(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{def?.name ?? "Connexion"}</DialogTitle>
+            <DialogDescription>
+              Renseignez les informations demandées par la plateforme (clé API, jeton, client ID, secret…).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+            {dialogFields.map((fd) => (
+              <div key={fd.key} className="space-y-1.5">
+                <Label htmlFor={`f-${fd.key}`}>
+                  {fd.label}
+                  {fd.required !== false && <span className="text-destructive"> *</span>}
+                </Label>
+                <Input
+                  id={`f-${fd.key}`}
+                  type={fd.secret ? "password" : "text"}
+                  autoComplete="off"
+                  placeholder={fd.placeholder ?? ""}
+                  value={values[fd.key] ?? ""}
+                  onChange={(e) => setValues((v) => ({ ...v, [fd.key]: e.target.value }))}
+                />
+              </div>
+            ))}
+            <div className="space-y-1.5">
+              <Label htmlFor="f-account_label">Nom du compte (facultatif)</Label>
+              <Input
+                id="f-account_label"
+                value={values["account_label"] ?? ""}
+                onChange={(e) => setValues((v) => ({ ...v, account_label: e.target.value }))}
+                placeholder="ex. contact@monentreprise.fr"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogKey(null)}>
+              Annuler
+            </Button>
+            <Button disabled={saving} onClick={() => void submitManual()}>
+              {saving ? "Enregistrement…" : "Enregistrer et connecter"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
 
   );

@@ -52,17 +52,6 @@ const publicRow = (def: ConnectorDef, row: any) => {
     fields: def.fields,
     optionalFields: def.optionalFields ?? [],
     servicesCatalog: def.services ?? [],
-    docsUrl: def.docsUrl ?? null,
-    setupSteps: def.setupSteps ?? [],
-    oauthConfig: def.oauth
-      ? {
-          authorizeUrl: def.oauth.authorizeUrl,
-          tokenUrl: def.oauth.tokenUrl,
-          defaultScopes: def.oauth.defaultScopes,
-          scopeCatalog: def.oauth.scopeCatalog ?? [],
-        }
-      : null,
-
     services: (row?.services ?? def.services?.map((s) => s.key) ?? []) as string[],
     values: masked,
     isEnabled: Boolean(row?.is_enabled),
@@ -477,7 +466,7 @@ export async function listUserConnections(userId: string) {
   const supabase = await db();
   const { data } = await supabase
     .from("oauth_connections")
-    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at,metadata")
+    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at")
     .eq("user_id", userId);
   const rows = new Map<string, any>((data ?? []).map((r: any) => [r.connector_key ?? r.provider, r]));
 
@@ -489,23 +478,6 @@ export async function listUserConnections(userId: string) {
     .filter((c) => c.userConnect || c.isEnabled)
     .map((c) => {
       const row = rows.get(c.key);
-      const saved = ((row?.metadata as any)?.values ?? {}) as Record<string, string>;
-      const def = CONNECTOR_MAP.get(c.key);
-      // Valeurs de la configuration globale (admin) déjà masquées — utilisées en repli
-      // quand l'utilisateur n'a pas d'identifiants propres, pour pré-remplir le formulaire.
-      const globalValues = ((c as any).values ?? {}) as Record<string, string>;
-      const savedValues: Record<string, string> = {};
-      [...(def?.fields ?? []), ...(def?.optionalFields ?? [])].forEach((fd) => {
-        const v = saved[fd.key];
-        if (v) {
-          savedValues[fd.key] = fd.secret ? maskSecret(v) : v;
-          return;
-        }
-        // Repli sur la configuration admin du connecteur (déjà masquée pour les secrets).
-        const g = globalValues[fd.key];
-        if (g) savedValues[fd.key] = g;
-      });
-      if (row?.account_label) savedValues["account_label"] = row.account_label;
       return {
         key: c.key,
         name: c.name,
@@ -518,8 +490,6 @@ export async function listUserConnections(userId: string) {
         connected: Boolean(row && !row.revoked),
         isActive: row ? row.is_active !== false : false,
         lastError: (row?.metadata as any)?.last_error ?? null,
-        managedByAdmin: Boolean((row?.metadata as any)?.managed_by_admin),
-        savedValues,
         account: row?.account_label ?? row?.provider_email ?? null,
         scopes: row?.scopes ?? "",
         expiresAt: row?.expires_at ?? null,
@@ -527,7 +497,6 @@ export async function listUserConnections(userId: string) {
         services: c.servicesCatalog,
       };
     });
-
 }
 
 /**
@@ -544,10 +513,7 @@ export async function enableManagedUserConnection(input: {
   if (!def) throw new Error("Connecteur inconnu.");
   if (def.authType === "oauth") throw new Error("Ce connecteur nécessite une autorisation OAuth.");
   const conf = await getConnectorConfig(input.connectorKey);
-  // Si aucune configuration n'existe encore en base, on se base sur le catalogue
-  // (connecteur proposé aux utilisateurs) plutôt que de bloquer l'activation.
-  const allowed = conf ? conf.isEnabled !== false : def.userConnect !== false;
-  if (!allowed) throw new Error("Ce connecteur n'est pas encore activé par votre administrateur.");
+  if (!conf?.isEnabled) throw new Error("Ce connecteur n'est pas encore activé par votre administrateur.");
 
   const supabase = await db();
   const { error } = await supabase.from("oauth_connections").upsert(
@@ -605,41 +571,21 @@ export async function saveUserManualConnection(input: {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def) throw new Error("Connecteur inconnu.");
 
-  const supabase = await db();
-
-  const { data: existingRow } = await supabase
-    .from("oauth_connections")
-    .select("metadata, account_label, access_token")
-    .eq("user_id", input.userId)
-    .eq("provider", input.connectorKey)
-    .maybeSingle();
-  const previous = ((existingRow?.metadata as any)?.values ?? {}) as Record<string, string>;
-
-  const incoming = Object.fromEntries(
-    Object.entries(input.values)
-      .map(([k, v]) => [k, (v ?? "").trim()] as const)
-      .filter(([, v]) => v !== "" && !v.includes("•")),
+  const values = Object.fromEntries(
+    Object.entries(input.values).map(([k, v]) => [k, (v ?? "").trim()]).filter(([, v]) => v !== ""),
   ) as Record<string, string>;
 
-  // Champ laissé vide ou valeur masquée = on conserve l'ancienne valeur.
-  const values = { ...previous, ...incoming };
-
-  // Un champ requis est aussi satisfait s'il existe dans la configuration globale (admin) :
-  // l'utilisateur n'a alors rien à renseigner, l'appel utilisera la clé centrale.
-  const global = await getConnectorConfig(input.connectorKey);
-  const globalHas = (k: string) =>
-    Boolean(global?.secrets?.[k] ?? global?.config?.[k]);
-
   const missing = (def.fields ?? [])
-    .filter((fd) => fd.required !== false && !values[fd.key] && !globalHas(fd.key))
+    .filter((fd) => fd.required !== false && !values[fd.key])
     .map((fd) => fd.label);
   if (missing.length) throw new Error(`Champs obligatoires manquants : ${missing.join(", ")}.`);
 
   const token =
     values["access_token"] ?? values["api_key"] ?? values["api_token"] ?? values["client_secret"] ??
     values["app_secret"] ?? Object.values(values)[0] ?? "";
-  const label = values["account_label"] ?? values["email"] ?? existingRow?.account_label ?? null;
+  const label = values["account_label"] ?? values["email"] ?? null;
 
+  const supabase = await db();
   const { error } = await supabase.from("oauth_connections").upsert(
     {
       user_id: input.userId,
@@ -649,7 +595,6 @@ export async function saveUserManualConnection(input: {
       provider_user_id: input.userId,
       access_token: token,
       account_label: label,
-
       status: "active",
       revoked: false,
       is_active: true,

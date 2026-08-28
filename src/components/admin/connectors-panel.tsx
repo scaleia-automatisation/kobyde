@@ -185,57 +185,25 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
           )}
 
           <form className="space-y-4" onSubmit={submit}>
-            {(connector.setupSteps?.length > 0 || connector.docsUrl) && (
-              <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  À configurer chez le fournisseur
-                </p>
-                {connector.setupSteps?.length > 0 && (
-                  <ol className="list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
-                    {connector.setupSteps.map((s: string) => (
-                      <li key={s}>{s}</li>
-                    ))}
-                  </ol>
-                )}
-                {connector.docsUrl && (
-                  <a
-                    className="inline-block text-xs font-medium text-primary underline"
-                    href={connector.docsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Ouvrir la console du fournisseur
-                  </a>
-                )}
-              </div>
-            )}
-
             <div className="grid gap-3 sm:grid-cols-2">
-              {[...connector.fields, ...connector.optionalFields].map((field) => {
-                const optional =
-                  field.required === false ||
-                  connector.optionalFields.some((o: { key: string }) => o.key === field.key);
-                return (
-                  <div key={field.key} className="space-y-1">
-                    <Label className="text-xs">
-                      {field.label}
-                      {optional ? (
-                        <span className="ml-1 text-muted-foreground">(facultatif)</span>
-                      ) : (
-                        <span className="ml-1 text-destructive">*</span>
-                      )}
-                    </Label>
-                    {field.hint && <p className="text-[11px] leading-snug text-muted-foreground">{field.hint}</p>}
-                    <Input
-                      type="text"
-                      autoComplete="off"
-                      placeholder={connector.values[field.key] || "—"}
-                      value={values[field.key] ?? ""}
-                      onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
-                    />
-                  </div>
-                );
-              })}
+              {[...connector.fields, ...connector.optionalFields].map((field) => (
+                <div key={field.key} className="space-y-1">
+                  <Label className="text-xs">
+                    {field.label}
+                    {field.required === false ||
+                    connector.optionalFields.some((o: { key: string }) => o.key === field.key) ? (
+                      <span className="ml-1 text-muted-foreground">(facultatif)</span>
+                    ) : null}
+                  </Label>
+                  <Input
+                    type="text"
+                    autoComplete="off"
+                    placeholder={connector.values[field.key] || "—"}
+                    value={values[field.key] ?? ""}
+                    onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))}
+                  />
+                </div>
+              ))}
             </div>
 
             {connector.servicesCatalog.length > 0 && (
@@ -257,28 +225,6 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
               </div>
             )}
 
-            {connector.oauthConfig && (
-              <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Points de terminaison OAuth
-                </p>
-                <UrlRow label="Authorize URL" value={connector.oauthConfig.authorizeUrl} />
-                <UrlRow label="Token URL" value={connector.oauthConfig.tokenUrl} />
-                {connector.oauthConfig.defaultScopes.length > 0 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Scopes demandés par défaut</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {connector.oauthConfig.defaultScopes.map((s: string) => (
-                        <Badge key={s} variant="secondary" className="font-mono text-[10px]">
-                          {s}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {(connector.userConnect || connector.authType === "oauth") && (
               <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Redirect URI</p>
@@ -286,7 +232,6 @@ function ConnectorRow({ connector, onChanged }: { connector: Connector; onChange
                 <UrlRow label="Développement" value={connector.urls.redirectDev} />
               </div>
             )}
-
 
             {connector.webhook && (
               <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3">

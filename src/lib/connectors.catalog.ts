@@ -9,8 +9,6 @@ export type ConnectorField = {
   required?: boolean;
   secret?: boolean;
   placeholder?: string;
-  /** Explication : où trouver la valeur et à quoi elle sert pour les requêtes API */
-  hint?: string;
 };
 
 export type ScopeOption = {
@@ -38,10 +36,6 @@ export type ConnectorDef = {
   userConnect?: boolean;
   /** Le connecteur reçoit des webhooks */
   webhook?: boolean;
-  /** Console développeur du fournisseur où créer l'application OAuth / la clé API */
-  docsUrl?: string;
-  /** Étapes de configuration côté fournisseur */
-  setupSteps?: string[];
   oauth?: {
     authorizeUrl: string;
     tokenUrl: string;
@@ -52,21 +46,12 @@ export type ConnectorDef = {
   };
 };
 
-const f = (
-  key: string,
-  label: string,
-  secret = true,
-  required = true,
-  hint?: string,
-): ConnectorField => ({
+const f = (key: string, label: string, secret = true, required = true): ConnectorField => ({
   key,
   label,
   secret,
   required,
-  ...(hint ? { hint } : {}),
 });
-
-
 
 export const CONNECTORS: ConnectorDef[] = [
   {
@@ -75,16 +60,8 @@ export const CONNECTORS: ConnectorDef[] = [
     category: "ia",
     description: "Génération de texte, analyse, raisonnement et images selon les modèles activés.",
     authType: "api_key",
-    docsUrl: "https://platform.openai.com/api-keys",
-    setupSteps: [
-      "Créez une clé API sur platform.openai.com › API keys.",
-      "Copiez l'identifiant d'organisation si votre compte en utilise plusieurs.",
-    ],
-    fields: [f("api_key", "API Key", true, true, "Clé secrète sk-… utilisée dans l'en-tête Authorization: Bearer.")],
-    optionalFields: [
-      { key: "organization_id", label: "Organization ID", secret: false, hint: "En-tête OpenAI-Organization (org-…)." },
-      { key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false, hint: "Plafond de dépense appliqué par Kobyde." },
-    ],
+    fields: [f("api_key", "API Key")],
+    optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
   },
   {
     key: "gemini",
@@ -93,9 +70,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Recherche web, veille, analyse concurrentielle et enrichissement de données.",
     authType: "api_key",
     userConnect: true,
-    docsUrl: "https://aistudio.google.com/apikey",
-    setupSteps: ["Générez une clé API dans Google AI Studio."],
-    fields: [f("api_key", "Gemini API Key", true, true, "Clé AIza… envoyée en paramètre x-goog-api-key.")],
+    fields: [f("api_key", "Gemini API Key")],
     services: [
       { key: "web_search", label: "Recherche web en temps réel (Google Search Grounding)" },
       { key: "text_generation", label: "Génération et reformulation de textes" },
@@ -111,19 +86,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Pages, bases de données et notes Notion de votre espace de travail.",
     authType: "oauth",
     userConnect: true,
-    docsUrl: "https://www.notion.so/my-integrations",
-    setupSteps: [
-      "Créez une intégration « Public » sur notion.so/my-integrations.",
-      "Collez la Redirect URI ci-dessous dans la section OAuth Domain & URIs.",
-      "Copiez l'OAuth client ID et l'OAuth client secret.",
-    ],
-    fields: [
-      f("client_id", "OAuth Client ID", false, true, "Onglet Secrets de l'intégration Notion."),
-      f("client_secret", "OAuth Client Secret", true, true, "Secret utilisé pour l'échange du code d'autorisation."),
-    ],
-    optionalFields: [
-      { key: "notion_version", label: "Notion-Version", secret: false, hint: "En-tête de version d'API (ex. 2022-06-28)." },
-    ],
+    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
     services: [
       { key: "pages", label: "Pages Notion" },
       { key: "databases", label: "Bases de données" },
@@ -141,19 +104,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Messages, canaux et notifications de votre espace Slack.",
     authType: "oauth",
     userConnect: true,
-    docsUrl: "https://api.slack.com/apps",
-    setupSteps: [
-      "Créez une app sur api.slack.com/apps.",
-      "OAuth & Permissions : ajoutez la Redirect URI ci-dessous et les bot scopes voulus.",
-      "Copiez Client ID, Client Secret et Signing Secret (onglet Basic Information).",
-    ],
-    fields: [
-      f("client_id", "Client ID", false, true, "Basic Information › App Credentials."),
-      f("client_secret", "Client Secret", true, true, "Échange du code OAuth contre un token."),
-    ],
-    optionalFields: [
-      { key: "signing_secret", label: "Signing Secret", secret: true, hint: "Vérification des requêtes et events Slack entrants." },
-    ],
+    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
     services: [
       { key: "messages", label: "Envoi de messages" },
       { key: "channels", label: "Canaux" },
@@ -179,19 +130,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Gmail, Agenda, Drive, Docs et Sheets des comptes Google autorisés.",
     authType: "oauth",
     userConnect: true,
-    docsUrl: "https://console.cloud.google.com/apis/credentials",
-    setupSteps: [
-      "Google Cloud Console › API et services › Identifiants › ID client OAuth (Application Web).",
-      "Ajoutez les deux Redirect URI ci-dessous aux URI de redirection autorisés.",
-      "Activez les API Gmail, Calendar, Drive, Docs et Sheets pour le projet.",
-    ],
-    fields: [
-      f("client_id", "Client ID", false, true, "Se termine par .apps.googleusercontent.com."),
-      f("client_secret", "Client Secret", true, true, "GOCSPX-… : échange du code et rafraîchissement des tokens."),
-    ],
-    optionalFields: [
-      { key: "project_id", label: "Project ID", secret: false, hint: "Projet Google Cloud propriétaire des API activées." },
-    ],
+    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
     services: [
       { key: "gmail", label: "Gmail" },
       { key: "calendar", label: "Google Calendar" },
@@ -230,18 +169,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Google Business Profile, Search Console et Analytics des comptes autorisés.",
     authType: "oauth",
     userConnect: true,
-    docsUrl: "https://console.cloud.google.com/apis/credentials",
-    setupSteps: [
-      "Utilisez un ID client OAuth Web (même projet que Google Workspace ou un projet dédié).",
-      "Activez Business Profile API, Search Console API et Google Analytics Data API.",
-    ],
-    fields: [
-      f("client_id", "Client ID", false, true, "ID client OAuth Web du projet Google Cloud."),
-      f("client_secret", "Client Secret", true, true, "Secret associé à l'ID client OAuth."),
-    ],
-    optionalFields: [
-      { key: "ga4_property_id", label: "Propriété GA4 par défaut", secret: false, hint: "ID numérique utilisé pour les rapports Analytics." },
-    ],
+    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
     services: [
       { key: "business_profile", label: "Google Business Profile" },
       { key: "search_console", label: "Search Console" },
@@ -268,20 +196,8 @@ export const CONNECTORS: ConnectorDef[] = [
     authType: "oauth",
     userConnect: true,
     webhook: true,
-    docsUrl: "https://developers.facebook.com/apps",
-    setupSteps: [
-      "Créez une app Business sur developers.facebook.com.",
-      "Produit « Facebook Login » : ajoutez les Redirect URI ci-dessous.",
-      "Produit « Webhooks » : collez l'URL de webhook et le Verify Token.",
-    ],
-    fields: [
-      f("app_id", "App ID", false, true, "Identifiant public de l'app Meta."),
-      f("app_secret", "App Secret", true, true, "Échange du code OAuth et signature appsecret_proof."),
-    ],
-    optionalFields: [
-      { key: "webhook_verify_token", label: "Webhook Verify Token", secret: true, hint: "Chaîne de votre choix, identique dans la console Meta." },
-      { key: "api_version", label: "Version de l'API Graph", secret: false, hint: "Ex. v20.0 — par défaut la version supportée par Kobyde." },
-    ],
+    fields: [f("app_id", "App ID", false), f("app_secret", "App Secret")],
+    optionalFields: [{ key: "webhook_verify_token", label: "Webhook Verify Token", secret: true }],
     services: [
       { key: "facebook", label: "Pages Facebook" },
       { key: "instagram", label: "Instagram Business" },
@@ -311,23 +227,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Publication et informations du compte LinkedIn connecté.",
     authType: "oauth",
     userConnect: true,
-    docsUrl: "https://www.linkedin.com/developers/apps",
-    setupSteps: [
-      "Créez une app liée à votre page entreprise sur linkedin.com/developers.",
-      "Onglet Auth : ajoutez les Redirect URI ci-dessous.",
-      "Produits : activez « Sign In with LinkedIn using OpenID Connect » et « Share on LinkedIn ».",
-    ],
-    fields: [
-      f("client_id", "Client ID", false, true, "Onglet Auth de l'app LinkedIn."),
-      f("client_secret", "Client Secret", true, true, "Utilisé pour l'échange du code d'autorisation."),
-    ],
-    optionalFields: [
-      { key: "organization_urn", label: "URN de la page entreprise", secret: false, hint: "urn:li:organization:123456 pour publier au nom de la page." },
-    ],
-    services: [
-      { key: "posts", label: "Publication de posts" },
-      { key: "profile", label: "Profil et identité" },
-    ],
+    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
     oauth: {
       authorizeUrl: "https://www.linkedin.com/oauth/v2/authorization",
       tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
@@ -347,19 +247,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Publication et statistiques des comptes TikTok connectés.",
     authType: "oauth",
     userConnect: true,
-    docsUrl: "https://developers.tiktok.com/apps",
-    setupSteps: [
-      "Créez une app sur developers.tiktok.com et ajoutez le produit « Login Kit » + « Content Posting API ».",
-      "Déclarez les Redirect URI ci-dessous dans la configuration Login Kit.",
-    ],
-    fields: [
-      f("client_key", "Client Key", false, true, "Identifiant public de l'app TikTok."),
-      f("client_secret", "Client Secret", true, true, "Échange du code d'autorisation contre un access token."),
-    ],
-    services: [
-      { key: "publish", label: "Publication de vidéos" },
-      { key: "insights", label: "Statistiques du compte" },
-    ],
+    fields: [f("client_key", "Client Key", false), f("client_secret", "Client Secret")],
     oauth: {
       authorizeUrl: "https://www.tiktok.com/v2/auth/authorize/",
       tokenUrl: "https://open.tiktokapis.com/v2/oauth/token/",
@@ -380,19 +268,8 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Outlook, Calendrier et Teams des comptes Microsoft autorisés.",
     authType: "oauth",
     userConnect: true,
-    docsUrl: "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps",
-    setupSteps: [
-      "Microsoft Entra ID › Inscriptions d'applications › Nouvelle inscription (comptes multi-tenant).",
-      "Authentification : ajoutez les Redirect URI ci-dessous (plateforme Web).",
-      "Certificats et secrets : créez un secret client et copiez sa valeur.",
-    ],
-    fields: [
-      f("client_id", "Application (client) ID", false, true, "GUID de l'inscription d'application."),
-      f("client_secret", "Client Secret", true, true, "Valeur du secret client (visible une seule fois)."),
-    ],
-    optionalFields: [
-      { key: "tenant_id", label: "Tenant ID", secret: false, hint: "GUID du locataire ; « common » si multi-tenant." },
-    ],
+    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
+    optionalFields: [{ key: "tenant_id", label: "Tenant ID (si nécessaire)", secret: false }],
     services: [
       { key: "outlook", label: "Outlook" },
       { key: "calendar", label: "Microsoft Calendar" },
@@ -418,19 +295,11 @@ export const CONNECTORS: ConnectorDef[] = [
     key: "apify",
     name: "Apify",
     category: "recherche",
-    description: "Scraping web et automatisation via des milliers d'Actors Apify : Google Maps, LinkedIn, réseaux sociaux, recherche de prospects.",
+    description: "Recherche Google Maps, collecte de données publiques et recherche de prospects.",
     authType: "api_key",
-    userConnect: true,
-    docsUrl: "https://console.apify.com/settings/integrations",
-    setupSteps: ["Apify Console › Settings › Integrations › Personal API token."],
-    fields: [f("api_token", "Apify API Token", true, true, "Token apify_api_… envoyé en Bearer sur api.apify.com.")],
-    services: [
-      { key: "actors", label: "Lancer des Actors (scraping & automatisation)" },
-      { key: "datasets", label: "Lire les datasets de résultats" },
-      { key: "leads", label: "Prospection (Google Maps, annuaires, réseaux sociaux)" },
-    ],
+    fields: [f("api_token", "Apify API Token")],
     optionalFields: [
-      { key: "allowed_actors", label: "Actors autorisés (séparés par une virgule)", secret: false, hint: "Ex. compass/crawler-google-places, apify/instagram-scraper." },
+      { key: "allowed_actors", label: "Actors autorisés (séparés par une virgule)", secret: false },
       { key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false },
     ],
   },
@@ -440,9 +309,8 @@ export const CONNECTORS: ConnectorDef[] = [
     category: "recherche",
     description: "Scénarios d'automatisation de collecte lorsque c'est pertinent et autorisé.",
     authType: "api_key",
-    docsUrl: "https://phantombuster.com/api-keys",
-    fields: [f("api_key", "API Key", true, true, "En-tête X-Phantombuster-Key-1.")],
-    optionalFields: [{ key: "allowed_phantoms", label: "Phantoms autorisés", secret: false, hint: "IDs des phantoms utilisables par les agents." }],
+    fields: [f("api_key", "API Key")],
+    optionalFields: [{ key: "allowed_phantoms", label: "Phantoms autorisés", secret: false }],
   },
   {
     key: "resend",
@@ -450,12 +318,10 @@ export const CONNECTORS: ConnectorDef[] = [
     category: "email",
     description: "Emails transactionnels du SaaS : devis, relances, invitations, notifications.",
     authType: "api_key",
-    docsUrl: "https://resend.com/api-keys",
-    setupSteps: ["Vérifiez votre domaine d'envoi puis créez une clé API avec droit d'envoi."],
-    fields: [f("api_key", "API Key", true, true, "Clé re_… envoyée en Bearer sur api.resend.com.")],
+    fields: [f("api_key", "API Key")],
     optionalFields: [
-      { key: "domain", label: "Domaine d'envoi", secret: false, hint: "Domaine vérifié (SPF/DKIM) chez Resend." },
-      { key: "from_email", label: "Email expéditeur", secret: false, hint: "Adresse par défaut du champ From." },
+      { key: "domain", label: "Domaine d'envoi", secret: false },
+      { key: "from_email", label: "Email expéditeur", secret: false },
       { key: "from_name", label: "Nom expéditeur", secret: false },
     ],
   },
@@ -465,10 +331,9 @@ export const CONNECTORS: ConnectorDef[] = [
     category: "email",
     description: "Séquences email, campagnes et automatisations marketing.",
     authType: "api_key",
-    docsUrl: "https://app.brevo.com/settings/keys/api",
-    fields: [f("api_key", "API Key", true, true, "Clé v3 envoyée en en-tête api-key.")],
+    fields: [f("api_key", "API Key")],
     optionalFields: [
-      { key: "sender_email", label: "Compte expéditeur", secret: false, hint: "Expéditeur vérifié dans Brevo." },
+      { key: "sender_email", label: "Compte expéditeur", secret: false },
       { key: "domain", label: "Domaine", secret: false },
     ],
   },
@@ -479,16 +344,8 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Paiements, abonnements et webhooks de facturation.",
     authType: "api_key",
     webhook: true,
-    docsUrl: "https://dashboard.stripe.com/apikeys",
-    setupSteps: [
-      "Copiez la clé secrète (sk_live_… ou sk_test_…).",
-      "Créez un endpoint webhook avec l'URL ci-dessous et copiez son secret de signature (whsec_…).",
-    ],
-    fields: [
-      f("secret_key", "Secret Key", true, true, "sk_live_… / sk_test_… : toutes les requêtes API Stripe."),
-      f("webhook_secret", "Webhook Signing Secret", true, true, "whsec_… : vérification des événements reçus."),
-    ],
-    optionalFields: [{ key: "publishable_key", label: "Publishable Key", secret: false, hint: "pk_… utilisée côté navigateur (Checkout)." }],
+    fields: [f("secret_key", "Secret Key"), f("webhook_secret", "Webhook Signing Secret")],
+    optionalFields: [{ key: "publishable_key", label: "Publishable Key", secret: false }],
   },
   {
     key: "twilio",
@@ -496,12 +353,8 @@ export const CONNECTORS: ConnectorDef[] = [
     category: "sms",
     description: "SMS, notifications et communications sortantes.",
     authType: "api_key",
-    docsUrl: "https://console.twilio.com",
-    fields: [
-      f("account_sid", "Account SID", false, true, "AC… : identifiant du compte (Basic Auth)."),
-      f("auth_token", "Auth Token", true, true, "Mot de passe Basic Auth des requêtes API."),
-    ],
-    optionalFields: [{ key: "messaging_service_sid", label: "Numéro ou Messaging Service SID", secret: false, hint: "Expéditeur par défaut (+33… ou MG…)." }],
+    fields: [f("account_sid", "Account SID", false), f("auth_token", "Auth Token")],
+    optionalFields: [{ key: "messaging_service_sid", label: "Numéro ou Messaging Service SID", secret: false }],
   },
   {
     key: "whatsapp",
@@ -510,16 +363,8 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Messages WhatsApp professionnels.",
     authType: "api_key",
     webhook: true,
-    docsUrl: "https://developers.facebook.com/apps",
-    setupSteps: ["App Meta › WhatsApp › API Setup : token permanent, Phone Number ID et WABA ID."],
-    fields: [
-      f("access_token", "Access Token", true, true, "Token système permanent de l'app Meta."),
-      f("phone_number_id", "Phone Number ID", false, true, "Identifiant du numéro expéditeur (endpoint /messages)."),
-    ],
-    optionalFields: [
-      { key: "business_account_id", label: "Business Account ID", secret: false, hint: "WABA ID pour la gestion des templates." },
-      { key: "webhook_verify_token", label: "Webhook Verify Token", secret: true, hint: "Identique à celui saisi dans la console Meta." },
-    ],
+    fields: [f("access_token", "Access Token"), f("phone_number_id", "Phone Number ID", false)],
+    optionalFields: [{ key: "business_account_id", label: "Business Account ID", secret: false }],
   },
   {
     key: "fcm",
@@ -527,10 +372,8 @@ export const CONNECTORS: ConnectorDef[] = [
     category: "automatisation",
     description: "Notifications push, alertes et rappels.",
     authType: "api_key",
-    docsUrl: "https://console.firebase.google.com",
-    setupSteps: ["Paramètres du projet › Comptes de service › Générer une nouvelle clé privée (JSON)."],
-    fields: [f("server_key", "Service Account JSON", true, true, "Contenu complet du JSON du compte de service.")],
-    optionalFields: [{ key: "project_id", label: "Project ID", secret: false, hint: "Utilisé dans l'URL de l'API FCM v1." }],
+    fields: [f("server_key", "Server Key / Service Account JSON")],
+    optionalFields: [{ key: "project_id", label: "Project ID", secret: false }],
   },
   {
     key: "make",
@@ -539,15 +382,13 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Scénarios d'automatisation externes.",
     authType: "api_key",
     webhook: true,
-    docsUrl: "https://www.make.com/en/help/apps/api",
-    fields: [f("api_key", "API Key ou Access Token", true, true, "En-tête Authorization: Token … de l'API Make.")],
+    fields: [f("api_key", "API Key ou Access Token")],
     optionalFields: [
-      { key: "webhook_url", label: "Webhook URL", secret: false, hint: "URL du webhook Make déclenché par Kobyde." },
+      { key: "webhook_url", label: "Webhook URL", secret: false },
       { key: "organization", label: "Organisation", secret: false },
     ],
   },
 ];
-
 
 export const CONNECTOR_MAP = new Map(CONNECTORS.map((c) => [c.key, c]));
 

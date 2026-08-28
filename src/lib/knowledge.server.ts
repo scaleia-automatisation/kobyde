@@ -3,6 +3,8 @@ import { openingHoursText } from "./company";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { aiFetch } from "./ai-provider.server";
+
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 /** Catégories de la version structurée exploitée par les agents. */
@@ -117,7 +119,7 @@ Structure complète des sections à produire (omettre toute ligne ou section san
 async function callAI(content: any[]): Promise<any> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("Clé IA indisponible.");
-  const res = await fetch(GATEWAY, {
+  const res = await aiFetch(GATEWAY, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({

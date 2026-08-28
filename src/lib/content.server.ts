@@ -4,6 +4,8 @@ import { OBJECTIVES, PLATFORMS, TONES, type ContentKind, type ContentModel, type
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { aiFetch } from "./ai-provider.server";
+
 const GATEWAY = "https://ai.gateway.lovable.dev";
 
 function apiKey() {
@@ -19,7 +21,7 @@ function gatewayError(status: number): Error {
 }
 
 async function chatJson(system: string, user: string): Promise<any> {
-  const res = await fetch(`${GATEWAY}/v1/chat/completions`, {
+  const res = await aiFetch(`${GATEWAY}/v1/chat/completions`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey()}` },
     body: JSON.stringify({
@@ -228,7 +230,7 @@ export async function generateImageB64(model: ContentModel, prompt: string): Pro
         modalities: ["image", "text"],
       };
 
-  const res = await fetch(`${GATEWAY}/v1/images/generations`, {
+  const res = await aiFetch(`${GATEWAY}/v1/images/generations`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey()}` },
     body: JSON.stringify(body),

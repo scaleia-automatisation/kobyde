@@ -3,6 +3,8 @@ import { loadCompanyMemory } from "./eric.server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { aiFetch } from "./ai-provider.server";
+
 export const CHANNELS = [
   "LinkedIn",
   "Facebook",
@@ -58,7 +60,7 @@ async function chatJson(system: string, user: string): Promise<any> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI indisponible : clé manquante.");
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({

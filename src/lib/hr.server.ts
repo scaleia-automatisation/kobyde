@@ -4,6 +4,8 @@ import { loadCompanyMemory } from "./eric.server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { aiFetch } from "./ai-provider.server";
+
 const MARIEME = `Tu es Mariéme, l'agent IA « Ressources humaines et recrutement » de Kobyde.
 Tu écris en français, de façon factuelle, neutre et professionnelle.
 Règle absolue : tu n'inventes JAMAIS une information (diplôme, entreprise, date, compétence, coordonnée).
@@ -35,7 +37,7 @@ async function chatJson(system: string, content: any): Promise<any> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("Clé IA indisponible.");
 
-  const res = await fetch(GATEWAY, {
+  const res = await aiFetch(GATEWAY, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({

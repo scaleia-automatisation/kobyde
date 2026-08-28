@@ -466,7 +466,7 @@ export async function listUserConnections(userId: string) {
   const supabase = await db();
   const { data } = await supabase
     .from("oauth_connections")
-    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at")
+    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at,metadata")
     .eq("user_id", userId);
   const rows = new Map<string, any>((data ?? []).map((r: any) => [r.connector_key ?? r.provider, r]));
 
@@ -478,6 +478,15 @@ export async function listUserConnections(userId: string) {
     .filter((c) => c.userConnect || c.isEnabled)
     .map((c) => {
       const row = rows.get(c.key);
+      const saved = ((row?.metadata as any)?.values ?? {}) as Record<string, string>;
+      const def = CONNECTOR_MAP.get(c.key);
+      const savedValues: Record<string, string> = {};
+      [...(def?.fields ?? []), ...(def?.optionalFields ?? [])].forEach((fd) => {
+        const v = saved[fd.key];
+        if (!v) return;
+        savedValues[fd.key] = fd.secret ? maskSecret(v) : v;
+      });
+      if (row?.account_label) savedValues["account_label"] = row.account_label;
       return {
         key: c.key,
         name: c.name,
@@ -490,6 +499,8 @@ export async function listUserConnections(userId: string) {
         connected: Boolean(row && !row.revoked),
         isActive: row ? row.is_active !== false : false,
         lastError: (row?.metadata as any)?.last_error ?? null,
+        managedByAdmin: Boolean((row?.metadata as any)?.managed_by_admin),
+        savedValues,
         account: row?.account_label ?? row?.provider_email ?? null,
         scopes: row?.scopes ?? "",
         expiresAt: row?.expires_at ?? null,
@@ -497,6 +508,7 @@ export async function listUserConnections(userId: string) {
         services: c.servicesCatalog,
       };
     });
+
 }
 
 /**

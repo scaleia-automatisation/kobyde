@@ -348,6 +348,7 @@ export async function buildAuthorizeUrl(input: {
   userId: string;
   orgId: string | null;
   origin?: string;
+  scopes?: string[];
 }) {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def?.oauth) throw new Error("Ce connecteur ne gère pas la connexion de compte.");
@@ -363,15 +364,22 @@ export async function buildAuthorizeUrl(input: {
   const state = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
   const supabase = await db();
+  const catalog = def.oauth.scopeCatalog ?? [];
+  const allowed = new Set(catalog.length ? catalog.map((s) => s.scope) : def.oauth.defaultScopes);
+  const required = catalog.filter((s) => s.required).map((s) => s.scope);
+  const chosen = (input.scopes ?? []).filter((s) => allowed.has(s));
+  const selected = Array.from(new Set([...required, ...(chosen.length ? chosen : def.oauth.defaultScopes)]));
+
   await supabase.from("oauth_states").insert({
     state,
     user_id: input.userId,
     org_id: input.orgId,
     connector_key: input.connectorKey,
-    redirect_to: `${base}/connexions`,
+    redirect_to: `${base}/mes-connexions`,
+    scopes: selected.join(" "),
   });
 
-  const scopes = def.oauth.defaultScopes.join(def.oauth.scopeSeparator ?? " ");
+  const scopes = selected.join(def.oauth.scopeSeparator ?? " ");
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -442,7 +450,7 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
       access_token: token,
       refresh_token: refresh,
       expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
-      scopes: def.oauth.defaultScopes.join(" "),
+      scopes: (st as any).scopes ?? def.oauth.defaultScopes.join(" "),
       status: "active",
       revoked: false,
       is_active: true,

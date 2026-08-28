@@ -583,14 +583,8 @@ export async function saveUserManualConnection(input: {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def) throw new Error("Connecteur inconnu.");
 
-  const values = Object.fromEntries(
-    Object.entries(input.values).map(([k, v]) => [k, (v ?? "").trim()]).filter(([, v]) => v !== ""),
-  ) as Record<string, string>;
-
-  const missing = (def.fields ?? [])
-    .filter((fd) => fd.required !== false && !values[fd.key])
-    .map((fd) => fd.label);
   const supabase = await db();
+
   const { data: existingRow } = await supabase
     .from("oauth_connections")
     .select("metadata, account_label, access_token")

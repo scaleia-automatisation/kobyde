@@ -249,6 +249,7 @@ export const startConnection = createServerFn({ method: "POST" })
         userId: context.userId,
         orgId: profile?.current_org_id ?? null,
         ...(data.origin ? { origin: data.origin } : {}),
+        ...(data.scopes ? { scopes: data.scopes } : {}),
       });
       return { url: res.url as string | null, error: null as string | null };
     } catch (e) {

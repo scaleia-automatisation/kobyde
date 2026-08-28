@@ -37,6 +37,7 @@ import { Route as AuthenticatedJasonRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedLamineRouteImport } from './routes/_authenticated/lamine'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedMerciRouteImport } from './routes/_authenticated/merci'
+import { Route as AuthenticatedMesConnexionsRouteImport } from './routes/_authenticated/mes-connexions'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOffresRouteImport } from './routes/_authenticated/offres'
 import { Route as AuthenticatedPaiementRouteImport } from './routes/_authenticated/paiement'
@@ -209,6 +210,12 @@ const AuthenticatedMerciRoute = AuthenticatedMerciRouteImport.update({
   path: '/merci',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMesConnexionsRoute =
+  AuthenticatedMesConnexionsRouteImport.update({
+    id: '/mes-connexions',
+    path: '/mes-connexions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedNotificationsRoute =
   AuthenticatedNotificationsRouteImport.update({
     id: '/notifications',
@@ -394,6 +401,7 @@ export interface FileRoutesByFullPath {
   '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/merci': typeof AuthenticatedMerciRoute
+  '/mes-connexions': typeof AuthenticatedMesConnexionsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/offres': typeof AuthenticatedOffresRoute
   '/paiement': typeof AuthenticatedPaiementRoute
@@ -453,6 +461,7 @@ export interface FileRoutesByTo {
   '/lamine': typeof AuthenticatedLamineRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/merci': typeof AuthenticatedMerciRoute
+  '/mes-connexions': typeof AuthenticatedMesConnexionsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/offres': typeof AuthenticatedOffresRoute
   '/paiement': typeof AuthenticatedPaiementRoute
@@ -514,6 +523,7 @@ export interface FileRoutesById {
   '/_authenticated/lamine': typeof AuthenticatedLamineRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/merci': typeof AuthenticatedMerciRoute
+  '/_authenticated/mes-connexions': typeof AuthenticatedMesConnexionsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/offres': typeof AuthenticatedOffresRoute
   '/_authenticated/paiement': typeof AuthenticatedPaiementRoute
@@ -575,6 +585,7 @@ export interface FileRouteTypes {
     | '/lamine'
     | '/marketing'
     | '/merci'
+    | '/mes-connexions'
     | '/notifications'
     | '/offres'
     | '/paiement'
@@ -634,6 +645,7 @@ export interface FileRouteTypes {
     | '/lamine'
     | '/marketing'
     | '/merci'
+    | '/mes-connexions'
     | '/notifications'
     | '/offres'
     | '/paiement'
@@ -694,6 +706,7 @@ export interface FileRouteTypes {
     | '/_authenticated/lamine'
     | '/_authenticated/marketing'
     | '/_authenticated/merci'
+    | '/_authenticated/mes-connexions'
     | '/_authenticated/notifications'
     | '/_authenticated/offres'
     | '/_authenticated/paiement'
@@ -947,6 +960,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMerciRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mes-connexions': {
+      id: '/_authenticated/mes-connexions'
+      path: '/mes-connexions'
+      fullPath: '/mes-connexions'
+      preLoaderRoute: typeof AuthenticatedMesConnexionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/notifications': {
       id: '/_authenticated/notifications'
       path: '/notifications'
@@ -1180,6 +1200,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLamineRoute: typeof AuthenticatedLamineRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedMerciRoute: typeof AuthenticatedMerciRoute
+  AuthenticatedMesConnexionsRoute: typeof AuthenticatedMesConnexionsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOffresRoute: typeof AuthenticatedOffresRoute
   AuthenticatedPaiementRoute: typeof AuthenticatedPaiementRoute
@@ -1221,6 +1242,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLamineRoute: AuthenticatedLamineRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedMerciRoute: AuthenticatedMerciRoute,
+  AuthenticatedMesConnexionsRoute: AuthenticatedMesConnexionsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOffresRoute: AuthenticatedOffresRoute,
   AuthenticatedPaiementRoute: AuthenticatedPaiementRoute,

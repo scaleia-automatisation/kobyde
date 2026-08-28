@@ -149,6 +149,9 @@ function ConnexionsPage() {
 
   const def = dialogKey ? CONNECTOR_MAP.get(dialogKey) : undefined;
   const dialogFields: ConnectorField[] = def ? [...(def.fields ?? []), ...(def.optionalFields ?? [])] : [];
+  const dialogItem = (list.data ?? []).find((c) => c.key === dialogKey) as
+    | { managedByAdmin?: boolean; connected?: boolean }
+    | undefined;
 
   const submitManual = async () => {
     if (!dialogKey) return;

@@ -224,7 +224,11 @@ function Dashboard() {
   return (
     <AppShell
       title={`Bonjour, ${firstName}`}
-      subtitle="Voici le résumé de votre activité aujourd'hui."
+      subtitle={
+        roleLabel
+          ? `${roleLabel} · Voici le résumé de votre activité aujourd'hui.`
+          : "Voici le résumé de votre activité aujourd'hui."
+      }
       action={
         <Button asChild className="gap-2">
           <Link to="/eric" search={{ agent: undefined }}>

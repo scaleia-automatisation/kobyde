@@ -9,6 +9,8 @@ export type ConnectorField = {
   required?: boolean;
   secret?: boolean;
   placeholder?: string;
+  /** Explication : où trouver la valeur et à quoi elle sert pour les requêtes API */
+  hint?: string;
 };
 
 export type ScopeOption = {
@@ -36,6 +38,10 @@ export type ConnectorDef = {
   userConnect?: boolean;
   /** Le connecteur reçoit des webhooks */
   webhook?: boolean;
+  /** Console développeur du fournisseur où créer l'application OAuth / la clé API */
+  docsUrl?: string;
+  /** Étapes de configuration côté fournisseur */
+  setupSteps?: string[];
   oauth?: {
     authorizeUrl: string;
     tokenUrl: string;
@@ -46,12 +52,20 @@ export type ConnectorDef = {
   };
 };
 
-const f = (key: string, label: string, secret = true, required = true): ConnectorField => ({
+const f = (
+  key: string,
+  label: string,
+  secret = true,
+  required = true,
+  hint?: string,
+): ConnectorField => ({
   key,
   label,
   secret,
   required,
+  hint,
 });
+
 
 export const CONNECTORS: ConnectorDef[] = [
   {

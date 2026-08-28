@@ -91,17 +91,21 @@ function ConnexionsPage() {
 
 
   const connect = async (key: string) => {
+    const isOauth = CONNECTOR_MAP.get(key)?.authType === "oauth";
     try {
       const res = await startFn({ data: { connectorKey: key, origin: window.location.origin } });
       if (res?.url) {
         window.location.href = res.url;
         return;
       }
-      openDialog(key);
-    } catch {
-      openDialog(key);
+      if (isOauth) openDialog(key);
+      else toast.error("Ce service est configuré par votre administrateur : rien à renseigner de votre côté.");
+    } catch (e) {
+      if (isOauth) openDialog(key);
+      else toast.error(e instanceof Error ? e.message : "Connexion impossible.");
     }
   };
+
 
   const toggleActive = async (key: string, active: boolean) => {
     try {
@@ -217,9 +221,11 @@ function ConnexionsPage() {
               </Button>
               {c.connected ? (
                 <>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Modifier mes identifiants
-                  </Button>
+                  {c.oauth && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Modifier mes identifiants
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={async () => {
@@ -234,11 +240,14 @@ function ConnexionsPage() {
               ) : (
                 <>
                   <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Saisir mes identifiants
-                  </Button>
+                  {c.oauth && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Saisir mes identifiants
+                    </Button>
+                  )}
                 </>
               )}
+
             </div>
 
             {results[c.key] && (

@@ -204,6 +204,35 @@ export async function getConnectorConfig(key: string) {
 
 /* --------------------------------------------------------- Test de connexion */
 
+type Probe = { ok: boolean; status: number; json: any; text: string };
+
+/** Appelle réellement l'API du fournisseur et renvoie le statut + le corps de la réponse. */
+async function probe(url: string, init?: RequestInit): Promise<Probe> {
+  const r = await fetch(url, {
+    ...init,
+    signal: AbortSignal.timeout(15000),
+  });
+  const text = await r.text().catch(() => "");
+  let json: any = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = null;
+  }
+  return { ok: r.ok, status: r.status, json, text };
+}
+
+/** Message d'erreur lisible extrait de la réponse du fournisseur. */
+function providerError(name: string, p: Probe) {
+  const detail =
+    p.json?.error?.message ??
+    p.json?.error_description ??
+    p.json?.message ??
+    (typeof p.json?.error === "string" ? p.json.error : null) ??
+    p.text.slice(0, 200);
+  return `${name} a répondu ${p.status}${detail ? ` : ${detail}` : ""}.`;
+}
+
 export async function testConnector(key: string) {
   const conf = await getConnectorConfig(key);
   const supabase = await db();
@@ -218,53 +247,99 @@ export async function testConnector(key: string) {
   };
   if (!conf) return finish(false, "Connecteur non configuré.");
   const s = conf.secrets;
+  const need = (field: string, label: string) =>
+    s[field] ? null : finish(false, `Clé manquante : renseignez ${label} avant de tester.`);
 
   try {
     if (key === "openai") {
-      const r = await fetch("https://api.openai.com/v1/models", {
+      const miss = await need("api_key", "la clé API OpenAI");
+      if (miss) return miss;
+      const p = await probe("https://api.openai.com/v1/models", {
         headers: { Authorization: `Bearer ${s["api_key"]}` },
       });
-      return finish(r.ok, r.ok ? "Connexion OpenAI réussie." : `OpenAI a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("OpenAI", p));
+      const n = Array.isArray(p.json?.data) ? p.json.data.length : 0;
+      return finish(true, `Appel API OpenAI réussi (200) — ${n} modèles disponibles.`);
     }
     if (key === "gemini") {
-      const r = await fetch(
+      const miss = await need("api_key", "la clé API Gemini");
+      if (miss) return miss;
+      const p = await probe(
         `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(s["api_key"] ?? "")}`,
       );
-      return finish(r.ok, r.ok ? "Connexion Gemini réussie." : `Gemini a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("Gemini", p));
+      const n = Array.isArray(p.json?.models) ? p.json.models.length : 0;
+      return finish(true, `Appel API Gemini réussi (200) — ${n} modèles disponibles.`);
     }
     if (key === "stripe") {
-      const r = await fetch("https://api.stripe.com/v1/balance", {
+      const miss = await need("secret_key", "la clé secrète Stripe");
+      if (miss) return miss;
+      const p = await probe("https://api.stripe.com/v1/balance", {
         headers: { Authorization: `Bearer ${s["secret_key"]}` },
       });
-      return finish(r.ok, r.ok ? "Connexion Stripe réussie." : `Stripe a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("Stripe", p));
+      const cur = p.json?.available?.[0]?.currency?.toUpperCase?.() ?? "";
+      return finish(true, `Appel API Stripe réussi (200)${cur ? ` — solde en ${cur}` : ""}.`);
     }
     if (key === "resend") {
-      const r = await fetch("https://api.resend.com/domains", {
+      const miss = await need("api_key", "la clé API Resend");
+      if (miss) return miss;
+      const p = await probe("https://api.resend.com/domains", {
         headers: { Authorization: `Bearer ${s["api_key"]}` },
       });
-      return finish(r.ok, r.ok ? "Connexion Resend réussie." : `Resend a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("Resend", p));
+      const n = Array.isArray(p.json?.data) ? p.json.data.length : 0;
+      return finish(true, `Appel API Resend réussi (200) — ${n} domaine(s) configuré(s).`);
     }
     if (key === "apify") {
-      const r = await fetch(`https://api.apify.com/v2/users/me?token=${encodeURIComponent(s["api_token"] ?? "")}`);
-      return finish(r.ok, r.ok ? "Connexion Apify réussie." : `Apify a répondu ${r.status}.`);
+      const miss = await need("api_token", "le jeton API Apify");
+      if (miss) return miss;
+      const p = await probe(`https://api.apify.com/v2/users/me?token=${encodeURIComponent(s["api_token"] ?? "")}`);
+      if (!p.ok) return finish(false, providerError("Apify", p));
+      const u = p.json?.data?.username ?? "";
+      return finish(true, `Appel API Apify réussi (200)${u ? ` — compte ${u}` : ""}.`);
     }
     if (key === "meta") {
-      const r = await fetch(
+      const p = await probe(
         `https://graph.facebook.com/oauth/access_token?client_id=${encodeURIComponent(
           conf.config["app_id"] ?? "",
         )}&client_secret=${encodeURIComponent(s["app_secret"] ?? "")}&grant_type=client_credentials`,
       );
-      return finish(r.ok, r.ok ? "Application Meta valide." : `Meta a répondu ${r.status}.`);
+      if (!p.ok) return finish(false, providerError("Meta", p));
+      return finish(true, "Appel API Meta réussi (200) — jeton d'application obtenu.");
+    }
+    if (key === "notion") {
+      const tok = s["api_key"] ?? s["access_token"] ?? s["token"] ?? "";
+      if (!tok) return finish(false, "Clé manquante : renseignez le jeton d'intégration Notion avant de tester.");
+      const p = await probe("https://api.notion.com/v1/users/me", {
+        headers: { Authorization: `Bearer ${tok}`, "Notion-Version": "2022-06-28" },
+      });
+      if (!p.ok) return finish(false, providerError("Notion", p));
+      return finish(true, `Appel API Notion réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
+    }
+    if (key === "slack") {
+      const tok = s["bot_token"] ?? s["access_token"] ?? s["api_key"] ?? "";
+      if (!tok) return finish(false, "Clé manquante : renseignez le jeton Slack avant de tester.");
+      const p = await probe("https://slack.com/api/auth.test", { headers: { Authorization: `Bearer ${tok}` } });
+      if (!p.json?.ok) return finish(false, `Slack a répondu ${p.status} : ${p.json?.error ?? "échec"}.`);
+      return finish(true, `Appel API Slack réussi (200) — espace ${p.json?.team ?? ""}.`);
     }
     const def = CONNECTOR_MAP.get(key);
     const requiredOk = (def?.fields ?? []).every((x) =>
       x.secret ? Boolean(s[x.key]) : Boolean(conf.config[x.key]),
     );
-    return finish(requiredOk, requiredOk ? "Configuration complète." : "Champs obligatoires manquants.");
+    return finish(
+      requiredOk,
+      requiredOk
+        ? "Configuration complète (aucun appel API de test disponible pour ce connecteur)."
+        : "Champs obligatoires manquants.",
+    );
   } catch (e) {
-    return finish(false, e instanceof Error ? e.message : "Erreur de connexion.");
+    const msg = e instanceof Error ? e.message : "Erreur de connexion.";
+    return finish(false, msg.includes("timed out") ? "Le fournisseur n'a pas répondu (délai dépassé)." : msg);
   }
 }
+
 
 /* ------------------------------------------------------------- OAuth utilisateur */
 

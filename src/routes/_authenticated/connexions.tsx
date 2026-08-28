@@ -61,6 +61,8 @@ function ConnexionsPage() {
   const [testing, setTesting] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
   const qc = useQueryClient();
+  const myRole = useMyRole();
+  const isAdmin = Boolean(myRole.data?.isPlatformAdmin || myRole.data?.role === "owner" || myRole.data?.role === "admin");
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
 

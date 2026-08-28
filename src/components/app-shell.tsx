@@ -39,7 +39,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { amIPlatformAdmin } from "@/lib/admin.functions";
 import { useSessionTracking } from "@/lib/user-events";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile, useRows } from "@/lib/db";
+import { useMyRole, useProfile, useRows } from "@/lib/db";
 import { useMonthlyRenewal, usePlan } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";

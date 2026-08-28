@@ -217,9 +217,11 @@ function ConnexionsPage() {
               </Button>
               {c.connected ? (
                 <>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Modifier mes identifiants
-                  </Button>
+                  {c.oauth && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Modifier mes identifiants
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={async () => {
@@ -234,11 +236,14 @@ function ConnexionsPage() {
               ) : (
                 <>
                   <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Saisir mes identifiants
-                  </Button>
+                  {c.oauth && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Saisir mes identifiants
+                    </Button>
+                  )}
                 </>
               )}
+
             </div>
 
             {results[c.key] && (

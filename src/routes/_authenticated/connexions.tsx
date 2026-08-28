@@ -41,13 +41,13 @@ export const Route = createFileRoute("/_authenticated/connexions")({
   }),
   head: () => ({
     meta: [
-      { title: "Mes connexions — Kobyde" },
+      { title: "Connecteurs — Kobyde" },
       {
         name: "description",
         content:
           "Connectez vos comptes Google, Meta, LinkedIn, TikTok ou Microsoft pour que vos agents IA Kobyde travaillent directement dans vos outils.",
       },
-      { property: "og:title", content: "Mes connexions — Kobyde" },
+      { property: "og:title", content: "Connecteurs — Kobyde" },
       {
         property: "og:description",
         content: "Autorisez Kobyde à agir en votre nom sur vos plateformes préférées, en toute sécurité.",
@@ -147,7 +147,7 @@ function ConnexionsPage() {
   const items = list.data ?? [];
 
   return (
-    <AppShell title="Mes connexions" subtitle="Autorisez vos agents à agir dans vos outils, en votre nom">
+    <AppShell title="Connecteurs" subtitle="Autorisez vos agents à agir dans vos outils, en votre nom">
       <div className="flex flex-col gap-4">
         {items.map((c) => (
           <Card key={c.key} className="space-y-3 p-5">

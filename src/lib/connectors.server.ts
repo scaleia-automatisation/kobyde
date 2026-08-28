@@ -52,6 +52,17 @@ const publicRow = (def: ConnectorDef, row: any) => {
     fields: def.fields,
     optionalFields: def.optionalFields ?? [],
     servicesCatalog: def.services ?? [],
+    docsUrl: def.docsUrl ?? null,
+    setupSteps: def.setupSteps ?? [],
+    oauthConfig: def.oauth
+      ? {
+          authorizeUrl: def.oauth.authorizeUrl,
+          tokenUrl: def.oauth.tokenUrl,
+          defaultScopes: def.oauth.defaultScopes,
+          scopeCatalog: def.oauth.scopeCatalog ?? [],
+        }
+      : null,
+
     services: (row?.services ?? def.services?.map((s) => s.key) ?? []) as string[],
     values: masked,
     isEnabled: Boolean(row?.is_enabled),

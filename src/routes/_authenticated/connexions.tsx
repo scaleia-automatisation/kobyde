@@ -130,6 +130,18 @@ function ConnexionsPage() {
 
   return (
     <AppShell title="Connecteurs" subtitle="Autorisez vos agents à agir dans vos outils, en votre nom">
+      {isAdmin && (
+        <section className="mb-8 space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">Administration des connecteurs</h2>
+            <p className="text-sm text-muted-foreground">
+              Activez chaque connecteur avec son interrupteur, puis renseignez les champs requis par son API.
+            </p>
+          </div>
+          <ConnectorsPanel />
+        </section>
+      )}
+
       <div className="flex flex-col gap-4">
         {items.map((c) => (
           <Card key={c.key} className="space-y-3 p-5">

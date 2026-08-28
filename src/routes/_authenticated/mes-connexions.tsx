@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   disconnectConnection,
+  enableManagedConnection,
   myConnections,
   startConnection,
   toggleMyConnection,
@@ -52,6 +53,7 @@ function MesConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
+  const enableFn = useServerFn(enableManagedConnection);
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
@@ -73,6 +75,10 @@ function MesConnexionsPage() {
         if (next[c.key]) continue;
         const def = CONNECTOR_MAP.get(c.key);
         const catalog = def?.oauth?.scopeCatalog ?? [];
+        if (!c.oauth) {
+          next[c.key] = (def?.services ?? []).map((sv) => sv.key);
+          continue;
+        }
         next[c.key] = catalog.length
           ? catalog.filter((s) => s.required || (def?.oauth?.defaultScopes ?? []).includes(s.scope)).map((s) => s.scope)
           : (def?.oauth?.defaultScopes ?? []);
@@ -87,9 +93,15 @@ function MesConnexionsPage() {
       return { ...prev, [key]: on ? Array.from(new Set([...current, scope])) : current.filter((s) => s !== scope) };
     });
 
-  const connect = async (key: string) => {
+  const connect = async (key: string, isOauth: boolean) => {
     setConnecting(key);
     try {
+      if (!isOauth) {
+        await enableFn({ data: { connectorKey: key, services: selected[key] ?? [] } });
+        toast.success("Service activé pour vos agents IA.");
+        void qc.invalidateQueries({ queryKey: ["my-connections"] });
+        return;
+      }
       const res = await startFn({
         data: { connectorKey: key, origin: window.location.origin, scopes: selected[key] ?? [] },
       });
@@ -101,8 +113,8 @@ function MesConnexionsPage() {
         res?.error ??
           "Ce service n'est pas encore activé par votre administrateur. Aucune information n'est à saisir de votre côté.",
       );
-    } catch {
-      toast.error("Ce service n'est pas encore activé par votre administrateur.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Ce service n'est pas encore activé par votre administrateur.");
     } finally {
       setConnecting(null);
     }
@@ -135,7 +147,9 @@ function MesConnexionsPage() {
 
         {items.map((c) => {
           const cdef = CONNECTOR_MAP.get(c.key);
-          const catalog = cdef?.oauth?.scopeCatalog ?? [];
+          const catalog = c.oauth
+            ? (cdef?.oauth?.scopeCatalog ?? [])
+            : (cdef?.services ?? []).map((sv) => ({ scope: sv.key, label: sv.label, required: false }));
           const chosen = selected[c.key] ?? [];
           return (
             <Card key={c.key} className="space-y-4 p-5">
@@ -175,7 +189,9 @@ function MesConnexionsPage() {
 
               {catalog.length > 0 ? (
                 <div className="space-y-2 rounded-lg border p-3">
-                  <p className="text-xs font-medium">Autorisations à accorder</p>
+                  <p className="text-xs font-medium">
+                    {c.oauth ? "Autorisations à accorder" : "Fonctions accessibles à vos agents"}
+                  </p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {catalog.map((s) => (
                       <label key={s.scope} className="flex items-start gap-2 text-sm">
@@ -207,8 +223,8 @@ function MesConnexionsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 {c.connected ? (
                   <>
-                    <Button disabled={connecting === c.key} onClick={() => void connect(c.key)}>
-                      Mettre à jour les autorisations
+                    <Button disabled={connecting === c.key} onClick={() => void connect(c.key, c.oauth)}>
+                      {c.oauth ? "Mettre à jour les autorisations" : "Mettre à jour les fonctions"}
                     </Button>
                     <Button
                       variant="outline"
@@ -218,12 +234,16 @@ function MesConnexionsPage() {
                         void qc.invalidateQueries({ queryKey: ["my-connections"] });
                       }}
                     >
-                      Déconnecter le compte
+                      {c.oauth ? "Déconnecter le compte" : "Désactiver le service"}
                     </Button>
                   </>
                 ) : (
-                  <Button disabled={connecting === c.key} onClick={() => void connect(c.key)}>
-                    {connecting === c.key ? "Ouverture…" : "Connecter le compte"}
+                  <Button disabled={connecting === c.key} onClick={() => void connect(c.key, c.oauth)}>
+                    {connecting === c.key
+                      ? "Activation…"
+                      : c.oauth
+                        ? "Connecter le compte"
+                        : "Activer ce service"}
                   </Button>
                 )}
               </div>

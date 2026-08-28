@@ -310,6 +310,34 @@ export const saveMyManualConnection = createServerFn({ method: "POST" })
     });
   });
 
+/** Active un connecteur non-OAuth (clé API, MCP…) pour l'utilisateur, via la configuration de l'administrateur. */
+export const enableManagedConnection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { connectorKey: string; services?: string[] }) =>
+    z
+      .object({
+        connectorKey: z.string().min(1).max(64),
+        services: z.array(z.string().max(120)).max(50).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await (context.supabase as any)
+      .from("profiles")
+      .select("current_org_id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const { enableManagedUserConnection } = await import("./connectors.server");
+    return enableManagedUserConnection({
+      userId: context.userId,
+      orgId: profile?.current_org_id ?? null,
+      connectorKey: data.connectorKey,
+      ...(data.services ? { services: data.services } : {}),
+    });
+  });
+
+
+
 
 export const testMyConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

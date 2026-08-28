@@ -472,10 +472,10 @@ export async function listUserConnections(userId: string) {
 
   const connectors = await listConnectors();
   return connectors
-    // Côté utilisateur : uniquement les comptes qui s'autorisent en OAuth.
-    // Les clés API, identifiants client/secret OAuth et serveurs MCP sont gérés
+    // Côté utilisateur : tout connecteur activé et configuré par l'administrateur.
+    // Les clés API, identifiants client/secret et serveurs MCP restent gérés
     // exclusivement par l'administrateur dans l'onglet Connecteurs.
-    .filter((c) => c.userConnect && c.authType === "oauth")
+    .filter((c) => c.isEnabled && c.status === "configure")
     .map((c) => {
       const row = rows.get(c.key);
       return {
@@ -483,6 +483,9 @@ export async function listUserConnections(userId: string) {
         name: c.name,
         description: c.description,
         category: c.category,
+        authType: c.authType,
+        /** true = autorisation OAuth du compte utilisateur ; false = accès fourni par l'administrateur */
+        oauth: c.authType === "oauth",
         available: c.isEnabled && c.status === "configure",
         connected: Boolean(row && !row.revoked),
         isActive: row ? row.is_active !== false : false,
@@ -495,6 +498,45 @@ export async function listUserConnections(userId: string) {
       };
     });
 }
+
+/**
+ * Active pour l'utilisateur un connecteur non-OAuth (clé API, MCP…) déjà configuré
+ * par l'administrateur : aucun identifiant à saisir, l'accès utilise la configuration centrale.
+ */
+export async function enableManagedUserConnection(input: {
+  userId: string;
+  orgId: string | null;
+  connectorKey: string;
+  services?: string[];
+}) {
+  const def = CONNECTOR_MAP.get(input.connectorKey);
+  if (!def) throw new Error("Connecteur inconnu.");
+  if (def.authType === "oauth") throw new Error("Ce connecteur nécessite une autorisation OAuth.");
+  const conf = await getConnectorConfig(input.connectorKey);
+  if (!conf?.isEnabled) throw new Error("Ce connecteur n'est pas encore activé par votre administrateur.");
+
+  const supabase = await db();
+  const { error } = await supabase.from("oauth_connections").upsert(
+    {
+      user_id: input.userId,
+      org_id: input.orgId,
+      provider: input.connectorKey,
+      connector_key: input.connectorKey,
+      provider_user_id: input.userId,
+      account_label: `${def.name} (accès administrateur)`,
+      scopes: (input.services ?? (def.services ?? []).map((s) => s.key)).join(" "),
+      status: "active",
+      revoked: false,
+      is_active: true,
+      metadata: { connector: input.connectorKey, managed_by_admin: true },
+    },
+    { onConflict: "user_id,provider" },
+  );
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+
 
 
 export async function setUserConnectionActive(userId: string, connectorKey: string, active: boolean) {

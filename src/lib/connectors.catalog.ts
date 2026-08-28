@@ -71,6 +71,12 @@ export const CONNECTORS: ConnectorDef[] = [
     authType: "api_key",
     userConnect: true,
     fields: [f("api_key", "Gemini API Key")],
+    services: [
+      { key: "web_search", label: "Recherche web en temps réel (Google Search Grounding)" },
+      { key: "text_generation", label: "Génération et reformulation de textes" },
+      { key: "analysis", label: "Analyse de documents et de données" },
+      { key: "monitoring", label: "Veille marché et concurrence" },
+    ],
     optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
   },
   {

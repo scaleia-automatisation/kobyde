@@ -79,13 +79,26 @@ function ConnexionsPage() {
   const saveFn = useServerFn(saveMyManualConnection);
   const [dialogKey, setDialogKey] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [currentSaved, setCurrentSaved] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const openDialog = (key: string) => {
     const existing = (list.data ?? []).find((c) => c.key === key) as
       | { savedValues?: Record<string, string> }
       | undefined;
-    setValues({ ...(existing?.savedValues ?? {}) });
+    const saved = { ...(existing?.savedValues ?? {}) };
+    setCurrentSaved(saved);
+    // Champs secrets : on ne pré-remplit pas l'input (illisible en password),
+    // la valeur actuelle est affichée en indice sous le champ ; vide = conservé.
+    const defForKey = CONNECTOR_MAP.get(key);
+    const secretKeys = new Set(
+      [...(defForKey?.fields ?? []), ...(defForKey?.optionalFields ?? [])]
+        .filter((f) => f.secret)
+        .map((f) => f.key),
+    );
+    setValues(
+      Object.fromEntries(Object.entries(saved).filter(([k]) => !secretKeys.has(k))),
+    );
     setDialogKey(key);
   };
 
@@ -136,6 +149,9 @@ function ConnexionsPage() {
 
   const def = dialogKey ? CONNECTOR_MAP.get(dialogKey) : undefined;
   const dialogFields: ConnectorField[] = def ? [...(def.fields ?? []), ...(def.optionalFields ?? [])] : [];
+  const dialogItem = (list.data ?? []).find((c) => c.key === dialogKey) as
+    | { managedByAdmin?: boolean; connected?: boolean }
+    | undefined;
 
   const submitManual = async () => {
     if (!dialogKey) return;
@@ -277,17 +293,29 @@ function ConnexionsPage() {
           </DialogHeader>
 
           <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+            {dialogItem?.managedByAdmin && (
+              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Ce connecteur utilise la configuration de votre administrateur. Les champs
+                ci-dessous servent uniquement si vous souhaitez utiliser vos propres identifiants.
+              </p>
+            )}
             {dialogFields.map((fd) => (
               <div key={fd.key} className="space-y-1.5">
                 <Label htmlFor={`f-${fd.key}`}>
                   {fd.label}
                   {fd.required !== false && <span className="text-destructive"> *</span>}
                 </Label>
+                {currentSaved[fd.key] && (
+                  <p className="text-xs text-muted-foreground">
+                    Valeur actuelle : <span className="font-mono">{currentSaved[fd.key]}</span>
+                    {" — laissez vide pour la conserver."}
+                  </p>
+                )}
                 <Input
                   id={`f-${fd.key}`}
                   type={fd.secret ? "password" : "text"}
                   autoComplete="off"
-                  placeholder={fd.placeholder ?? ""}
+                  placeholder={currentSaved[fd.key] ? "••••••••  (valeur enregistrée)" : (fd.placeholder ?? "")}
                   value={values[fd.key] ?? ""}
                   onChange={(e) => setValues((v) => ({ ...v, [fd.key]: e.target.value }))}
                 />

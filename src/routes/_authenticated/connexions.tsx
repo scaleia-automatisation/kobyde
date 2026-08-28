@@ -221,7 +221,8 @@ function ConnexionsPage() {
               </Button>
               {c.connected ? (
                 <>
-                  {c.oauth && (
+                  {((CONNECTOR_MAP.get(c.key)?.fields?.length ?? 0) +
+                    (CONNECTOR_MAP.get(c.key)?.optionalFields?.length ?? 0)) > 0 && (
                     <Button variant="outline" onClick={() => openDialog(c.key)}>
                       Modifier mes identifiants
                     </Button>
@@ -240,7 +241,8 @@ function ConnexionsPage() {
               ) : (
                 <>
                   <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
-                  {c.oauth && (
+                  {((CONNECTOR_MAP.get(c.key)?.fields?.length ?? 0) +
+                    (CONNECTOR_MAP.get(c.key)?.optionalFields?.length ?? 0)) > 0 && (
                     <Button variant="outline" onClick={() => openDialog(c.key)}>
                       Saisir mes identifiants
                     </Button>

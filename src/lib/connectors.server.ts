@@ -525,7 +525,10 @@ export async function enableManagedUserConnection(input: {
   if (!def) throw new Error("Connecteur inconnu.");
   if (def.authType === "oauth") throw new Error("Ce connecteur nécessite une autorisation OAuth.");
   const conf = await getConnectorConfig(input.connectorKey);
-  if (!conf?.isEnabled) throw new Error("Ce connecteur n'est pas encore activé par votre administrateur.");
+  // Si aucune configuration n'existe encore en base, on se base sur le catalogue
+  // (connecteur proposé aux utilisateurs) plutôt que de bloquer l'activation.
+  const allowed = conf ? conf.isEnabled !== false : def.userConnect !== false;
+  if (!allowed) throw new Error("Ce connecteur n'est pas encore activé par votre administrateur.");
 
   const supabase = await db();
   const { error } = await supabase.from("oauth_connections").upsert(

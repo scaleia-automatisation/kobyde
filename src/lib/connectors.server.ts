@@ -480,11 +480,19 @@ export async function listUserConnections(userId: string) {
       const row = rows.get(c.key);
       const saved = ((row?.metadata as any)?.values ?? {}) as Record<string, string>;
       const def = CONNECTOR_MAP.get(c.key);
+      // Valeurs de la configuration globale (admin) déjà masquées — utilisées en repli
+      // quand l'utilisateur n'a pas d'identifiants propres, pour pré-remplir le formulaire.
+      const globalValues = ((c as any).values ?? {}) as Record<string, string>;
       const savedValues: Record<string, string> = {};
       [...(def?.fields ?? []), ...(def?.optionalFields ?? [])].forEach((fd) => {
         const v = saved[fd.key];
-        if (!v) return;
-        savedValues[fd.key] = fd.secret ? maskSecret(v) : v;
+        if (v) {
+          savedValues[fd.key] = fd.secret ? maskSecret(v) : v;
+          return;
+        }
+        // Repli sur la configuration admin du connecteur (déjà masquée pour les secrets).
+        const g = globalValues[fd.key];
+        if (g) savedValues[fd.key] = g;
       });
       if (row?.account_label) savedValues["account_label"] = row.account_label;
       return {
@@ -605,8 +613,14 @@ export async function saveUserManualConnection(input: {
   // Champ laissé vide ou valeur masquée = on conserve l'ancienne valeur.
   const values = { ...previous, ...incoming };
 
+  // Un champ requis est aussi satisfait s'il existe dans la configuration globale (admin) :
+  // l'utilisateur n'a alors rien à renseigner, l'appel utilisera la clé centrale.
+  const global = await getConnectorConfig(input.connectorKey);
+  const globalHas = (k: string) =>
+    Boolean(global?.secrets?.[k] ?? global?.config?.[k]);
+
   const missing = (def.fields ?? [])
-    .filter((fd) => fd.required !== false && !values[fd.key])
+    .filter((fd) => fd.required !== false && !values[fd.key] && !globalHas(fd.key))
     .map((fd) => fd.label);
   if (missing.length) throw new Error(`Champs obligatoires manquants : ${missing.join(", ")}.`);
 

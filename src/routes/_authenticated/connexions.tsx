@@ -19,6 +19,8 @@ import {
   toggleMyConnection,
 } from "@/lib/connectors.functions";
 import { CATEGORY_LABELS, CONNECTOR_MAP } from "@/lib/connectors.catalog";
+import { ConnectorsPanel } from "@/components/admin/connectors-panel";
+import { useMyRole } from "@/lib/db";
 
 
 type Search = { connexion?: string | undefined; connecteur?: string | undefined; message?: string | undefined };

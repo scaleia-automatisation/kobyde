@@ -293,17 +293,29 @@ function ConnexionsPage() {
           </DialogHeader>
 
           <div className="max-h-[55vh] space-y-3 overflow-y-auto pr-1">
+            {dialogItem?.managedByAdmin && (
+              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Ce connecteur utilise la configuration de votre administrateur. Les champs
+                ci-dessous servent uniquement si vous souhaitez utiliser vos propres identifiants.
+              </p>
+            )}
             {dialogFields.map((fd) => (
               <div key={fd.key} className="space-y-1.5">
                 <Label htmlFor={`f-${fd.key}`}>
                   {fd.label}
                   {fd.required !== false && <span className="text-destructive"> *</span>}
                 </Label>
+                {currentSaved[fd.key] && (
+                  <p className="text-xs text-muted-foreground">
+                    Valeur actuelle : <span className="font-mono">{currentSaved[fd.key]}</span>
+                    {" — laissez vide pour la conserver."}
+                  </p>
+                )}
                 <Input
                   id={`f-${fd.key}`}
                   type={fd.secret ? "password" : "text"}
                   autoComplete="off"
-                  placeholder={fd.placeholder ?? ""}
+                  placeholder={currentSaved[fd.key] ? "••••••••  (valeur enregistrée)" : (fd.placeholder ?? "")}
                   value={values[fd.key] ?? ""}
                   onChange={(e) => setValues((v) => ({ ...v, [fd.key]: e.target.value }))}
                 />

@@ -81,7 +81,15 @@ function ConnexionsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  const isOauth = (key: string) => CONNECTOR_MAP.get(key)?.authType === "oauth";
+
   const openDialog = (key: string) => {
+    if (!isOauth(key)) {
+      toast.info(
+        "Les identifiants de ce service sont gérés dans l'administration (onglet Connecteurs). Rien à saisir ici.",
+      );
+      return;
+    }
     setValues({});
     setDialogKey(key);
   };
@@ -213,9 +221,11 @@ function ConnexionsPage() {
               </Button>
               {c.connected ? (
                 <>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Modifier mes identifiants
-                  </Button>
+                  {isOauth(c.key) && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Modifier mes identifiants
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     onClick={async () => {
@@ -230,9 +240,11 @@ function ConnexionsPage() {
               ) : (
                 <>
                   <Button onClick={() => void connect(c.key)}>Connecter mon compte</Button>
-                  <Button variant="outline" onClick={() => openDialog(c.key)}>
-                    Saisir mes identifiants
-                  </Button>
+                  {isOauth(c.key) && (
+                    <Button variant="outline" onClick={() => openDialog(c.key)}>
+                      Saisir mes identifiants
+                    </Button>
+                  )}
                 </>
               )}
             </div>

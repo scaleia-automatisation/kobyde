@@ -128,6 +128,8 @@ function Dashboard() {
   const prospectsChauds = PR.filter((p) => Number(p.score ?? 0) >= 70);
   const tachesOuvertes = T.filter((t) => t.status !== "termine" && t.status !== "fait");
   const firstName = (profile?.full_name ?? "").split(" ")[0] || "vous";
+  const { data: myRole } = useMyRole();
+  const roleLabel = myRole?.label ?? null;
 
   const recos: { title: string; desc: string; cta: string; to: string; search?: Record<string, unknown> }[] = [];
   if (devisEnAttente.length > 0)

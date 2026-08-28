@@ -472,10 +472,10 @@ export async function listUserConnections(userId: string) {
 
   const connectors = await listConnectors();
   return connectors
-    // Côté utilisateur : uniquement les comptes qui s'autorisent en OAuth.
-    // Les clés API, identifiants client/secret OAuth et serveurs MCP sont gérés
+    // Côté utilisateur : tout connecteur activé et configuré par l'administrateur.
+    // Les clés API, identifiants client/secret et serveurs MCP restent gérés
     // exclusivement par l'administrateur dans l'onglet Connecteurs.
-    .filter((c) => c.userConnect && c.authType === "oauth")
+    .filter((c) => c.isEnabled && c.status === "configure")
     .map((c) => {
       const row = rows.get(c.key);
       return {
@@ -483,6 +483,9 @@ export async function listUserConnections(userId: string) {
         name: c.name,
         description: c.description,
         category: c.category,
+        authType: c.authType,
+        /** true = autorisation OAuth du compte utilisateur ; false = accès fourni par l'administrateur */
+        oauth: c.authType === "oauth",
         available: c.isEnabled && c.status === "configure",
         connected: Boolean(row && !row.revoked),
         isActive: row ? row.is_active !== false : false,

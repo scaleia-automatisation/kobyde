@@ -34,6 +34,7 @@ export const CAPABILITY_ROUTES: Record<Capability, { connector: string; needsUse
   send_transactional_email: [{ connector: "resend" }, { connector: "brevo" }],
   send_sms: [{ connector: "twilio" }, { connector: "whatsapp" }],
   payment: [{ connector: "stripe" }],
+  automation: [],
 };
 
 async function userHasAccount(userId: string, connectorKey: string) {

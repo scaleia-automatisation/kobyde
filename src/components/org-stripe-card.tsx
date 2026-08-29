@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CreditCard, ExternalLink, RefreshCw } from "lucide-react";
+import { CheckCircle2, CreditCard, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,14 @@ import {
   refreshOrgStripeAccountFn,
   startOrgStripeConnect,
 } from "@/lib/stripe-connect.functions";
+
+const STRIPE_SCOPES = [
+  "Créer des paiements et demandes de paiement",
+  "Consulter les paiements et transactions",
+  "Créer et gérer les clients Stripe",
+  "Émettre des remboursements",
+  "Suivre les virements et le solde",
+];
 
 /** Connexion Stripe de l'entreprise (paiements de SES clients). Aucune clé à copier. */
 export function OrgStripeCard() {
@@ -109,6 +117,20 @@ export function OrgStripeCard() {
         </div>
       )}
 
+      <div className="space-y-3 rounded-lg border p-4">
+        <p className="text-sm font-medium">{acc ? "Permissions accordées" : "Autorisations demandées"}</p>
+        <ul className="space-y-1 text-sm">
+          {STRIPE_SCOPES.map((s) => (
+            <li key={s} className={`flex items-center gap-2 ${acc ? "text-emerald-700" : "text-muted-foreground"}`}>
+              <CheckCircle2 className="size-3.5" /> {s}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground">
+          Le consentement final est demandé par Stripe elle-même (accès complet « read_write » à votre compte).
+        </p>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {acc ? (
           <>
@@ -118,16 +140,20 @@ export function OrgStripeCard() {
             <Button variant="outline" size="sm" disabled={busy} onClick={() => void sync()}>
               <RefreshCw className="mr-1 size-4" /> Actualiser
             </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => void disconnect()}>
+            <Button variant="outline" size="sm" disabled={busy} onClick={() => void connect()}>
+              <RefreshCw className="mr-1 size-4" /> Reconnecter
+            </Button>
+            <Button variant="ghost" size="sm" className="text-destructive" disabled={busy} onClick={() => void disconnect()}>
               Déconnecter
             </Button>
           </>
         ) : (
-          <Button size="sm" disabled={busy || data?.available === false} onClick={() => void connect()}>
-            <ExternalLink className="mr-1 size-4" /> Connecter Stripe Connect
+          <Button disabled={busy || data?.available === false} onClick={() => void connect()}>
+            {busy ? "Redirection…" : "Se connecter à Stripe Connect"}
           </Button>
         )}
       </div>
+
     </Card>
   );
 }

@@ -178,8 +178,6 @@ function MesConnexionsPage() {
           </p>
         </Card>
 
-        <OrgStripeCard />
-
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -190,6 +188,9 @@ function MesConnexionsPage() {
             className="w-full pl-9 text-sm"
           />
         </div>
+
+        {"stripe connect".includes(query.trim().toLowerCase()) && <OrgStripeCard />}
+
 
         {filteredItems.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);

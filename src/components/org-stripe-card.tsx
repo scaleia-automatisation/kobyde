@@ -148,7 +148,7 @@ export function OrgStripeCard() {
             </Button>
           </>
         ) : (
-          <Button disabled={busy || data?.available === false} onClick={() => void connect()}>
+          <Button disabled={busy} onClick={() => void connect()}>
             {busy ? "Redirection…" : "Se connecter à Stripe Connect"}
           </Button>
         )}

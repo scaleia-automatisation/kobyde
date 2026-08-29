@@ -270,23 +270,67 @@ export function openaiSize(ratio?: string) {
 /* ------------------------------ Génération vidéo ------------------------------ */
 
 /**
- * Trois familles de fournisseurs vidéo :
- *  - `openai/…`  → API OpenAI Vidéos (Sora 2, Sora 2 Pro)
- *  - `fal-ai/…`  → file d'attente fal.ai (Kling, Seedance, Grok Imagine)
- *  - `google/…`  → passerelle Lovable (Veo 3.1)
+ * Fournisseurs vidéo, chacun via son API officielle :
+ *  - `openai/…`   → API OpenAI Vidéos (Sora 2, Sora 2 Pro)
+ *  - `kling/…`    → API officielle Kling AI (JWT AccessKey/SecretKey)
+ *  - `seedance/…` → API officielle Seedance (ModelArk / BytePlus)
+ *  - `xai/…`      → API officielle xAI (Grok Imagine)
+ *  - `google/…`   → passerelle Lovable (Veo 3.1)
  * L'identifiant de tâche renvoyé encode le fournisseur : `provider|engine|id`.
  */
 
-async function providerKey(connector: string, envVar: string): Promise<string> {
-  let key = "";
+/** Secrets d'un connecteur (configuré par l'admin) avec repli sur les variables d'environnement. */
+async function connectorSecrets(connector: string): Promise<Record<string, string>> {
   try {
     const conf = await getConnectorConfig(connector);
-    if (conf?.isEnabled !== false) key = conf?.secrets?.["api_key"] ?? "";
+    if (conf?.isEnabled !== false) return (conf?.secrets ?? {}) as Record<string, string>;
   } catch {
     /* base indisponible */
   }
-  return key || process.env[envVar] || "";
+  return {};
 }
+
+async function providerKey(connector: string, envVar: string): Promise<string> {
+  const s = await connectorSecrets(connector);
+  return s["api_key"] || process.env[envVar] || "";
+}
+
+const KLING_BASE = process.env["KLING_API_BASE"] || "https://api-singapore.klingai.com";
+const SEEDANCE_BASE = process.env["SEEDANCE_API_BASE"] || "https://ark.ap-southeast.bytepluses.com/api/v3";
+const XAI_BASE = process.env["XAI_API_BASE"] || "https://api.x.ai";
+
+const b64url = (bytes: Uint8Array) => {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+
+/** Jeton JWT HS256 exigé par l'API officielle Kling (valide 30 minutes). */
+async function klingToken(accessKey: string, secretKey: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const enc = new TextEncoder();
+  const head = b64url(enc.encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const payload = b64url(enc.encode(JSON.stringify({ iss: accessKey, exp: now + 1800, nbf: now - 5 })));
+  const key = await crypto.subtle.importKey("raw", enc.encode(secretKey), { name: "HMAC", hash: "SHA-256" }, false, [
+    "sign",
+  ]);
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(`${head}.${payload}`)));
+  return `${head}.${payload}.${b64url(sig)}`;
+}
+
+/** En-têtes authentifiés pour l'API officielle Kling. */
+async function klingHeaders(): Promise<Record<string, string>> {
+  const s = await connectorSecrets("kling");
+  const accessKey = s["access_key"] || process.env["KLING_ACCESS_KEY"] || "";
+  const secretKey = s["secret_key"] || process.env["KLING_SECRET_KEY"] || "";
+  if (!accessKey || !secretKey)
+    throw new Error("Clés Kling manquantes : renseignez l'Access Key et la Secret Key du connecteur Kling AI.");
+  return {
+    "content-type": "application/json",
+    authorization: `Bearer ${await klingToken(accessKey, secretKey)}`,
+  };
+}
+
 
 const videoDuration = (model: ContentModel, params: ContentParams) => {
   const allowed = videoCaps(model.key).durations;

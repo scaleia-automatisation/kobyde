@@ -251,7 +251,8 @@ export const regenerateSlide = createServerFn({ method: "POST" })
       const current = assets[data.index];
       if (!current) throw new Error("Visuel introuvable.");
       const prompt = data.prompt?.trim() || current.prompt;
-      const b64 = await generateImageB64(model, prompt);
+      const savedParams = (row.params ?? {}) as Record<string, unknown>;
+      const b64 = await generateImageB64(model, prompt, savedParams as any);
       const stored = await storeImageB64(data.orgId, b64);
       assets[data.index] = { ...current, prompt, path: stored.path, url: stored.url };
       const { data: updated } = await supabase

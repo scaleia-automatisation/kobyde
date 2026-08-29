@@ -492,9 +492,17 @@ export async function buildAuthorizeUrl(input: {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def?.oauth) throw new Error("Ce connecteur ne gère pas la connexion de compte.");
   const conf = await getConnectorConfig(input.connectorKey);
-  if (!conf?.isEnabled) throw new Error("Ce connecteur n'est pas encore activé par l'administrateur.");
-  const { clientId } = appCredentials(conf);
-  if (!clientId) throw new Error("Connecteur incomplet : identifiant d'application manquant.");
+  const app = await resolveOAuthApp(input.connectorKey, input.orgId, conf);
+  const clientId = app.clientId;
+  if (app.source === "platform" && !conf?.isEnabled) {
+    throw new Error(
+      "Ce connecteur n'est pas encore activé : renseignez vos identifiants dans l'onglet « Configuration ».",
+    );
+  }
+  if (!clientId) {
+    throw new Error("Configuration incomplète : renseignez vos identifiants dans l'onglet « Configuration ».");
+  }
+
 
   const base = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
   const redirectUri = `${base}${callbackPath(input.connectorKey)}`;

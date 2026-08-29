@@ -13,6 +13,14 @@ import {
   startOrgStripeConnect,
 } from "@/lib/stripe-connect.functions";
 
+const STRIPE_SCOPES = [
+  "Créer des paiements et demandes de paiement",
+  "Consulter les paiements et transactions",
+  "Créer et gérer les clients Stripe",
+  "Émettre des remboursements",
+  "Suivre les virements et le solde",
+];
+
 /** Connexion Stripe de l'entreprise (paiements de SES clients). Aucune clé à copier. */
 export function OrgStripeCard() {
   const statusFn = useServerFn(myOrgStripe);

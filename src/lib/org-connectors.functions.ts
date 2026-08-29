@@ -47,7 +47,10 @@ export const saveMyOrgConnector = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { orgId } = await orgContext(context.supabase, context.userId, true);
+    // WhatsApp Business est géré par chaque utilisateur (ses propres identifiants) :
+    // aucun rôle admin/owner requis, contrairement aux autres identifiants d'entreprise.
+    const userManaged = data.provider === "whatsapp";
+    const { orgId } = await orgContext(context.supabase, context.userId, !userManaged);
     const { saveOrgConnector } = await import("./org-connectors.server");
     return saveOrgConnector({ orgId, userId: context.userId, provider: data.provider, values: data.values });
   });
@@ -72,7 +75,8 @@ export const deleteMyOrgConnector = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { provider: string }) => z.object({ provider: z.string().min(1).max(64) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { orgId } = await orgContext(context.supabase, context.userId, true);
+    const userManaged = data.provider === "whatsapp";
+    const { orgId } = await orgContext(context.supabase, context.userId, !userManaged);
     const { deleteOrgConnector } = await import("./org-connectors.server");
     return deleteOrgConnector(orgId, data.provider);
   });

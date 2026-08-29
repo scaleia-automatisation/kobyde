@@ -43,7 +43,8 @@ export function OrgWhatsappCard() {
   });
 
   const item = useMemo(() => (q.data?.items ?? []).find((c) => c.key === "whatsapp"), [q.data]);
-  const canManage = q.data?.canManage ?? false;
+  // WhatsApp Business est géré par chaque utilisateur (aucun rôle admin requis).
+  const canManage = true;
 
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState("");

@@ -297,8 +297,12 @@ async function providerKey(connector: string, envVar: string): Promise<string> {
   return s["api_key"] || process.env[envVar] || "";
 }
 
-const KLING_BASE = process.env["KLING_API_BASE"] || "https://api-singapore.klingai.com";
-const SEEDANCE_BASE = process.env["SEEDANCE_API_BASE"] || "https://ark.ap-southeast.bytepluses.com/api/v3";
+const klingBase = async () =>
+  (await connectorSecrets("kling"))["api_base"] || process.env["KLING_API_BASE"] || "https://api-singapore.klingai.com";
+const seedanceBase = async () =>
+  (await connectorSecrets("seedance"))["api_base"] ||
+  process.env["SEEDANCE_API_BASE"] ||
+  "https://ark.ap-southeast.bytepluses.com/api/v3";
 const XAI_BASE = process.env["XAI_API_BASE"] || "https://api.x.ai";
 
 const b64url = (bytes: Uint8Array) => {
@@ -382,7 +386,7 @@ export async function startVideoJob(model: ContentModel, prompt: string, params:
 
   /* --------------------------- Kling AI (API officielle) --------------------------- */
   if (engine.startsWith("kling/")) {
-    const res = await fetch(`${KLING_BASE}/v1/videos/text2video`, {
+    const res = await fetch(`${await klingBase()}/v1/videos/text2video`, {
       method: "POST",
       headers: await klingHeaders(),
       body: JSON.stringify({
@@ -406,7 +410,7 @@ export async function startVideoJob(model: ContentModel, prompt: string, params:
   if (engine.startsWith("seedance/")) {
     const key = await providerKey("seedance", "SEEDANCE_API_KEY");
     if (!key) throw new Error("Clé Seedance manquante : configurez le connecteur Seedance.");
-    const res = await fetch(`${SEEDANCE_BASE}/contents/generations/tasks`, {
+    const res = await fetch(`${await seedanceBase()}/contents/generations/tasks`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
       body: JSON.stringify({
@@ -508,7 +512,7 @@ export async function pollVideoJob(id: string): Promise<{ status: string; bytes?
   };
 
   if (provider === "kling") {
-    const res = await fetch(`${KLING_BASE}/v1/videos/text2video/${realId}`, { headers: await klingHeaders() });
+    const res = await fetch(`${await klingBase()}/v1/videos/text2video/${realId}`, { headers: await klingHeaders() });
     if (!res.ok) throw gatewayError(res.status);
     const job = (await res.json()) as any;
     const st = job?.data?.task_status;
@@ -519,7 +523,7 @@ export async function pollVideoJob(id: string): Promise<{ status: string; bytes?
 
   if (provider === "seedance") {
     const key = await providerKey("seedance", "SEEDANCE_API_KEY");
-    const res = await fetch(`${SEEDANCE_BASE}/contents/generations/tasks/${realId}`, {
+    const res = await fetch(`${await seedanceBase()}/contents/generations/tasks/${realId}`, {
       headers: { authorization: `Bearer ${key}` },
     });
     if (!res.ok) throw gatewayError(res.status);

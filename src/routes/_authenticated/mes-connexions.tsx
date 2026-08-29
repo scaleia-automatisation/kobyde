@@ -141,6 +141,10 @@ function MesConnexionsPage() {
           </p>
         </Card>
 
+        <OrgStripeCard />
+
+
+
         {items.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);
           const groups = scopeGroups(def);

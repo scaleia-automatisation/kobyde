@@ -289,36 +289,40 @@ export async function maybeCreateProject(quoteId: string) {
 }
 
 
-/** Lien de paiement Stripe (si la clé est configurée), sinon paiement manuel. */
+/**
+ * Lien de paiement pour un client d'une entreprise.
+ * Utilise EXCLUSIVEMENT le compte Stripe connecté de l'entreprise (Stripe Connect).
+ * Jamais le Stripe du SaaS (réservé aux abonnements Kobyde).
+ */
 export async function createStripeCheckout(requestId: string, origin: string) {
-  const key = process.env["STRIPE_SECRET_KEY"];
-  if (!key) return null;
   const db = await admin();
   const { data: pr } = await db.from("payment_requests").select("*").eq("id", requestId).maybeSingle();
   if (!pr) throw new Error("Demande de paiement introuvable.");
 
-  const body = new URLSearchParams({
-    mode: "payment",
-    "line_items[0][quantity]": "1",
-    "line_items[0][price_data][currency]": "eur",
-    "line_items[0][price_data][unit_amount]": String(Math.round(Number(pr.amount_ttc ?? 0) * 100)),
-    "line_items[0][price_data][product_data][name]": String(pr.label ?? "Paiement"),
-    success_url: `${origin}/payer/${pr.token}?ok=1`,
-    cancel_url: `${origin}/payer/${pr.token}`,
-    "metadata[payment_request_id]": pr.id,
-    client_reference_id: pr.id,
-  });
+  const { createOrgCheckoutSession } = await import("./stripe-connect.server");
+  const { data: client } = await db
+    .from("clients")
+    .select("email")
+    .eq("id", pr.client_id)
+    .maybeSingle();
 
-  const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${key}`,
-      "content-type": "application/x-www-form-urlencoded",
+  const session = await createOrgCheckoutSession({
+    orgId: pr.org_id,
+    amountTtc: Number(pr.amount_ttc ?? 0),
+    label: String(pr.label ?? "Paiement"),
+    successUrl: `${origin}/payer/${pr.token}?ok=1`,
+    cancelUrl: `${origin}/payer/${pr.token}`,
+    clientReferenceId: pr.id,
+    customerEmail: client?.email ?? null,
+    metadata: {
+      payment_request_id: pr.id,
+      client_id: pr.client_id ?? "",
+      quote_id: pr.quote_id ?? "",
+      invoice_id: pr.invoice_id ?? "",
     },
-    body,
   });
-  if (!res.ok) throw new Error(`Stripe (${res.status})`);
-  const json = (await res.json()) as any;
-  await db.from("payment_requests").update({ payment_url: json.url }).eq("id", pr.id);
-  return json.url as string;
+  if (!session) return null;
+
+  await db.from("payment_requests").update({ payment_url: session.url }).eq("id", pr.id);
+  return session.url;
 }

@@ -357,12 +357,6 @@ export async function testConnector(key: string) {
       const miss = await need("api_key", "la clé API Seedance");
       if (miss) return miss;
       const key = s["api_key"] ?? "";
-      if (!key.startsWith("ark-")) {
-        return finish(
-          false,
-          "Format de clé Seedance incorrect. ModelArk attend une clé commençant par 'ark-'. La clé actuelle ne sera pas acceptée.",
-        );
-      }
       const base = conf.config["api_base"] || "https://ark.ap-southeast.bytepluses.com/api/v3";
       const p = await probe(`${base}/contents/generations/tasks?page_size=1`, {
         headers: { Authorization: `Bearer ${key}` },

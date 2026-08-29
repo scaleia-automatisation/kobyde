@@ -467,7 +467,21 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
   }
 }
 
+/** Vérifie que toutes les autorisations du catalogue sont bien accordées par la plateforme. */
+function checkScopes(oauthKey: string, granted: string[]): { missing: string[]; total: number } | null {
+  const def = CONNECTOR_MAP.get(oauthKey);
+  const catalog = def?.oauth?.scopeCatalog ?? [];
+  const wanted = catalog.length ? catalog.map((s) => s.scope) : (def?.oauth?.defaultScopes ?? []);
+  if (!wanted.length) return null;
+  const has = new Set((granted ?? []).map((s) => String(s)));
+  const missing = wanted
+    .filter((s) => !has.has(s))
+    .map((s) => catalog.find((c) => c.scope === s)?.label ?? s);
+  return { missing, total: wanted.length };
+}
+
 /** Test réel avec le jeton du compte déjà autorisé. */
+
 async function testLiveToken(provider: string, token: string): Promise<{ ok: boolean; message: string } | null> {
   if (provider === "google") {
     const p = await probe("https://www.googleapis.com/oauth2/v3/userinfo", {

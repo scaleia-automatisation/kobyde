@@ -324,6 +324,35 @@ export async function testConnector(key: string) {
       const n = Array.isArray(p.json?.data) ? p.json.data.length : 0;
       return finish(true, `Appel API Resend réussi (200) — ${n} domaine(s) configuré(s).`);
     }
+    if (key === "brevo") {
+      const miss = await need("api_key", "la clé API Brevo");
+      if (miss) return miss;
+      const p = await probe("https://api.brevo.com/v3/account", {
+        headers: {
+          "api-key": s["api_key"] ?? "",
+          Accept: "application/json",
+        },
+      });
+      if (!p.ok) return finish(false, providerError("Brevo", p));
+      const email = p.json?.email ?? "";
+      return finish(true, `Appel API Brevo réussi (200)${email ? ` — compte ${email}` : ""}.`);
+    }
+    if (key === "mailerlite") {
+      const miss = await need("api_key", "la clé API MailerLite");
+      if (miss) return miss;
+      const p = await probe("https://api.mailerlite.com/api/v2/stats", {
+        headers: {
+          "X-MailerLite-ApiKey": s["api_key"] ?? "",
+          Accept: "application/json",
+        },
+      });
+      if (!p.ok) return finish(false, providerError("MailerLite", p));
+      const subs = p.json?.subscribers ?? p.json?.total ?? "";
+      return finish(
+        true,
+        `Appel API MailerLite réussi (200)${subs !== "" ? ` — ${subs} abonné(s)` : ""}.`,
+      );
+    }
     if (key === "apify") {
       const miss = await need("api_token", "le jeton API Apify");
       if (miss) return miss;

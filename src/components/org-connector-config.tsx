@@ -229,10 +229,19 @@ export function OrgConnectorConfig() {
                   {busy === `test-${c.key}` ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}
                   Tester la connexion
                 </Button>
-                {c.authType === "oauth" && (
+                {c.authType === "oauth" ? (
                   <Button size="sm" disabled={!c.complete || busy === `connect-${c.key}`} onClick={() => void connect(c.key)}>
                     <RefreshCw className="mr-1 size-4" />
                     {c.connected ? "Reconnecter" : "Autoriser mon compte"}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled
+                    title="Aucune autorisation à donner : la clé API de votre entreprise suffit."
+                  >
+                    <RefreshCw className="mr-1 size-4" />
+                    Autoriser mon compte
                   </Button>
                 )}
                 {(c.complete || c.connected) && canManage && (

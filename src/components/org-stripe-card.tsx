@@ -76,7 +76,7 @@ export function OrgStripeCard() {
         <div>
           <div className="flex items-center gap-2">
             <CreditCard className="size-4 text-muted-foreground" />
-            <h3 className="font-medium">Stripe</h3>
+            <h3 className="font-medium">Stripe Connect</h3>
             {acc ? (
               <Badge className="bg-emerald-500/15 text-emerald-600">● Stripe connecté</Badge>
             ) : data?.available === false ? (
@@ -124,7 +124,7 @@ export function OrgStripeCard() {
           </>
         ) : (
           <Button size="sm" disabled={busy || data?.available === false} onClick={() => void connect()}>
-            <ExternalLink className="mr-1 size-4" /> Connecter Stripe
+            <ExternalLink className="mr-1 size-4" /> Connecter Stripe Connect
           </Button>
         )}
       </div>

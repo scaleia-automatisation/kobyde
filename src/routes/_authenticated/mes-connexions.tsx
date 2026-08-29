@@ -188,6 +188,9 @@ function MesConnexionsPage() {
 
         {"stripe connect".includes(query.trim().toLowerCase()) && <OrgStripeCard />}
 
+        {"whatsapp business".includes(query.trim().toLowerCase()) && <OrgWhatsappCard />}
+
+
 
         {filteredItems.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);

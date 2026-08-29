@@ -704,7 +704,8 @@ export async function refreshUserToken(userId: string, connectorKey: string) {
   if (!def?.oauth || !row?.refresh_token) return { ok: false, reason: "no_refresh_token" as const };
 
   const conf = await getConnectorConfig(connectorKey);
-  const { clientId, clientSecret } = appCredentials(conf);
+  const { clientId, clientSecret } = await resolveOAuthApp(connectorKey, row.org_id, conf);
+
   const body = new URLSearchParams({
     grant_type: "refresh_token",
     refresh_token: row.refresh_token,

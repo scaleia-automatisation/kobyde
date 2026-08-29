@@ -68,6 +68,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as ApiPublicConnectorsConnectorCallbackRouteImport } from './routes/api/public/connectors/$connector/callback'
+import { Route as ApiPublicStripeConnectCallbackRouteImport } from './routes/api/public/stripe/connect/callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -372,6 +373,12 @@ const ApiPublicConnectorsConnectorCallbackRoute =
     path: '/api/public/connectors/$connector/callback',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicStripeConnectCallbackRoute =
+  ApiPublicStripeConnectCallbackRouteImport.update({
+    id: '/api/public/stripe/connect/callback',
+    path: '/api/public/stripe/connect/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -432,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/connectors/$connector/callback': typeof ApiPublicConnectorsConnectorCallbackRoute
+  '/api/public/stripe/connect/callback': typeof ApiPublicStripeConnectCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -492,6 +500,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/connectors/$connector/callback': typeof ApiPublicConnectorsConnectorCallbackRoute
+  '/api/public/stripe/connect/callback': typeof ApiPublicStripeConnectCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -554,6 +563,7 @@ export interface FileRoutesById {
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/connectors/$connector/callback': typeof ApiPublicConnectorsConnectorCallbackRoute
+  '/api/public/stripe/connect/callback': typeof ApiPublicStripeConnectCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -616,6 +626,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
     | '/api/public/connectors/$connector/callback'
+    | '/api/public/stripe/connect/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -676,6 +687,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
     | '/api/public/connectors/$connector/callback'
+    | '/api/public/stripe/connect/callback'
   id:
     | '__root__'
     | '/'
@@ -737,6 +749,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
     | '/api/public/connectors/$connector/callback'
+    | '/api/public/stripe/connect/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -760,6 +773,7 @@ export interface RootRouteChildren {
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiPublicConnectorsConnectorCallbackRoute: typeof ApiPublicConnectorsConnectorCallbackRoute
+  ApiPublicStripeConnectCallbackRoute: typeof ApiPublicStripeConnectCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1177,6 +1191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicConnectorsConnectorCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe/connect/callback': {
+      id: '/api/public/stripe/connect/callback'
+      path: '/api/public/stripe/connect/callback'
+      fullPath: '/api/public/stripe/connect/callback'
+      preLoaderRoute: typeof ApiPublicStripeConnectCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1289,6 +1310,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
   ApiPublicConnectorsConnectorCallbackRoute:
     ApiPublicConnectorsConnectorCallbackRoute,
+  ApiPublicStripeConnectCallbackRoute: ApiPublicStripeConnectCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

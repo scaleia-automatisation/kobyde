@@ -213,32 +213,15 @@ export function OrgConnectorConfig() {
         const result = results[c.key];
         return (
           <Card key={c.key} className="space-y-4 p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Plug className="size-4 text-muted-foreground" />
-                  <h3 className="font-medium">{c.name}</h3>
-                  <Badge className={statusTone[c.status] ?? statusTone["non_configure"]}>
-                    {ORG_STATUS_LABELS[c.status] ?? c.status}
-                  </Badge>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
-                {c.account && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    ✓ {c.name} connecté — compte : {c.account}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Dernier test :{" "}
-                  {c.lastTestAt
-                    ? `${c.lastTestOk ? "réussi" : "échoué"} le ${new Date(c.lastTestAt).toLocaleDateString("fr-FR")}`
-                    : "jamais"}
-                  {" · "}
-                  Dernière utilisation :{" "}
-                  {c.lastUsedAt ? new Date(c.lastUsedAt).toLocaleDateString("fr-FR") : "jamais"}
-                </p>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
+              <div className="flex min-w-0 items-center gap-2">
+                <Plug className="size-4 shrink-0 text-muted-foreground" />
+                <h3 className="truncate font-medium">{c.name}</h3>
+                <Badge className={`shrink-0 ${statusTone[c.status] ?? statusTone["non_configure"]}`}>
+                  {ORG_STATUS_LABELS[c.status] ?? c.status}
+                </Badge>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex shrink-0 flex-nowrap items-center gap-2">
                 <Button size="sm" variant={isOpen ? "secondary" : "outline"} onClick={() => setOpen((p) => ({ ...p, [c.key]: !isOpen }))}>
                   {c.complete ? "Modifier" : "Configurer"}
                 </Button>
@@ -265,6 +248,24 @@ export function OrgConnectorConfig() {
                   </Button>
                 )}
               </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">{c.description}</p>
+              {c.account && (
+                <p className="text-xs text-muted-foreground">
+                  ✓ {c.name} connecté — compte : {c.account}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Dernier test :{" "}
+                {c.lastTestAt
+                  ? `${c.lastTestOk ? "réussi" : "échoué"} le ${new Date(c.lastTestAt).toLocaleDateString("fr-FR")}`
+                  : "jamais"}
+                {" · "}
+                Dernière utilisation :{" "}
+                {c.lastUsedAt ? new Date(c.lastUsedAt).toLocaleDateString("fr-FR") : "jamais"}
+              </p>
             </div>
 
             {result && (

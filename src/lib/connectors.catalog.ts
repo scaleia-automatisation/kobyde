@@ -365,19 +365,6 @@ export const CONNECTORS: ConnectorDef[] = [
     fields: [f("server_key", "Server Key / Service Account JSON")],
     optionalFields: [{ key: "project_id", label: "Project ID", secret: false }],
   },
-  {
-    key: "make",
-    name: "Make",
-    category: "automatisation",
-    description: "Scénarios d'automatisation externes.",
-    authType: "api_key",
-    webhook: true,
-    fields: [f("api_key", "API Key ou Access Token")],
-    optionalFields: [
-      { key: "webhook_url", label: "Webhook URL", secret: false },
-      { key: "organization", label: "Organisation", secret: false },
-    ],
-  },
 ];
 
 export const CONNECTOR_MAP = new Map(CONNECTORS.map((c) => [c.key, c]));

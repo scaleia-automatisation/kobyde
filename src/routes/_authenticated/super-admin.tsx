@@ -163,7 +163,7 @@ function SuperAdminPage() {
         </Button>
       }
     >
-      <Tabs defaultValue="dashboard" className="space-y-6">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="agents">Agents</TabsTrigger>
@@ -171,6 +171,7 @@ function SuperAdminPage() {
           <TabsTrigger value="comportement">Comportement</TabsTrigger>
           <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
           <TabsTrigger value="connecteurs">Connecteurs</TabsTrigger>
+          <TabsTrigger value="stripe-saas">Stripe SaaS</TabsTrigger>
           <TabsTrigger value="couts">Coûts API</TabsTrigger>
           <TabsTrigger value="tarifs">Tarifs</TabsTrigger>
           <TabsTrigger value="budgets">Budgets</TabsTrigger>

@@ -185,9 +185,61 @@ function MesConnexionsPage() {
 
         {filteredItems.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);
-          const groups = scopeGroups(def);
+          const platform = (c as any).platformManaged === true;
+          const groups = platform
+            ? [{ label: "Usages autorisés", scopes: ((c as any).services ?? []).map((s: any) => ({ scope: s.key, label: s.label, required: false })) }]
+            : scopeGroups(def);
           const chosen = selected[c.key] ?? [];
           const showPerms = openPerms[c.key] ?? !c.connected;
+          if (platform) {
+            return (
+              <Card key={c.key} className="space-y-4 p-5">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Link2 className="size-4 shrink-0 text-muted-foreground" />
+                    <h3 className="truncate font-medium">{c.name}</h3>
+                    <Badge className="shrink-0" variant="outline">
+                      Géré par l'administrateur
+                    </Badge>
+                    {c.connected && (
+                      <Badge className="shrink-0 bg-emerald-500/15 text-emerald-600">Autorisations validées</Badge>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Button
+                      size="sm"
+                      disabled={busy === c.key || !(groups[0]?.scopes.length)}
+                      onClick={() => void validateScopes(c.key)}
+                    >
+                      {c.connected ? "Mettre à jour" : "Valider les autorisations"}
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground">{c.description}</p>
+
+                {groups[0]?.scopes.length ? (
+                  <div className="space-y-2 rounded-lg border p-4">
+                    <p className="text-sm font-medium">Autorisations à valider</p>
+                    {groups[0].scopes.map((s: any) => (
+                      <label key={s.scope} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={chosen.includes(s.scope)}
+                          onCheckedChange={(v) => toggleScope(c.key, s.scope, Boolean(v))}
+                        />
+                        <span>{s.label}</span>
+                      </label>
+                    ))}
+                    <p className="text-xs text-muted-foreground">
+                      Aucune clé à saisir : ce service utilise les identifiants configurés par votre administrateur.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Aucune autorisation spécifique à valider.</p>
+                )}
+              </Card>
+            );
+          }
           return (
             <Card key={c.key} className="space-y-4 p-5">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">

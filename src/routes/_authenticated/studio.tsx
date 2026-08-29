@@ -413,6 +413,25 @@ function StudioPage() {
                   </div>
                 ) : null}
 
+                {model.params?.["quality"] && model.kind === "image" ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Qualité</Label>
+                    <Select
+                      value={params.quality ?? "low"}
+                      onValueChange={(v) => setParams((p) => ({ ...p, quality: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Qualité" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Rapide (brouillon)</SelectItem>
+                        <SelectItem value="medium">Standard</SelectItem>
+                        <SelectItem value="high">Haute qualité</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : null}
+
                 {model.params?.["style"] ? (
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Style</Label>

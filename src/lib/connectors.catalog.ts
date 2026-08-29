@@ -328,11 +328,33 @@ export const CONNECTORS: ConnectorDef[] = [
   },
   {
     key: "brevo",
-    name: "Brevo / MailerLite",
+    name: "Brevo",
     category: "email",
-    description: "Séquences email, campagnes et automatisations marketing.",
+    description: "Emails transactionnels et campagnes marketing via l'API Brevo (Sendinblue).",
     authType: "api_key",
     fields: [f("api_key", "API Key")],
+    services: [
+      { key: "transactional", label: "Emails transactionnels" },
+      { key: "campaigns", label: "Campagnes email" },
+      { key: "automation", label: "Automatisations" },
+    ],
+    optionalFields: [
+      { key: "sender_email", label: "Compte expéditeur", secret: false },
+      { key: "domain", label: "Domaine", secret: false },
+    ],
+  },
+  {
+    key: "mailerlite",
+    name: "MailerLite",
+    category: "email",
+    description: "Newsletters, campagnes email et automatisations MailerLite.",
+    authType: "api_key",
+    fields: [f("api_key", "API Key")],
+    services: [
+      { key: "campaigns", label: "Campagnes email" },
+      { key: "subscribers", label: "Abonnés et groupes" },
+      { key: "automation", label: "Automatisations" },
+    ],
     optionalFields: [
       { key: "sender_email", label: "Compte expéditeur", secret: false },
       { key: "domain", label: "Domaine", secret: false },

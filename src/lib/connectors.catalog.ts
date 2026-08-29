@@ -64,19 +64,42 @@ export const CONNECTORS: ConnectorDef[] = [
     optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
   },
   {
-    key: "fal",
-    name: "fal.ai (Kling, Seedance, Grok Imagine)",
+    key: "kling",
+    name: "Kling AI",
     category: "ia",
-    description: "Génération de vidéos IA Kling, Seedance et Grok Imagine utilisées par le Studio de contenus.",
+    description: "Génération de vidéos IA Kling via l'API officielle Kling AI (Access Key + Secret Key).",
     authType: "api_key",
-    fields: [f("api_key", "fal.ai API Key")],
-    services: [
-      { key: "kling", label: "Kling — vidéos cinématiques" },
-      { key: "seedance", label: "Seedance — vidéos rapides et réalistes" },
-      { key: "grok", label: "Grok Imagine — vidéos courtes" },
+    fields: [f("access_key", "Kling Access Key", false), f("secret_key", "Kling Secret Key")],
+    services: [{ key: "video", label: "Vidéos Kling (text-to-video)" }],
+    optionalFields: [
+      { key: "api_base", label: "Endpoint API (par défaut Singapour)", secret: false },
+      { key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false },
     ],
+  },
+  {
+    key: "seedance",
+    name: "Seedance",
+    category: "ia",
+    description: "Génération de vidéos IA Seedance via l'API officielle Seedance (ModelArk).",
+    authType: "api_key",
+    fields: [f("api_key", "Seedance API Key")],
+    services: [{ key: "video", label: "Vidéos Seedance (text-to-video)" }],
+    optionalFields: [
+      { key: "api_base", label: "Endpoint API", secret: false },
+      { key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false },
+    ],
+  },
+  {
+    key: "grok",
+    name: "Grok (xAI)",
+    category: "ia",
+    description: "Génération de vidéos Grok Imagine via l'API officielle xAI.",
+    authType: "api_key",
+    fields: [f("api_key", "xAI API Key")],
+    services: [{ key: "video", label: "Vidéos Grok Imagine" }],
     optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
   },
+
 
   {
     key: "gemini",

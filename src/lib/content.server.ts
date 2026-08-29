@@ -270,23 +270,73 @@ export function openaiSize(ratio?: string) {
 /* ------------------------------ Génération vidéo ------------------------------ */
 
 /**
- * Trois familles de fournisseurs vidéo :
- *  - `openai/…`  → API OpenAI Vidéos (Sora 2, Sora 2 Pro)
- *  - `fal-ai/…`  → file d'attente fal.ai (Kling, Seedance, Grok Imagine)
- *  - `google/…`  → passerelle Lovable (Veo 3.1)
+ * Fournisseurs vidéo, chacun via son API officielle :
+ *  - `openai/…`   → API OpenAI Vidéos (Sora 2, Sora 2 Pro)
+ *  - `kling/…`    → API officielle Kling AI (JWT AccessKey/SecretKey)
+ *  - `seedance/…` → API officielle Seedance (ModelArk / BytePlus)
+ *  - `xai/…`      → API officielle xAI (Grok Imagine)
+ *  - `google/…`   → passerelle Lovable (Veo 3.1)
  * L'identifiant de tâche renvoyé encode le fournisseur : `provider|engine|id`.
  */
 
-async function providerKey(connector: string, envVar: string): Promise<string> {
-  let key = "";
+/** Secrets d'un connecteur (configuré par l'admin) avec repli sur les variables d'environnement. */
+async function connectorSecrets(connector: string): Promise<Record<string, string>> {
   try {
     const conf = await getConnectorConfig(connector);
-    if (conf?.isEnabled !== false) key = conf?.secrets?.["api_key"] ?? "";
+    if (conf?.isEnabled !== false)
+      return { ...(conf?.config ?? {}), ...(conf?.secrets ?? {}) } as Record<string, string>;
   } catch {
     /* base indisponible */
   }
-  return key || process.env[envVar] || "";
+  return {};
 }
+
+
+async function providerKey(connector: string, envVar: string): Promise<string> {
+  const s = await connectorSecrets(connector);
+  return s["api_key"] || process.env[envVar] || "";
+}
+
+const klingBase = async () =>
+  (await connectorSecrets("kling"))["api_base"] || process.env["KLING_API_BASE"] || "https://api-singapore.klingai.com";
+const seedanceBase = async () =>
+  (await connectorSecrets("seedance"))["api_base"] ||
+  process.env["SEEDANCE_API_BASE"] ||
+  "https://ark.ap-southeast.bytepluses.com/api/v3";
+const XAI_BASE = process.env["XAI_API_BASE"] || "https://api.x.ai";
+
+const b64url = (bytes: Uint8Array) => {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+
+/** Jeton JWT HS256 exigé par l'API officielle Kling (valide 30 minutes). */
+async function klingToken(accessKey: string, secretKey: string): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const enc = new TextEncoder();
+  const head = b64url(enc.encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const payload = b64url(enc.encode(JSON.stringify({ iss: accessKey, exp: now + 1800, nbf: now - 5 })));
+  const key = await crypto.subtle.importKey("raw", enc.encode(secretKey), { name: "HMAC", hash: "SHA-256" }, false, [
+    "sign",
+  ]);
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(`${head}.${payload}`)));
+  return `${head}.${payload}.${b64url(sig)}`;
+}
+
+/** En-têtes authentifiés pour l'API officielle Kling. */
+async function klingHeaders(): Promise<Record<string, string>> {
+  const s = await connectorSecrets("kling");
+  const accessKey = s["access_key"] || process.env["KLING_ACCESS_KEY"] || "";
+  const secretKey = s["secret_key"] || process.env["KLING_SECRET_KEY"] || "";
+  if (!accessKey || !secretKey)
+    throw new Error("Clés Kling manquantes : renseignez l'Access Key et la Secret Key du connecteur Kling AI.");
+  return {
+    "content-type": "application/json",
+    authorization: `Bearer ${await klingToken(accessKey, secretKey)}`,
+  };
+}
+
 
 const videoDuration = (model: ContentModel, params: ContentParams) => {
   const allowed = videoCaps(model.key).durations;
@@ -334,22 +384,73 @@ export async function startVideoJob(model: ContentModel, prompt: string, params:
     return `openai|${engine}|${job.id}`;
   }
 
-  /* ------------------- fal.ai : Kling, Seedance, Grok Imagine ------------------- */
-  if (engine.startsWith("fal-ai/")) {
-    const key = await providerKey("fal", "FAL_KEY");
-    if (!key) throw new Error("Clé fal.ai manquante : configurez le connecteur fal.ai (Kling / Seedance / Grok).");
-    const input: Record<string, unknown> = { prompt, aspect_ratio: ratio, duration: String(duration) };
-    if (/seedance|grok/.test(engine)) input["resolution"] = resolution;
-    if (/kling/.test(engine)) input["negative_prompt"] = "blur, distort, low quality";
-    const res = await fetch(`https://queue.fal.run/${engine}`, {
+  /* --------------------------- Kling AI (API officielle) --------------------------- */
+  if (engine.startsWith("kling/")) {
+    const res = await fetch(`${await klingBase()}/v1/videos/text2video`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Key ${key}` },
-      body: JSON.stringify(input),
+      headers: await klingHeaders(),
+      body: JSON.stringify({
+        model_name: engine.replace("kling/", ""),
+        prompt,
+        negative_prompt: "blur, distort, low quality",
+        mode: resolution === "1080p" ? "pro" : "std",
+        duration: String(duration),
+        aspect_ratio: ratio,
+      }),
     });
-    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo (${res.status})`);
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo Kling (${res.status})`);
     const job = (await res.json()) as any;
-    return `fal|${engine}|${job.request_id}`;
+    if (job?.code && job.code !== 0) throw new Error(job?.message ?? "Kling a refusé la demande.");
+    const taskId = job?.data?.task_id;
+    if (!taskId) throw new Error("Kling n'a renvoyé aucune tâche.");
+    return `kling|${engine}|${taskId}`;
   }
+
+  /* ------------------------ Seedance (API officielle ModelArk) ------------------------ */
+  if (engine.startsWith("seedance/")) {
+    const key = await providerKey("seedance", "SEEDANCE_API_KEY");
+    if (!key) throw new Error("Clé Seedance manquante : configurez le connecteur Seedance.");
+    const res = await fetch(`${await seedanceBase()}/contents/generations/tasks`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: engine.replace("seedance/", ""),
+        content: [
+          {
+            type: "text",
+            text: `${prompt} --resolution ${resolution} --duration ${duration} --ratio ${ratio}`,
+          },
+        ],
+      }),
+    });
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo Seedance (${res.status})`);
+    const job = (await res.json()) as any;
+    if (!job?.id) throw new Error("Seedance n'a renvoyé aucune tâche.");
+    return `seedance|${engine}|${job.id}`;
+  }
+
+  /* --------------------------- Grok Imagine (API xAI) --------------------------- */
+  if (engine.startsWith("xai/")) {
+    const key = await providerKey("grok", "XAI_API_KEY");
+    if (!key) throw new Error("Clé Grok manquante : configurez le connecteur Grok (xAI).");
+    const res = await fetch(`${XAI_BASE}/v1/videos/generations`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: engine.replace("xai/", ""),
+        prompt,
+        duration_seconds: duration,
+        aspect_ratio: ratio,
+        resolution,
+      }),
+    });
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo Grok (${res.status})`);
+    const job = (await res.json()) as any;
+    const jobId = job?.id ?? job?.request_id;
+    if (!jobId) throw new Error("Grok n'a renvoyé aucune tâche.");
+    return `xai|${engine}|${jobId}`;
+  }
+
 
   /* ----------------------------- Passerelle (Veo) ----------------------------- */
   const res = await fetch(`${GATEWAY}/v1/videos`, {
@@ -402,25 +503,51 @@ export async function pollVideoJob(id: string): Promise<{ status: string; bytes?
     return { status: "completed", bytes: new Uint8Array(await dl.arrayBuffer()) };
   }
 
-  if (provider === "fal") {
-    const key = await providerKey("fal", "FAL_KEY");
-    const st = await fetch(`https://queue.fal.run/${engine}/requests/${realId}/status`, {
-      headers: { authorization: `Key ${key}` },
-    });
-    if (!st.ok) throw gatewayError(st.status);
-    const status = (await st.json()) as any;
-    if (String(status?.status).toUpperCase() !== "COMPLETED") return { status: "in_progress" };
-    const out = await fetch(`https://queue.fal.run/${engine}/requests/${realId}`, {
-      headers: { authorization: `Key ${key}` },
-    });
-    if (!out.ok) throw gatewayError(out.status);
-    const result = (await out.json()) as any;
-    const url = result?.video?.url ?? result?.videos?.[0]?.url;
+  /** Télécharge la vidéo finale depuis l'URL renvoyée par le fournisseur. */
+  const download = async (url?: string) => {
     if (!url) return { status: "failed", error: "Le modèle n'a renvoyé aucune vidéo." };
     const dl = await fetch(url);
     if (!dl.ok) throw new Error("Téléchargement de la vidéo impossible.");
     return { status: "completed", bytes: new Uint8Array(await dl.arrayBuffer()) };
+  };
+
+  if (provider === "kling") {
+    const res = await fetch(`${await klingBase()}/v1/videos/text2video/${realId}`, { headers: await klingHeaders() });
+    if (!res.ok) throw gatewayError(res.status);
+    const job = (await res.json()) as any;
+    const st = job?.data?.task_status;
+    if (st === "failed") return { status: "failed", error: job?.data?.task_status_msg ?? "Génération Kling échouée." };
+    if (st !== "succeed") return { status: "in_progress" };
+    return download(job?.data?.task_result?.videos?.[0]?.url);
   }
+
+  if (provider === "seedance") {
+    const key = await providerKey("seedance", "SEEDANCE_API_KEY");
+    const res = await fetch(`${await seedanceBase()}/contents/generations/tasks/${realId}`, {
+      headers: { authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) throw gatewayError(res.status);
+    const job = (await res.json()) as any;
+    const st = String(job?.status ?? "").toLowerCase();
+    if (st === "failed" || st === "cancelled")
+      return { status: "failed", error: job?.error?.message ?? "Génération Seedance échouée." };
+    if (st !== "succeeded") return { status: "in_progress" };
+    return download(job?.content?.video_url);
+  }
+
+  if (provider === "xai") {
+    const key = await providerKey("grok", "XAI_API_KEY");
+    const res = await fetch(`${XAI_BASE}/v1/videos/generations/${realId}`, {
+      headers: { authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) throw gatewayError(res.status);
+    const job = (await res.json()) as any;
+    const st = String(job?.status ?? "").toLowerCase();
+    if (st === "failed") return { status: "failed", error: job?.error?.message ?? "Génération Grok échouée." };
+    if (st && !["completed", "succeeded", "success"].includes(st)) return { status: "in_progress" };
+    return download(job?.video?.url ?? job?.data?.[0]?.url ?? job?.url);
+  }
+
 
   const res = await fetch(`${GATEWAY}/v1/videos/${realId}`, { headers: { authorization: `Bearer ${apiKey()}` } });
   if (!res.ok) throw gatewayError(res.status);

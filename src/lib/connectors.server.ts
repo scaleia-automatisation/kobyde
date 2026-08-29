@@ -233,6 +233,26 @@ function providerError(name: string, p: Probe) {
   return `${name} a répondu ${p.status}${detail ? ` : ${detail}` : ""}.`;
 }
 
+/** Jeton JWT HS256 attendu par l'API officielle Kling AI. */
+async function klingJwt(accessKey: string, secretKey: string): Promise<string> {
+  const enc = new TextEncoder();
+  const b64 = (bytes: Uint8Array) => {
+    let bin = "";
+    for (const b of bytes) bin += String.fromCharCode(b);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  };
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64(enc.encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const payload = b64(enc.encode(JSON.stringify({ iss: accessKey, exp: now + 1800, nbf: now - 5 })));
+  const k = await crypto.subtle.importKey("raw", enc.encode(secretKey), { name: "HMAC", hash: "SHA-256" }, false, [
+    "sign",
+  ]);
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", k, enc.encode(`${head}.${payload}`)));
+  return `${head}.${payload}.${b64(sig)}`;
+}
+
+
+
 export async function testConnector(key: string) {
   const conf = await getConnectorConfig(key);
   const supabase = await db();
@@ -324,7 +344,37 @@ export async function testConnector(key: string) {
       if (!p.json?.ok) return finish(false, `Slack a répondu ${p.status} : ${p.json?.error ?? "échec"}.`);
       return finish(true, `Appel API Slack réussi (200) — espace ${p.json?.team ?? ""}.`);
     }
+    if (key === "grok") {
+      const miss = await need("api_key", "la clé API xAI");
+      if (miss) return miss;
+      const p = await probe("https://api.x.ai/v1/models", { headers: { Authorization: `Bearer ${s["api_key"]}` } });
+      if (!p.ok) return finish(false, providerError("xAI", p));
+      const n = Array.isArray(p.json?.data) ? p.json.data.length : 0;
+      return finish(true, `Appel API xAI réussi (200) — ${n} modèle(s) disponible(s).`);
+    }
+    if (key === "seedance") {
+      const miss = await need("api_key", "la clé API Seedance");
+      if (miss) return miss;
+      const base = conf.config["api_base"] || "https://ark.ap-southeast.bytepluses.com/api/v3";
+      const p = await probe(`${base}/contents/generations/tasks?page_size=1`, {
+        headers: { Authorization: `Bearer ${s["api_key"]}` },
+      });
+      if (!p.ok) return finish(false, providerError("Seedance", p));
+      return finish(true, "Appel API Seedance réussi (200) — clé valide.");
+    }
+    if (key === "kling") {
+      const ak = conf.config["access_key"] ?? s["access_key"] ?? "";
+      const sk = s["secret_key"] ?? "";
+      if (!ak || !sk) return finish(false, "Clés manquantes : renseignez l'Access Key et la Secret Key Kling.");
+      const base = conf.config["api_base"] || "https://api-singapore.klingai.com";
+      const p = await probe(`${base}/v1/videos/text2video?pageNum=1&pageSize=1`, {
+        headers: { Authorization: `Bearer ${await klingJwt(ak, sk)}` },
+      });
+      if (!p.ok) return finish(false, providerError("Kling", p));
+      return finish(true, "Appel API Kling réussi (200) — identifiants valides.");
+    }
     const def = CONNECTOR_MAP.get(key);
+
     const requiredOk = (def?.fields ?? []).every((x) =>
       x.secret ? Boolean(s[x.key]) : Boolean(conf.config[x.key]),
     );

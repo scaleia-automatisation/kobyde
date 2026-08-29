@@ -280,6 +280,7 @@ export function ConnectorsPanel() {
   const createFn = useServerFn(adminCreateCustomConnector);
   const qc = useQueryClient();
   const [category, setCategory] = useState("all");
+  const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
   const [custom, setCustom] = useState({ key: "", name: "", baseUrl: "", authType: "api_key" });
 
   const list = useQuery({ queryKey: ["admin-connectors"], queryFn: () => listFn({ data: undefined }) });
@@ -309,7 +310,15 @@ export function ConnectorsPanel() {
     return ["all", ...set];
   }, [list.data]);
 
-  const items = (list.data ?? []).filter((c) => category === "all" || c.category === category);
+  const items = useMemo(() => {
+    const filtered = (list.data ?? []).filter((c) => category === "all" || c.category === category);
+    return [...filtered].sort((a, b) => {
+      if (sort === "name-asc") return a.name.localeCompare(b.name, "fr");
+      if (sort === "name-desc") return b.name.localeCompare(a.name, "fr");
+      const order = { configure: 0, erreur: 1, default: 2 };
+      return (order[a.status as keyof typeof order] ?? order.default) - (order[b.status as keyof typeof order] ?? order.default);
+    });
+  }, [list.data, category, sort]);
 
   return (
     <div className="space-y-5">

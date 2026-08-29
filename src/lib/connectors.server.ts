@@ -233,6 +233,26 @@ function providerError(name: string, p: Probe) {
   return `${name} a répondu ${p.status}${detail ? ` : ${detail}` : ""}.`;
 }
 
+/** Jeton JWT HS256 attendu par l'API officielle Kling AI. */
+async function klingJwt(accessKey: string, secretKey: string): Promise<string> {
+  const enc = new TextEncoder();
+  const b64 = (bytes: Uint8Array) => {
+    let bin = "";
+    for (const b of bytes) bin += String.fromCharCode(b);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  };
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64(enc.encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const payload = b64(enc.encode(JSON.stringify({ iss: accessKey, exp: now + 1800, nbf: now - 5 })));
+  const k = await crypto.subtle.importKey("raw", enc.encode(secretKey), { name: "HMAC", hash: "SHA-256" }, false, [
+    "sign",
+  ]);
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", k, enc.encode(`${head}.${payload}`)));
+  return `${head}.${payload}.${b64(sig)}`;
+}
+
+
+
 export async function testConnector(key: string) {
   const conf = await getConnectorConfig(key);
   const supabase = await db();

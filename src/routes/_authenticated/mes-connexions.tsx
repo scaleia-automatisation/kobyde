@@ -100,7 +100,8 @@ function MesConnexionsPage() {
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
     // WhatsApp Business est géré par l'utilisateur lui-même (carte dédiée).
-    const base = items.filter((c) => c.key !== "whatsapp");
+    // Stripe SaaS est le compte de la plateforme : réservé au Super Admin, jamais visible ici.
+    const base = items.filter((c) => c.key !== "whatsapp" && c.key !== "stripe");
     if (!q) return base;
     return base.filter(
       (c) =>

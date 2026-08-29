@@ -131,6 +131,11 @@ function ConnecteursAdminPage() {
     return Array.from(map, ([cat, list]) => ({ cat, list }));
   }, [items]);
 
+  // DEBUG
+  useEffect(() => {
+    console.log("[ConnecteursDebug] list", { data: list.data, error: list.error, isLoading: list.isLoading, isFetching: list.isFetching });
+  }, [list.data, list.error, list.isLoading, list.isFetching]);
+
   return (
     <AppShell title="Connecteurs" subtitle="Configuration centrale des API, applications OAuth et webhooks">
       <Tabs defaultValue="config">

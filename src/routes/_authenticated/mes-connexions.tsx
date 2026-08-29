@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Link2, RefreshCw, Search, ShieldCheck, XCircle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { OrgStripeCard } from "@/components/org-stripe-card";
+import { OrgWhatsappCard } from "@/components/org-whatsapp-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

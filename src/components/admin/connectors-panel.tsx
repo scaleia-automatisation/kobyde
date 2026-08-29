@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, Copy, Plug, Settings2, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowDownAZ, ArrowUpAZ, Copy, Plug, Settings2, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -280,6 +280,7 @@ export function ConnectorsPanel() {
   const createFn = useServerFn(adminCreateCustomConnector);
   const qc = useQueryClient();
   const [category, setCategory] = useState("all");
+  const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
   const [custom, setCustom] = useState({ key: "", name: "", baseUrl: "", authType: "api_key" });
 
   const list = useQuery({ queryKey: ["admin-connectors"], queryFn: () => listFn({ data: undefined }) });
@@ -309,7 +310,15 @@ export function ConnectorsPanel() {
     return ["all", ...set];
   }, [list.data]);
 
-  const items = (list.data ?? []).filter((c) => category === "all" || c.category === category);
+  const items = useMemo(() => {
+    const filtered = (list.data ?? []).filter((c) => category === "all" || c.category === category);
+    return [...filtered].sort((a, b) => {
+      if (sort === "name-asc") return a.name.localeCompare(b.name, "fr");
+      if (sort === "name-desc") return b.name.localeCompare(a.name, "fr");
+      const order = { configure: 0, erreur: 1, default: 2 };
+      return (order[a.status as keyof typeof order] ?? order.default) - (order[b.status as keyof typeof order] ?? order.default);
+    });
+  }, [list.data, category, sort]);
 
   return (
     <div className="space-y-5">
@@ -354,12 +363,41 @@ export function ConnectorsPanel() {
         </div>
       </Card>
 
-      <div className="flex flex-wrap gap-2">
-        {categories.map((c) => (
-          <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => setCategory(c)}>
-            {c === "all" ? "Tous" : (CATEGORY_LABELS[c as keyof typeof CATEGORY_LABELS] ?? c)}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => setCategory(c)}>
+              {c === "all" ? "Tous" : (CATEGORY_LABELS[c as keyof typeof CATEGORY_LABELS] ?? c)}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Trier par</span>
+          <Button
+            size="sm"
+            variant={sort === "name-asc" ? "default" : "outline"}
+            onClick={() => setSort("name-asc")}
+            aria-label="Tri par nom croissant"
+          >
+            <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
           </Button>
-        ))}
+          <Button
+            size="sm"
+            variant={sort === "name-desc" ? "default" : "outline"}
+            onClick={() => setSort("name-desc")}
+            aria-label="Tri par nom décroissant"
+          >
+            <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
+          </Button>
+          <Button
+            size="sm"
+            variant={sort === "status" ? "default" : "outline"}
+            onClick={() => setSort("status")}
+            aria-label="Tri par statut"
+          >
+            Statut
+          </Button>
+        </div>
       </div>
 
       {list.isLoading && <Card className="p-6 text-sm text-muted-foreground">Chargement…</Card>}

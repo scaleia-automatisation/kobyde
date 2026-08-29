@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Copy, Link2, ShieldCheck } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Copy, Link2, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,7 @@ function ConnecteursAdminPage() {
   const logs = useQuery({ queryKey: ["admin-connector-logs"], queryFn: () => logsFn({ data: {} }) });
 
   const items = useMemo(() => list.data ?? [], [list.data]);
+  const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
@@ -125,11 +126,20 @@ function ConnecteursAdminPage() {
     }
   };
 
+  const sortConnectors = (list: typeof items) => {
+    return [...list].sort((a, b) => {
+      if (sort === "name-asc") return a.name.localeCompare(b.name, "fr");
+      if (sort === "name-desc") return b.name.localeCompare(a.name, "fr");
+      const order = { configure: 0, erreur: 1, default: 2 };
+      return (order[a.status as keyof typeof order] ?? order.default) - (order[b.status as keyof typeof order] ?? order.default);
+    });
+  };
+
   const grouped = useMemo(() => {
     const map = new Map<string, typeof items>();
     for (const c of items) map.set(c.category, [...(map.get(c.category) ?? []), c]);
-    return Array.from(map, ([cat, list]) => ({ cat, list }));
-  }, [items]);
+    return Array.from(map, ([cat, list]) => ({ cat, list: sortConnectors(list) }));
+  }, [items, sort]);
 
   // DEBUG
   useEffect(() => {
@@ -152,6 +162,34 @@ function ConnecteursAdminPage() {
               autorisent uniquement leurs propres comptes depuis « Mes connexions ».
             </p>
           </Card>
+
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <span className="text-xs text-muted-foreground">Trier par</span>
+            <Button
+              size="sm"
+              variant={sort === "name-asc" ? "default" : "outline"}
+              onClick={() => setSort("name-asc")}
+              aria-label="Tri par nom croissant"
+            >
+              <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
+            </Button>
+            <Button
+              size="sm"
+              variant={sort === "name-desc" ? "default" : "outline"}
+              onClick={() => setSort("name-desc")}
+              aria-label="Tri par nom décroissant"
+            >
+              <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
+            </Button>
+            <Button
+              size="sm"
+              variant={sort === "status" ? "default" : "outline"}
+              onClick={() => setSort("status")}
+              aria-label="Tri par statut"
+            >
+              Statut
+            </Button>
+          </div>
 
           {grouped.map(({ cat, list: group }) => (
             <div key={cat} className="space-y-3">

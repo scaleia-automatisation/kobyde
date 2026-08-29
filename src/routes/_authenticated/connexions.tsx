@@ -79,6 +79,7 @@ function ConnecteursAdminPage() {
   const logs = useQuery({ queryKey: ["admin-connector-logs"], queryFn: () => logsFn({ data: {} }) });
 
   const items = useMemo(() => list.data ?? [], [list.data]);
+  const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
@@ -125,11 +126,20 @@ function ConnecteursAdminPage() {
     }
   };
 
+  const sortConnectors = (list: typeof items) => {
+    return [...list].sort((a, b) => {
+      if (sort === "name-asc") return a.name.localeCompare(b.name, "fr");
+      if (sort === "name-desc") return b.name.localeCompare(a.name, "fr");
+      const order = { configure: 0, erreur: 1, default: 2 };
+      return (order[a.status as keyof typeof order] ?? order.default) - (order[b.status as keyof typeof order] ?? order.default);
+    });
+  };
+
   const grouped = useMemo(() => {
     const map = new Map<string, typeof items>();
     for (const c of items) map.set(c.category, [...(map.get(c.category) ?? []), c]);
-    return Array.from(map, ([cat, list]) => ({ cat, list }));
-  }, [items]);
+    return Array.from(map, ([cat, list]) => ({ cat, list: sortConnectors(list) }));
+  }, [items, sort]);
 
   // DEBUG
   useEffect(() => {

@@ -21,6 +21,7 @@ import {
   myConnections,
   startConnection,
   toggleMyConnection,
+  validatePlatformScopes,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP, scopeGroups } from "@/lib/connectors.catalog";
 

@@ -21,7 +21,7 @@ import {
   myConnections,
   startConnection,
   toggleMyConnection,
-  validatePlatformScopes,
+
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP, scopeGroups } from "@/lib/connectors.catalog";
 
@@ -58,7 +58,6 @@ function MesConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
-  const validateFn = useServerFn(validatePlatformScopes);
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
@@ -94,18 +93,8 @@ function MesConnexionsPage() {
     });
   }, [items]);
 
-  const validateScopes = async (key: string) => {
-    setBusy(key);
-    try {
-      await validateFn({ data: { connectorKey: key, scopes: selected[key] ?? [] } });
-      toast.success("Autorisations enregistrées.");
-      void qc.invalidateQueries({ queryKey: ["my-connections"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Enregistrement impossible.");
-    } finally {
-      setBusy(null);
-    }
-  };
+
+
 
   const toggleScope = (key: string, scope: string, on: boolean) =>
     setSelected((prev) => {
@@ -211,6 +200,7 @@ function MesConnexionsPage() {
           const chosen = selected[c.key] ?? [];
           const showPerms = openPerms[c.key] ?? !c.connected;
           if (platform) {
+            const activeServices: any[] = groups[0]?.scopes ?? [];
             return (
               <Card key={c.key} className="space-y-4 p-5">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
@@ -220,42 +210,31 @@ function MesConnexionsPage() {
                     <Badge className="shrink-0" variant="outline">
                       Géré par l'administrateur
                     </Badge>
-                    {c.connected && (
-                      <Badge className="shrink-0 bg-emerald-500/15 text-emerald-600">Autorisations validées</Badge>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Button
-                      size="sm"
-                      disabled={busy === c.key || !(groups[0]?.scopes.length)}
-                      onClick={() => void validateScopes(c.key)}
-                    >
-                      {c.connected ? "Mettre à jour" : "Valider les autorisations"}
-                    </Button>
+                    <Badge className="shrink-0 bg-emerald-500/15 text-emerald-600">Actif pour votre compte</Badge>
                   </div>
                 </div>
 
                 <p className="text-sm text-muted-foreground">{c.description}</p>
 
-                {groups[0]?.scopes.length ? (
+                {activeServices.length ? (
                   <div className="space-y-2 rounded-lg border p-4">
-                    <p className="text-sm font-medium">Autorisations à valider</p>
-                    {groups[0].scopes.map((s: any) => (
-                      <label key={s.scope} className="flex items-center gap-2 text-sm">
-                        <Checkbox
-                          checked={chosen.includes(s.scope)}
-                          onCheckedChange={(v) => toggleScope(c.key, s.scope, Boolean(v))}
-                        />
-                        <span>{s.label}</span>
-                      </label>
-                    ))}
+                    <p className="text-sm font-medium">Usages activés par votre administrateur</p>
+                    <ul className="space-y-1 text-sm">
+                      {activeServices.map((s: any) => (
+                        <li key={s.scope} className="flex items-center gap-2 text-emerald-700">
+                          <CheckCircle2 className="size-3.5" /> {s.label}
+                        </li>
+                      ))}
+                    </ul>
                     <p className="text-xs text-muted-foreground">
-                      Aucune clé à saisir : ce service utilise les identifiants configurés par votre administrateur.
+                      Aucune action requise : ces autorisations sont déjà actives pour vous, avec les identifiants
+                      configurés par votre administrateur.
                     </p>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Aucune autorisation spécifique à valider.</p>
+                  <p className="text-xs text-muted-foreground">Aucun usage activé par votre administrateur.</p>
                 )}
+
               </Card>
             );
           }

@@ -961,13 +961,16 @@ export async function listUserConnections(userId: string) {
     });
 
   // Connecteurs gérés par l'administrateur (clés API / OAuth de la plateforme) :
-  // l'utilisateur n'a rien à saisir, il valide uniquement les usages autorisés.
+  // les usages activés par l'admin sont automatiquement accordés à l'utilisateur.
   const platformItems = connectors
     .filter((c) => !c.userConnect && c.isEnabled && c.status === "configure")
     .map((c) => {
       const row = rows.get(c.key);
-      const granted = splitScopes(row?.scopes_granted ?? row?.scopes);
-      const services: { key: string; label: string }[] = (c.servicesCatalog ?? []) as any;
+      const catalog: { key: string; label: string }[] = (c.servicesCatalog ?? []) as any;
+      const adminKeys: string[] = ((c.services ?? []) as string[]).length
+        ? (c.services as string[])
+        : catalog.map((s) => s.key);
+      const services = catalog.filter((s) => adminKeys.includes(s.key));
       return {
         key: c.key,
         name: c.name,
@@ -976,13 +979,13 @@ export async function listUserConnections(userId: string) {
         authType: c.authType,
         oauth: false,
         available: true,
-        connected: Boolean(row && !row.revoked && granted.length > 0),
-        isActive: row ? row.is_active !== false : false,
+        connected: true,
+        isActive: row ? row.is_active !== false : true,
         needsReconnect: false,
         account: null as string | null,
-        grantedScopes: granted,
-        grantedLabels: services.filter((s) => granted.includes(s.key)).map((s) => s.label),
-        missingLabels: services.filter((s) => !granted.includes(s.key)).map((s) => s.label),
+        grantedScopes: services.map((s) => s.key),
+        grantedLabels: services.map((s) => s.label),
+        missingLabels: [] as string[],
         expiresAt: null as string | null,
         connectedAt: row?.connected_at ?? row?.created_at ?? null,
         lastUsedAt: row?.last_used_at ?? null,
@@ -990,6 +993,7 @@ export async function listUserConnections(userId: string) {
         platformManaged: true,
       };
     });
+
 
   return [...userItems, ...platformItems];
 }

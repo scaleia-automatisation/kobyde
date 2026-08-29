@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowDownAZ, ArrowUpAZ, Copy, Plug, Settings2, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowDownAZ, ArrowUpAZ, Copy, Plug, Search, Settings2, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -281,6 +281,7 @@ export function ConnectorsPanel() {
   const qc = useQueryClient();
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
+  const [query, setQuery] = useState("");
   const [custom, setCustom] = useState({ key: "", name: "", baseUrl: "", authType: "api_key" });
 
   const list = useQuery({ queryKey: ["admin-connectors"], queryFn: () => listFn({ data: undefined }) });
@@ -311,14 +312,23 @@ export function ConnectorsPanel() {
   }, [list.data]);
 
   const items = useMemo(() => {
-    const filtered = (list.data ?? []).filter((c) => category === "all" || c.category === category);
+    const q = query.trim().toLowerCase();
+    const filtered = (list.data ?? []).filter((c) => {
+      const matchesCategory = category === "all" || c.category === category;
+      const matchesQuery =
+        !q ||
+        c.name.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.key.toLowerCase().includes(q);
+      return matchesCategory && matchesQuery;
+    });
     return [...filtered].sort((a, b) => {
       if (sort === "name-asc") return a.name.localeCompare(b.name, "fr");
       if (sort === "name-desc") return b.name.localeCompare(a.name, "fr");
       const order = { configure: 0, erreur: 1, default: 2 };
       return (order[a.status as keyof typeof order] ?? order.default) - (order[b.status as keyof typeof order] ?? order.default);
     });
-  }, [list.data, category, sort]);
+  }, [list.data, category, sort, query]);
 
   return (
     <div className="space-y-5">
@@ -371,7 +381,17 @@ export function ConnectorsPanel() {
             </Button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Rechercher un connecteur…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-56 pl-9 text-sm"
+            />
+          </div>
           <span className="text-xs text-muted-foreground">Trier par</span>
           <Button
             size="sm"

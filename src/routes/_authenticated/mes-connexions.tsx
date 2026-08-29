@@ -3,13 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, Link2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, Link2, RefreshCw, Search, ShieldCheck, XCircle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { OrgStripeCard } from "@/components/org-stripe-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -58,6 +59,7 @@ function MesConnexionsPage() {
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
   const items = useMemo(() => list.data ?? [], [list.data]);
 
+  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Record<string, string[]>>({});
   const [openPerms, setOpenPerms] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -88,6 +90,17 @@ function MesConnexionsPage() {
       const cur = prev[key] ?? [];
       return { ...prev, [key]: on ? Array.from(new Set([...cur, scope])) : cur.filter((s) => s !== scope) };
     });
+
+  const filteredItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.key.toLowerCase().includes(q)
+    );
+  }, [items, query]);
 
   const connect = async (key: string) => {
     setBusy(key);
@@ -144,9 +157,18 @@ function MesConnexionsPage() {
 
         <OrgStripeCard />
 
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Rechercher un connecteur…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full pl-9 text-sm"
+          />
+        </div>
 
-
-        {items.map((c) => {
+        {filteredItems.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);
           const groups = scopeGroups(def);
           const chosen = selected[c.key] ?? [];
@@ -265,9 +287,11 @@ function MesConnexionsPage() {
           );
         })}
 
-        {!items.length && !list.isLoading && (
+        {!filteredItems.length && !list.isLoading && (
           <Card className="p-6 text-sm text-muted-foreground">
-            Aucun service à connecter pour le moment. Votre administrateur doit d'abord activer les connecteurs.
+            {query.trim()
+              ? "Aucun connecteur ne correspond à votre recherche."
+              : "Aucun service à connecter pour le moment. Votre administrateur doit d'abord activer les connecteurs."}
           </Card>
         )}
       </div>

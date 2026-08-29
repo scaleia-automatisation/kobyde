@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowDownAZ, ArrowUpAZ, Copy, Link2, ShieldCheck } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Copy, Link2, Search, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +80,7 @@ function ConnecteursAdminPage() {
 
   const items = useMemo(() => list.data ?? [], [list.data]);
   const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
+  const [query, setQuery] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
@@ -136,10 +137,17 @@ function ConnecteursAdminPage() {
   };
 
   const grouped = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = items.filter((c) =>
+      !q ||
+      c.name.toLowerCase().includes(q) ||
+      c.description.toLowerCase().includes(q) ||
+      c.key.toLowerCase().includes(q)
+    );
     const map = new Map<string, typeof items>();
-    for (const c of items) map.set(c.category, [...(map.get(c.category) ?? []), c]);
+    for (const c of filtered) map.set(c.category, [...(map.get(c.category) ?? []), c]);
     return Array.from(map, ([cat, list]) => ({ cat, list: sortConnectors(list) }));
-  }, [items, sort]);
+  }, [items, sort, query]);
 
   // DEBUG
   useEffect(() => {
@@ -163,32 +171,44 @@ function ConnecteursAdminPage() {
             </p>
           </Card>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <span className="text-xs text-muted-foreground">Trier par</span>
-            <Button
-              size="sm"
-              variant={sort === "name-asc" ? "default" : "outline"}
-              onClick={() => setSort("name-asc")}
-              aria-label="Tri par nom croissant"
-            >
-              <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
-            </Button>
-            <Button
-              size="sm"
-              variant={sort === "name-desc" ? "default" : "outline"}
-              onClick={() => setSort("name-desc")}
-              aria-label="Tri par nom décroissant"
-            >
-              <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
-            </Button>
-            <Button
-              size="sm"
-              variant={sort === "status" ? "default" : "outline"}
-              onClick={() => setSort("status")}
-              aria-label="Tri par statut"
-            >
-              Statut
-            </Button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Rechercher un connecteur…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-64 pl-9 text-sm"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">Trier par</span>
+              <Button
+                size="sm"
+                variant={sort === "name-asc" ? "default" : "outline"}
+                onClick={() => setSort("name-asc")}
+                aria-label="Tri par nom croissant"
+              >
+                <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
+              </Button>
+              <Button
+                size="sm"
+                variant={sort === "name-desc" ? "default" : "outline"}
+                onClick={() => setSort("name-desc")}
+                aria-label="Tri par nom décroissant"
+              >
+                <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
+              </Button>
+              <Button
+                size="sm"
+                variant={sort === "status" ? "default" : "outline"}
+                onClick={() => setSort("status")}
+                aria-label="Tri par statut"
+              >
+                Statut
+              </Button>
+            </div>
           </div>
 
           {grouped.map(({ cat, list: group }) => (

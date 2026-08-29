@@ -297,15 +297,6 @@ export const CONNECTORS: ConnectorDef[] = [
     ],
   },
   {
-    key: "phantombuster",
-    name: "PhantomBuster",
-    category: "recherche",
-    description: "Scénarios d'automatisation de collecte lorsque c'est pertinent et autorisé.",
-    authType: "api_key",
-    fields: [f("api_key", "API Key")],
-    optionalFields: [{ key: "allowed_phantoms", label: "Phantoms autorisés", secret: false }],
-  },
-  {
     key: "resend",
     name: "Resend",
     category: "email",

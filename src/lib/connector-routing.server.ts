@@ -22,7 +22,7 @@ export type Capability =
 /** Ordre de préférence des connecteurs par capacité. */
 export const CAPABILITY_ROUTES: Record<Capability, { connector: string; needsUserAccount?: boolean }[]> = {
   web_search: [{ connector: "gemini" }, { connector: "openai" }],
-  prospect_search: [{ connector: "gemini" }, { connector: "apify" }, { connector: "phantombuster" }],
+  prospect_search: [{ connector: "gemini" }, { connector: "apify" }],
   maps_search: [{ connector: "apify" }],
   text_generation: [{ connector: "gemini" }, { connector: "openai" }],
   image_generation: [{ connector: "openai" }, { connector: "gemini" }],

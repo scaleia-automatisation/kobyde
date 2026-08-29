@@ -438,6 +438,10 @@ function SuperAdminPage() {
           <ContentModelsPanel />
         </TabsContent>
 
+        <TabsContent value="stripe-saas" className="space-y-4">
+          <StripeSaasPanel onConfigure={() => setTab("connecteurs")} />
+        </TabsContent>
+
 
         <TabsContent value="couts">
           <CostsPanel />

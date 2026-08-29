@@ -30,10 +30,7 @@ export const CAPABILITY_ROUTES: Record<Capability, { connector: string; needsUse
   publish_instagram: [{ connector: "meta", needsUserAccount: true }],
   publish_linkedin: [{ connector: "linkedin", needsUserAccount: true }],
   publish_tiktok: [{ connector: "tiktok", needsUserAccount: true }],
-  send_user_email: [
-    { connector: "google", needsUserAccount: true },
-    { connector: "microsoft", needsUserAccount: true },
-  ],
+  send_user_email: [{ connector: "google", needsUserAccount: true }],
   send_transactional_email: [{ connector: "resend" }, { connector: "brevo" }],
   send_sms: [{ connector: "twilio" }, { connector: "whatsapp" }],
   payment: [{ connector: "stripe" }],

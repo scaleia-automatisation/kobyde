@@ -80,6 +80,7 @@ function ConnecteursAdminPage() {
 
   const items = useMemo(() => list.data ?? [], [list.data]);
   const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
+  const [query, setQuery] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});

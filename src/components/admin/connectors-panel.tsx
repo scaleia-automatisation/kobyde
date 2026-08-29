@@ -281,6 +281,7 @@ export function ConnectorsPanel() {
   const qc = useQueryClient();
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<"name-asc" | "name-desc" | "status">("name-asc");
+  const [query, setQuery] = useState("");
   const [custom, setCustom] = useState({ key: "", name: "", baseUrl: "", authType: "api_key" });
 
   const list = useQuery({ queryKey: ["admin-connectors"], queryFn: () => listFn({ data: undefined }) });

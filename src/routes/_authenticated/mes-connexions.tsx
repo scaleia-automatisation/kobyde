@@ -58,6 +58,7 @@ function MesConnexionsPage() {
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
   const items = useMemo(() => list.data ?? [], [list.data]);
 
+  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Record<string, string[]>>({});
   const [openPerms, setOpenPerms] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState<string | null>(null);

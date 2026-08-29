@@ -705,7 +705,7 @@ export async function getUserAccessToken(
   // Renouvellement anticipé (2 minutes avant expiration).
   if (expiresAt && expiresAt - Date.now() < 120_000) {
     const refreshed = await refreshUserToken(userId, connectorKey);
-    if (!refreshed.ok) return { ok: false, reason: "reconnect_required" };
+    if (!refreshed.ok || !refreshed.accessToken) return { ok: false, reason: "reconnect_required" };
     token = refreshed.accessToken;
   }
   const supabase = await db();

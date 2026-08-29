@@ -58,11 +58,26 @@ export const CONNECTORS: ConnectorDef[] = [
     key: "openai",
     name: "OpenAI",
     category: "ia",
-    description: "Génération de texte, analyse, raisonnement et images selon les modèles activés.",
+    description: "Génération de texte, analyse, raisonnement, images et vidéos Sora selon les modèles activés.",
     authType: "api_key",
     fields: [f("api_key", "API Key")],
     optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
   },
+  {
+    key: "fal",
+    name: "fal.ai (Kling, Seedance, Grok Imagine)",
+    category: "ia",
+    description: "Génération de vidéos IA Kling, Seedance et Grok Imagine utilisées par le Studio de contenus.",
+    authType: "api_key",
+    fields: [f("api_key", "fal.ai API Key")],
+    services: [
+      { key: "kling", label: "Kling — vidéos cinématiques" },
+      { key: "seedance", label: "Seedance — vidéos rapides et réalistes" },
+      { key: "grok", label: "Grok Imagine — vidéos courtes" },
+    ],
+    optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
+  },
+
   {
     key: "gemini",
     name: "Gemini + Google Search Grounding",

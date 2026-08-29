@@ -109,6 +109,20 @@ export function OrgStripeCard() {
         </div>
       )}
 
+      <div className="space-y-3 rounded-lg border p-4">
+        <p className="text-sm font-medium">{acc ? "Permissions accordées" : "Autorisations demandées"}</p>
+        <ul className="space-y-1 text-sm">
+          {STRIPE_SCOPES.map((s) => (
+            <li key={s} className={`flex items-center gap-2 ${acc ? "text-emerald-700" : "text-muted-foreground"}`}>
+              <CheckCircle2 className="size-3.5" /> {s}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground">
+          Le consentement final est demandé par Stripe elle-même (accès complet « read_write » à votre compte).
+        </p>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {acc ? (
           <>
@@ -118,16 +132,20 @@ export function OrgStripeCard() {
             <Button variant="outline" size="sm" disabled={busy} onClick={() => void sync()}>
               <RefreshCw className="mr-1 size-4" /> Actualiser
             </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => void disconnect()}>
+            <Button variant="outline" size="sm" disabled={busy} onClick={() => void connect()}>
+              <RefreshCw className="mr-1 size-4" /> Reconnecter
+            </Button>
+            <Button variant="ghost" size="sm" className="text-destructive" disabled={busy} onClick={() => void disconnect()}>
               Déconnecter
             </Button>
           </>
         ) : (
-          <Button size="sm" disabled={busy || data?.available === false} onClick={() => void connect()}>
-            <ExternalLink className="mr-1 size-4" /> Connecter Stripe Connect
+          <Button disabled={busy || data?.available === false} onClick={() => void connect()}>
+            {busy ? "Redirection…" : "Se connecter à Stripe Connect"}
           </Button>
         )}
       </div>
+
     </Card>
   );
 }

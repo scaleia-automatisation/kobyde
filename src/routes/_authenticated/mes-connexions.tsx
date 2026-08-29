@@ -58,6 +58,7 @@ function MesConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
+  const validateFn = useServerFn(validatePlatformScopes);
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });

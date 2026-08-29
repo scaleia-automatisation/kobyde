@@ -13,6 +13,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OrgConnectorConfig } from "@/components/org-connector-config";
+
 import {
   disconnectConnection,
   myConnections,
@@ -143,9 +146,21 @@ function MesConnexionsPage() {
   return (
     <AppShell
       title="Mes connexions"
-      subtitle="Connectez vos comptes une seule fois : aucune clé technique à renseigner"
+      subtitle="Configurez les identifiants de votre entreprise, puis autorisez vos comptes"
     >
+      <Tabs defaultValue="configuration" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="configuration">Configuration</TabsTrigger>
+          <TabsTrigger value="comptes">Mes comptes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="configuration">
+          <OrgConnectorConfig />
+        </TabsContent>
+
+        <TabsContent value="comptes">
       <div className="flex flex-col gap-4">
+
         <Card className="flex items-start gap-3 border-primary/20 bg-primary/5 p-4">
           <ShieldCheck className="mt-0.5 size-5 text-primary" />
           <p className="text-sm text-muted-foreground">
@@ -295,6 +310,9 @@ function MesConnexionsPage() {
           </Card>
         )}
       </div>
+        </TabsContent>
+      </Tabs>
     </AppShell>
   );
 }
+

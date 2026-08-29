@@ -451,6 +451,24 @@ function appCredentials(conf: { config: Record<string, string>; secrets: Record<
   return { clientId, clientSecret };
 }
 
+/**
+ * Identifiants OAuth à utiliser : ceux de l'entreprise (« Mes connexions » → Configuration)
+ * en priorité, sinon ceux de la plateforme configurés par l'administrateur.
+ */
+async function resolveOAuthApp(
+  connectorKey: string,
+  orgId: string | null | undefined,
+  conf: { config: Record<string, string>; secrets: Record<string, string> } | null,
+) {
+  if (orgId) {
+    const { getOrgOAuthApp } = await import("./org-connectors.server");
+    const own = await getOrgOAuthApp(orgId, connectorKey);
+    if (own) return { ...own, source: "org" as const };
+  }
+  return { ...appCredentials(conf), source: "platform" as const };
+}
+
+
 /** Connexion utilisateur (ligne brute) — serveur uniquement. */
 async function getConnectionRow(userId: string, connectorKey: string) {
   const supabase = await db();
@@ -474,9 +492,17 @@ export async function buildAuthorizeUrl(input: {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def?.oauth) throw new Error("Ce connecteur ne gère pas la connexion de compte.");
   const conf = await getConnectorConfig(input.connectorKey);
-  if (!conf?.isEnabled) throw new Error("Ce connecteur n'est pas encore activé par l'administrateur.");
-  const { clientId } = appCredentials(conf);
-  if (!clientId) throw new Error("Connecteur incomplet : identifiant d'application manquant.");
+  const app = await resolveOAuthApp(input.connectorKey, input.orgId, conf);
+  const clientId = app.clientId;
+  if (app.source === "platform" && !conf?.isEnabled) {
+    throw new Error(
+      "Ce connecteur n'est pas encore activé : renseignez vos identifiants dans l'onglet « Configuration ».",
+    );
+  }
+  if (!clientId) {
+    throw new Error("Configuration incomplète : renseignez vos identifiants dans l'onglet « Configuration ».");
+  }
+
 
   const base = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
   const redirectUri = `${base}${callbackPath(input.connectorKey)}`;
@@ -582,7 +608,8 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
   if (new Date(st.expires_at).getTime() < Date.now()) throw new Error("Session d'autorisation expirée.");
 
   const conf = await getConnectorConfig(connectorKey);
-  const { clientId, clientSecret } = appCredentials(conf);
+  const { clientId, clientSecret } = await resolveOAuthApp(connectorKey, st.org_id, conf);
+
   const redirectUri = `${origin.replace(/\/$/, "")}${callbackPath(connectorKey)}`;
 
   const body = new URLSearchParams({
@@ -678,7 +705,8 @@ export async function refreshUserToken(userId: string, connectorKey: string) {
   if (!def?.oauth || !row?.refresh_token) return { ok: false, reason: "no_refresh_token" as const };
 
   const conf = await getConnectorConfig(connectorKey);
-  const { clientId, clientSecret } = appCredentials(conf);
+  const { clientId, clientSecret } = await resolveOAuthApp(connectorKey, row.org_id, conf);
+
   const body = new URLSearchParams({
     grant_type: "refresh_token",
     refresh_token: row.refresh_token,

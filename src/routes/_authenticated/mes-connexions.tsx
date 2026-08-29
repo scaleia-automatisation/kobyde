@@ -61,7 +61,14 @@ function MesConnexionsPage() {
   const toggleFn = useServerFn(toggleMyConnection);
   const qc = useQueryClient();
 
-  const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
+  const list = useQuery({
+    queryKey: ["my-connections"],
+    queryFn: async () => {
+      const res = await listFn({ data: undefined });
+      if (res == null) throw new Error("Votre session a expiré : rechargez la page ou reconnectez-vous.");
+      return res;
+    },
+  });
   const items = useMemo(() => list.data ?? [], [list.data]);
 
   const [query, setQuery] = useState("");

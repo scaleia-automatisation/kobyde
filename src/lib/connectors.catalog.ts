@@ -362,15 +362,18 @@ export const CONNECTORS: ConnectorDef[] = [
   },
   {
     key: "stripe",
-    name: "Stripe",
+    name: "Stripe SaaS",
     category: "paiement",
-    description: "Paiements, abonnements et webhooks de facturation.",
+    description:
+      "Stripe de la plateforme : abonnements Kobyde, renouvellements, échecs de paiement et facturation du SaaS. Le Client ID Connect sert à autoriser les entreprises à brancher leur propre Stripe.",
     authType: "api_key",
     webhook: true,
     fields: [f("secret_key", "Secret Key")],
     optionalFields: [
-      { key: "webhook_secret", label: "Webhook Signing Secret", secret: true },
+      { key: "webhook_secret", label: "Webhook Signing Secret (abonnements SaaS)", secret: true },
       { key: "publishable_key", label: "Publishable Key", secret: false },
+      { key: "connect_client_id", label: "Connect Client ID (ca_…)", secret: false },
+      { key: "connect_webhook_secret", label: "Webhook Signing Secret (Connect entreprises)", secret: true },
     ],
   },
   {

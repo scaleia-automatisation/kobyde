@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { CheckCircle2, Link2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { OrgStripeCard } from "@/components/org-stripe-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,10 @@ function MesConnexionsPage() {
             nouvelle permission est nécessaire ou si vous révoquez l'accès.
           </p>
         </Card>
+
+        <OrgStripeCard />
+
+
 
         {items.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);

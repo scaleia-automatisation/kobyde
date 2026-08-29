@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StripeSaasPanel } from "@/components/admin/stripe-saas-panel";
 import {
   Select,
   SelectContent,
@@ -86,6 +87,7 @@ function SuperAdminPage() {
   const planFn = useServerFn(changePlatformUserPlan);
   const qc = useQueryClient();
 
+  const [tab, setTab] = useState("dashboard");
   const [search, setSearch] = useState("");
   const [applied, setApplied] = useState("");
 
@@ -163,7 +165,7 @@ function SuperAdminPage() {
         </Button>
       }
     >
-      <Tabs defaultValue="dashboard" className="space-y-6">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="agents">Agents</TabsTrigger>
@@ -171,6 +173,7 @@ function SuperAdminPage() {
           <TabsTrigger value="comportement">Comportement</TabsTrigger>
           <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
           <TabsTrigger value="connecteurs">Connecteurs</TabsTrigger>
+          <TabsTrigger value="stripe-saas">Stripe SaaS</TabsTrigger>
           <TabsTrigger value="couts">Coûts API</TabsTrigger>
           <TabsTrigger value="tarifs">Tarifs</TabsTrigger>
           <TabsTrigger value="budgets">Budgets</TabsTrigger>
@@ -436,6 +439,10 @@ function SuperAdminPage() {
         <TabsContent value="connecteurs" className="space-y-4">
           <ConnectorsPanel />
           <ContentModelsPanel />
+        </TabsContent>
+
+        <TabsContent value="stripe-saas" className="space-y-4">
+          <StripeSaasPanel onConfigure={() => setTab("connecteurs")} />
         </TabsContent>
 
 

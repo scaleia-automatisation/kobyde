@@ -6,6 +6,7 @@
 
 import { ORG_CONNECTORS, ORG_CONNECTOR_MAP, type OrgConnectorDef } from "./org-connectors.catalog";
 import { callbackPath, productionBaseUrl, logConnectorCall } from "./connectors.server";
+import { CONNECTOR_MAP } from "./connectors.catalog";
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

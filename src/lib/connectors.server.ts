@@ -451,6 +451,24 @@ function appCredentials(conf: { config: Record<string, string>; secrets: Record<
   return { clientId, clientSecret };
 }
 
+/**
+ * Identifiants OAuth à utiliser : ceux de l'entreprise (« Mes connexions » → Configuration)
+ * en priorité, sinon ceux de la plateforme configurés par l'administrateur.
+ */
+async function resolveOAuthApp(
+  connectorKey: string,
+  orgId: string | null | undefined,
+  conf: { config: Record<string, string>; secrets: Record<string, string> } | null,
+) {
+  if (orgId) {
+    const { getOrgOAuthApp } = await import("./org-connectors.server");
+    const own = await getOrgOAuthApp(orgId, connectorKey);
+    if (own) return { ...own, source: "org" as const };
+  }
+  return { ...appCredentials(conf), source: "platform" as const };
+}
+
+
 /** Connexion utilisateur (ligne brute) — serveur uniquement. */
 async function getConnectionRow(userId: string, connectorKey: string) {
   const supabase = await db();

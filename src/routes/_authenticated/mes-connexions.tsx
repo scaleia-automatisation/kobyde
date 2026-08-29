@@ -286,9 +286,11 @@ function MesConnexionsPage() {
           );
         })}
 
-        {!items.length && !list.isLoading && (
+        {!filteredItems.length && !list.isLoading && (
           <Card className="p-6 text-sm text-muted-foreground">
-            Aucun service à connecter pour le moment. Votre administrateur doit d'abord activer les connecteurs.
+            {query.trim()
+              ? "Aucun connecteur ne correspond à votre recherche."
+              : "Aucun service à connecter pour le moment. Votre administrateur doit d'abord activer les connecteurs."}
           </Card>
         )}
       </div>

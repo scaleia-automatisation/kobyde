@@ -956,8 +956,75 @@ export async function listUserConnections(userId: string) {
         connectedAt: row?.connected_at ?? row?.created_at ?? null,
         lastUsedAt: row?.last_used_at ?? null,
         services: c.servicesCatalog,
+        platformManaged: false,
       };
     });
+
+  // Connecteurs gérés par l'administrateur (clés API / OAuth de la plateforme) :
+  // l'utilisateur n'a rien à saisir, il valide uniquement les usages autorisés.
+  const platformItems = connectors
+    .filter((c) => !c.userConnect && c.isEnabled && c.status === "configure")
+    .map((c) => {
+      const row = rows.get(c.key);
+      const granted = splitScopes(row?.scopes_granted ?? row?.scopes);
+      const services: { key: string; label: string }[] = (c.servicesCatalog ?? []) as any;
+      return {
+        key: c.key,
+        name: c.name,
+        description: c.description,
+        category: c.category,
+        authType: c.authType,
+        oauth: false,
+        available: true,
+        connected: Boolean(row && !row.revoked && granted.length > 0),
+        isActive: row ? row.is_active !== false : false,
+        needsReconnect: false,
+        account: null as string | null,
+        grantedScopes: granted,
+        grantedLabels: services.filter((s) => granted.includes(s.key)).map((s) => s.label),
+        missingLabels: services.filter((s) => !granted.includes(s.key)).map((s) => s.label),
+        expiresAt: null as string | null,
+        connectedAt: row?.connected_at ?? row?.created_at ?? null,
+        lastUsedAt: row?.last_used_at ?? null,
+        services,
+        platformManaged: true,
+      };
+    });
+
+  return [...userItems, ...platformItems];
+}
+
+/** Valide (ou met à jour) les usages autorisés d'un connecteur géré par l'administrateur. */
+export async function validatePlatformConnector(userId: string, connectorKey: string, scopes: string[]) {
+  const supabase = await db();
+  const clean = Array.from(new Set(scopes.filter(Boolean))).join(" ");
+  const { data: existing } = await supabase
+    .from("oauth_connections")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("provider", connectorKey)
+    .maybeSingle();
+
+  if (existing?.id) {
+    const { error } = await supabase
+      .from("oauth_connections")
+      .update({ scopes_granted: clean, revoked: false, is_active: true, status: "active" })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("oauth_connections").insert({
+      user_id: userId,
+      provider: connectorKey,
+      connector_key: connectorKey,
+      provider_user_id: userId,
+      scopes_granted: clean,
+      status: "active",
+      is_active: true,
+      connected_at: new Date().toISOString(),
+    } as any);
+    if (error) throw new Error(error.message);
+  }
+  return { ok: true, scopes: clean };
 }
 
 export async function setUserConnectionActive(userId: string, connectorKey: string, active: boolean) {

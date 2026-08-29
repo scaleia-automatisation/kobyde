@@ -46,6 +46,7 @@ import {
   VIDEO_CAMERA,
   detectKindLocal,
   platformLabel,
+  videoCaps,
   type ContentKind,
   type ContentModel,
   type ContentParams,

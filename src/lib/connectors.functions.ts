@@ -258,6 +258,18 @@ export const startConnection = createServerFn({ method: "POST" })
     }
   });
 
+export const validatePlatformScopes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { connectorKey: string; scopes: string[] }) =>
+    z
+      .object({ connectorKey: z.string().min(1).max(64), scopes: z.array(z.string().max(200)).max(50) })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { validatePlatformConnector } = await import("./connectors.server");
+    return validatePlatformConnector(context.userId, data.connectorKey, data.scopes);
+  });
+
 export const disconnectConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { connectorKey: string }) => z.object({ connectorKey: z.string().min(1).max(64) }).parse(d))

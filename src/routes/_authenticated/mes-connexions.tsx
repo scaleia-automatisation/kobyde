@@ -21,6 +21,7 @@ import {
   myConnections,
   startConnection,
   toggleMyConnection,
+  validatePlatformScopes,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP, scopeGroups } from "@/lib/connectors.catalog";
 
@@ -57,6 +58,7 @@ function MesConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
+  const validateFn = useServerFn(validatePlatformScopes);
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
@@ -78,6 +80,10 @@ function MesConnexionsPage() {
       const next = { ...prev };
       for (const c of items) {
         if (next[c.key]) continue;
+        if ((c as any).platformManaged) {
+          next[c.key] = [...(c.grantedScopes ?? [])];
+          continue;
+        }
         const def = CONNECTOR_MAP.get(c.key);
         const catalog = def?.oauth?.scopeCatalog ?? [];
         const required = catalog.filter((s) => s.required).map((s) => s.scope);
@@ -87,6 +93,19 @@ function MesConnexionsPage() {
       return next;
     });
   }, [items]);
+
+  const validateScopes = async (key: string) => {
+    setBusy(key);
+    try {
+      await validateFn({ data: { connectorKey: key, scopes: selected[key] ?? [] } });
+      toast.success("Autorisations enregistrées.");
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Enregistrement impossible.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const toggleScope = (key: string, scope: string, on: boolean) =>
     setSelected((prev) => {
@@ -185,9 +204,61 @@ function MesConnexionsPage() {
 
         {filteredItems.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);
-          const groups = scopeGroups(def);
+          const platform = (c as any).platformManaged === true;
+          const groups = platform
+            ? [{ label: "Usages autorisés", scopes: ((c as any).services ?? []).map((s: any) => ({ scope: s.key, label: s.label, required: false })) }]
+            : scopeGroups(def);
           const chosen = selected[c.key] ?? [];
           const showPerms = openPerms[c.key] ?? !c.connected;
+          if (platform) {
+            return (
+              <Card key={c.key} className="space-y-4 p-5">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Link2 className="size-4 shrink-0 text-muted-foreground" />
+                    <h3 className="truncate font-medium">{c.name}</h3>
+                    <Badge className="shrink-0" variant="outline">
+                      Géré par l'administrateur
+                    </Badge>
+                    {c.connected && (
+                      <Badge className="shrink-0 bg-emerald-500/15 text-emerald-600">Autorisations validées</Badge>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Button
+                      size="sm"
+                      disabled={busy === c.key || !(groups[0]?.scopes.length)}
+                      onClick={() => void validateScopes(c.key)}
+                    >
+                      {c.connected ? "Mettre à jour" : "Valider les autorisations"}
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground">{c.description}</p>
+
+                {groups[0]?.scopes.length ? (
+                  <div className="space-y-2 rounded-lg border p-4">
+                    <p className="text-sm font-medium">Autorisations à valider</p>
+                    {groups[0].scopes.map((s: any) => (
+                      <label key={s.scope} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={chosen.includes(s.scope)}
+                          onCheckedChange={(v) => toggleScope(c.key, s.scope, Boolean(v))}
+                        />
+                        <span>{s.label}</span>
+                      </label>
+                    ))}
+                    <p className="text-xs text-muted-foreground">
+                      Aucune clé à saisir : ce service utilise les identifiants configurés par votre administrateur.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Aucune autorisation spécifique à valider.</p>
+                )}
+              </Card>
+            );
+          }
           return (
             <Card key={c.key} className="space-y-4 p-5">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
@@ -258,7 +329,7 @@ function MesConnexionsPage() {
                   {groups.map((g) => (
                     <div key={g.label} className="space-y-1.5">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
-                      {g.scopes.map((s) => (
+                      {g.scopes.map((s: { scope: string; label: string; required?: boolean }) => (
                         <label key={s.scope} className="flex items-center gap-2 text-sm">
                           <Checkbox
                             checked={chosen.includes(s.scope)}

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -130,6 +130,11 @@ function ConnecteursAdminPage() {
     for (const c of items) map.set(c.category, [...(map.get(c.category) ?? []), c]);
     return Array.from(map, ([cat, list]) => ({ cat, list }));
   }, [items]);
+
+  // DEBUG
+  useEffect(() => {
+    console.log("[ConnecteursDebug] list", { data: list.data, error: list.error, isLoading: list.isLoading, isFetching: list.isFetching });
+  }, [list.data, list.error, list.isLoading, list.isFetching]);
 
   return (
     <AppShell title="Connecteurs" subtitle="Configuration centrale des API, applications OAuth et webhooks">

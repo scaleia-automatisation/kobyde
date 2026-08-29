@@ -329,13 +329,14 @@ export async function testConnector(key: string) {
       return finish(true, "Appel API Meta réussi (200) — jeton d'application obtenu.");
     }
     if (key === "notion") {
-      const tok = s["api_key"] ?? s["access_token"] ?? s["token"] ?? "";
-      if (!tok) return finish(false, "Clé manquante : renseignez le jeton d'intégration Notion avant de tester.");
-      const p = await probe("https://api.notion.com/v1/users/me", {
-        headers: { Authorization: `Bearer ${tok}`, "Notion-Version": "2022-06-28" },
-      });
-      if (!p.ok) return finish(false, providerError("Notion", p));
-      return finish(true, `Appel API Notion réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
+      const { clientId, clientSecret } = appCredentials(conf);
+      if (!clientId || !clientSecret) {
+        return finish(false, "Configuration OAuth incomplète : renseignez le Client ID et le Client Secret Notion.");
+      }
+      return finish(
+        true,
+        "Configuration OAuth Notion complète — les utilisateurs pourront connecter leur espace depuis « Mes connexions ».",
+      );
     }
     if (key === "slack") {
       const tok = s["bot_token"] ?? s["access_token"] ?? s["api_key"] ?? "";
@@ -355,18 +356,26 @@ export async function testConnector(key: string) {
     if (key === "seedance") {
       const miss = await need("api_key", "la clé API Seedance");
       if (miss) return miss;
+      const key = s["api_key"] ?? "";
+      if (!key.startsWith("ark-")) {
+        return finish(
+          false,
+          "Format de clé Seedance incorrect. ModelArk attend une clé commençant par 'ark-'. La clé actuelle ne sera pas acceptée.",
+        );
+      }
       const base = conf.config["api_base"] || "https://ark.ap-southeast.bytepluses.com/api/v3";
       const p = await probe(`${base}/contents/generations/tasks?page_size=1`, {
-        headers: { Authorization: `Bearer ${s["api_key"]}` },
+        headers: { Authorization: `Bearer ${key}` },
       });
       if (!p.ok) return finish(false, providerError("Seedance", p));
       return finish(true, "Appel API Seedance réussi (200) — clé valide.");
     }
     if (key === "kling") {
+      const apiKey = s["api_key"] ?? "";
       const ak = conf.config["access_key"] ?? s["access_key"] ?? "";
       const sk = s["secret_key"] ?? "";
-      const token = ak && sk ? await klingJwt(ak, sk) : (s["api_key"] ?? "");
-      if (!token) return finish(false, "Clé manquante : renseignez la clé API Kling.");
+      const token = apiKey ? apiKey : ak && sk ? await klingJwt(ak, sk) : "";
+      if (!token) return finish(false, "Clé manquante : renseignez la clé API Kling ou la paire Access Key + Secret Key.");
       const base = conf.config["api_base"] || "https://api-singapore.klingai.com";
       const p = await probe(`${base}/v1/videos/text2video?pageNum=1&pageSize=1`, {
         headers: { Authorization: `Bearer ${token}` },

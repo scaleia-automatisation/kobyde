@@ -2399,6 +2399,62 @@ export type Database = {
           },
         ]
       }
+      org_connector_credentials: {
+        Row: {
+          config: Json
+          configured_fields: string[]
+          created_at: string
+          id: string
+          last_error: string | null
+          last_test_at: string | null
+          last_test_ok: boolean | null
+          org_id: string
+          provider: string
+          secrets_encrypted: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config?: Json
+          configured_fields?: string[]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_test_at?: string | null
+          last_test_ok?: boolean | null
+          org_id: string
+          provider: string
+          secrets_encrypted?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json
+          configured_fields?: string[]
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_test_at?: string | null
+          last_test_ok?: boolean | null
+          org_id?: string
+          provider?: string
+          secrets_encrypted?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_connector_credentials_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_stripe_accounts: {
         Row: {
           business_name: string | null

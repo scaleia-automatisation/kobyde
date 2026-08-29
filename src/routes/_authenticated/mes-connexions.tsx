@@ -304,28 +304,27 @@ function MesConnexionsPage() {
 
               {showPerms && groups.length > 0 && (
                 <div className="space-y-3 rounded-lg border p-4">
-                  <p className="text-sm font-medium">Autorisations demandées</p>
+                  <p className="text-sm font-medium">
+                    Autorisations demandées — toutes activées automatiquement ({chosen.length})
+                  </p>
                   {groups.map((g) => (
                     <div key={g.label} className="space-y-1.5">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
                       {g.scopes.map((s: { scope: string; label: string; required?: boolean }) => (
-                        <label key={s.scope} className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={chosen.includes(s.scope)}
-                            disabled={s.required}
-                            onCheckedChange={(v) => toggleScope(c.key, s.scope, Boolean(v))}
-                          />
+                        <div key={s.scope} className="flex items-center gap-2 text-sm text-emerald-700">
+                          <CheckCircle2 className="size-3.5" />
                           <span>{s.label}</span>
-                          {s.required && <span className="text-xs text-muted-foreground">(obligatoire)</span>}
-                        </label>
+                        </div>
                       ))}
                     </div>
                   ))}
                   <p className="text-xs text-muted-foreground">
-                    Le consentement final est demandé par la plateforme elle-même.
+                    Toutes les autorisations sont demandées en une seule fois : le consentement final est donné par la
+                    plateforme elle-même.
                   </p>
                 </div>
               )}
+
 
               <div className="flex flex-wrap gap-2">
                 {!c.connected ? (

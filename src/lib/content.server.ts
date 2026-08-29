@@ -211,17 +211,18 @@ function finalPrompt(base: string, brief: string, params: ContentParams): string
 }
 
 /** Génère une image et renvoie le base64 PNG. */
-export async function generateImageB64(model: ContentModel, prompt: string): Promise<string> {
+export async function generateImageB64(model: ContentModel, prompt: string, params: ContentParams = {}): Promise<string> {
   const engine = model.engine;
   if (!engine) throw new Error(`Le modèle « ${model.label} » n'est pas encore raccordé à une API. Choisissez un autre modèle.`);
 
   const isOpenAI = engine.startsWith("openai/");
+  const quality = ["low", "medium", "high"].includes(String(params.quality)) ? String(params.quality) : "low";
   const body = isOpenAI
     ? {
         model: engine,
         prompt,
-        size: "1024x1024",
-        quality: "low",
+        size: openaiSize(params.ratio),
+        quality,
         n: 1,
       }
     : {

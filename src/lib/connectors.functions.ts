@@ -276,73 +276,30 @@ export const toggleMyConnection = createServerFn({ method: "POST" })
     return setUserConnectionActive(context.userId, data.connectorKey, data.active);
   });
 
-export const saveMyManualConnection = createServerFn({ method: "POST" })
+export const adminConnectorLogs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { connectorKey: string; values: Record<string, string> }) =>
+  .inputValidator((d: { provider?: string; userId?: string; orgId?: string; agentKey?: string; status?: string; since?: string }) =>
     z
       .object({
-        connectorKey: z.string().min(1).max(64),
-        values: z.record(z.string(), z.string()),
+        provider: z.string().max(64).optional(),
+        userId: z.string().uuid().optional(),
+        orgId: z.string().uuid().optional(),
+        agentKey: z.string().max(64).optional(),
+        status: z.string().max(32).optional(),
+        since: z.string().max(40).optional(),
       })
-      .parse(d),
+      .parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
-    // Les clés API, identifiants client/secret OAuth et serveurs MCP sont gérés
-    // uniquement par l'administrateur : l'utilisateur ne saisit jamais d'identifiants.
-    const { CONNECTOR_MAP } = await import("./connectors.catalog");
-    const def = CONNECTOR_MAP.get(data.connectorKey);
-    if (!def || def.authType !== "oauth") {
-      throw new Error(
-        "Les identifiants de ce service sont gérés par l'administrateur. Vous n'avez rien à renseigner.",
-      );
-    }
-    const { data: profile } = await (context.supabase as any)
-      .from("profiles")
-      .select("current_org_id")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    const { saveUserManualConnection } = await import("./connectors.server");
-    return saveUserManualConnection({
-      userId: context.userId,
-      orgId: profile?.current_org_id ?? null,
-      connectorKey: data.connectorKey,
-      values: data.values,
-    });
+    await assertPlatformAdmin(context.supabase);
+    const { listConnectorLogs } = await import("./connectors.server");
+    return listConnectorLogs(data as any);
   });
 
-/** Active un connecteur non-OAuth (clé API, MCP…) pour l'utilisateur, via la configuration de l'administrateur. */
-export const enableManagedConnection = createServerFn({ method: "POST" })
+export const adminConnectorStats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { connectorKey: string; services?: string[] }) =>
-    z
-      .object({
-        connectorKey: z.string().min(1).max(64),
-        services: z.array(z.string().max(120)).max(50).optional(),
-      })
-      .parse(d),
-  )
-  .handler(async ({ data, context }) => {
-    const { data: profile } = await (context.supabase as any)
-      .from("profiles")
-      .select("current_org_id")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    const { enableManagedUserConnection } = await import("./connectors.server");
-    return enableManagedUserConnection({
-      userId: context.userId,
-      orgId: profile?.current_org_id ?? null,
-      connectorKey: data.connectorKey,
-      ...(data.services ? { services: data.services } : {}),
-    });
-  });
-
-
-
-
-export const testMyConnection = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { connectorKey: string }) => z.object({ connectorKey: z.string().min(1).max(64) }).parse(d))
-  .handler(async ({ data, context }) => {
-    const { testUserConnection } = await import("./connectors.server");
-    return testUserConnection(context.userId, data.connectorKey);
+  .handler(async ({ context }) => {
+    await assertPlatformAdmin(context.supabase);
+    const { connectorStats } = await import("./connectors.server");
+    return connectorStats();
   });

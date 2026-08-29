@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Callback OAuth générique des connecteurs (Google, Meta, LinkedIn, TikTok, Microsoft…). */
+/** Callback OAuth générique des connecteurs (Google, Meta, LinkedIn, TikTok, Slack, Notion…). */
 export const Route = createFileRoute("/api/public/connectors/$connector/callback")({
   server: {
     handlers: {

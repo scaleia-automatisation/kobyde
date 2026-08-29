@@ -914,6 +914,90 @@ export type Database = {
           },
         ]
       }
+      connector_call_logs: {
+        Row: {
+          account_id: string | null
+          action: string | null
+          agent_key: string | null
+          cost_eur: number | null
+          created_at: string
+          credits: number | null
+          duration_ms: number | null
+          endpoint: string | null
+          error: string | null
+          id: string
+          org_id: string | null
+          provider: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          action?: string | null
+          agent_key?: string | null
+          cost_eur?: number | null
+          created_at?: string
+          credits?: number | null
+          duration_ms?: number | null
+          endpoint?: string | null
+          error?: string | null
+          id?: string
+          org_id?: string | null
+          provider: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          action?: string | null
+          agent_key?: string | null
+          cost_eur?: number | null
+          created_at?: string
+          credits?: number | null
+          duration_ms?: number | null
+          endpoint?: string | null
+          error?: string | null
+          id?: string
+          org_id?: string | null
+          provider?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      connector_executions: {
+        Row: {
+          action: string | null
+          created_at: string
+          id: string
+          idempotency_key: string
+          org_id: string | null
+          provider: string | null
+          result: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          org_id?: string | null
+          provider?: string | null
+          result?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          org_id?: string | null
+          provider?: string | null
+          result?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       content_creations: {
         Row: {
           assets: Json
@@ -2124,63 +2208,87 @@ export type Database = {
         Row: {
           access_token: string | null
           account_label: string | null
+          connected_at: string | null
           connector_key: string | null
           created_at: string
           expires_at: string | null
           id: string
           is_active: boolean
+          last_refresh_at: string | null
           last_used_at: string | null
           metadata: Json | null
           org_id: string | null
           provider: string
+          provider_account_id: string | null
           provider_email: string | null
           provider_user_id: string
           refresh_token: string | null
+          refresh_token_expires_at: string | null
           revoked: boolean
+          revoked_at: string | null
           scopes: string | null
+          scopes_granted: string | null
+          scopes_requested: string | null
           status: string
+          token_type: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           access_token?: string | null
           account_label?: string | null
+          connected_at?: string | null
           connector_key?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          last_refresh_at?: string | null
           last_used_at?: string | null
           metadata?: Json | null
           org_id?: string | null
           provider?: string
+          provider_account_id?: string | null
           provider_email?: string | null
           provider_user_id: string
           refresh_token?: string | null
+          refresh_token_expires_at?: string | null
           revoked?: boolean
+          revoked_at?: string | null
           scopes?: string | null
+          scopes_granted?: string | null
+          scopes_requested?: string | null
           status?: string
+          token_type?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           access_token?: string | null
           account_label?: string | null
+          connected_at?: string | null
           connector_key?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          last_refresh_at?: string | null
           last_used_at?: string | null
           metadata?: Json | null
           org_id?: string | null
           provider?: string
+          provider_account_id?: string | null
           provider_email?: string | null
           provider_user_id?: string
           refresh_token?: string | null
+          refresh_token_expires_at?: string | null
           revoked?: boolean
+          revoked_at?: string | null
           scopes?: string | null
+          scopes_granted?: string | null
+          scopes_requested?: string | null
           status?: string
+          token_type?: string | null
           updated_at?: string
           user_id?: string | null
         }

@@ -324,16 +324,17 @@ async function klingToken(accessKey: string, secretKey: string): Promise<string>
   return `${head}.${payload}.${b64url(sig)}`;
 }
 
-/** En-têtes authentifiés pour l'API officielle Kling. */
+/** En-têtes authentifiés pour l'API officielle Kling (clé API simple ou couple Access/Secret Key). */
 async function klingHeaders(): Promise<Record<string, string>> {
   const s = await connectorSecrets("kling");
+  const apiKey = s["api_key"] || process.env["KLING_API_KEY"] || "";
   const accessKey = s["access_key"] || process.env["KLING_ACCESS_KEY"] || "";
   const secretKey = s["secret_key"] || process.env["KLING_SECRET_KEY"] || "";
-  if (!accessKey || !secretKey)
-    throw new Error("Clés Kling manquantes : renseignez l'Access Key et la Secret Key du connecteur Kling AI.");
+  const token = accessKey && secretKey ? await klingToken(accessKey, secretKey) : apiKey;
+  if (!token) throw new Error("Clés Kling manquantes : renseignez la clé API du connecteur Kling AI.");
   return {
     "content-type": "application/json",
-    authorization: `Bearer ${await klingToken(accessKey, secretKey)}`,
+    authorization: `Bearer ${token}`,
   };
 }
 

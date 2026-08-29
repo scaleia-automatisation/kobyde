@@ -365,10 +365,11 @@ export async function testConnector(key: string) {
     if (key === "kling") {
       const ak = conf.config["access_key"] ?? s["access_key"] ?? "";
       const sk = s["secret_key"] ?? "";
-      if (!ak || !sk) return finish(false, "Clés manquantes : renseignez l'Access Key et la Secret Key Kling.");
+      const token = ak && sk ? await klingJwt(ak, sk) : (s["api_key"] ?? "");
+      if (!token) return finish(false, "Clé manquante : renseignez la clé API Kling.");
       const base = conf.config["api_base"] || "https://api-singapore.klingai.com";
       const p = await probe(`${base}/v1/videos/text2video?pageNum=1&pageSize=1`, {
-        headers: { Authorization: `Bearer ${await klingJwt(ak, sk)}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!p.ok) return finish(false, providerError("Kling", p));
       return finish(true, "Appel API Kling réussi (200) — identifiants valides.");

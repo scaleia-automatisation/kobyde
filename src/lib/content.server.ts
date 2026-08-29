@@ -497,25 +497,51 @@ export async function pollVideoJob(id: string): Promise<{ status: string; bytes?
     return { status: "completed", bytes: new Uint8Array(await dl.arrayBuffer()) };
   }
 
-  if (provider === "fal") {
-    const key = await providerKey("fal", "FAL_KEY");
-    const st = await fetch(`https://queue.fal.run/${engine}/requests/${realId}/status`, {
-      headers: { authorization: `Key ${key}` },
-    });
-    if (!st.ok) throw gatewayError(st.status);
-    const status = (await st.json()) as any;
-    if (String(status?.status).toUpperCase() !== "COMPLETED") return { status: "in_progress" };
-    const out = await fetch(`https://queue.fal.run/${engine}/requests/${realId}`, {
-      headers: { authorization: `Key ${key}` },
-    });
-    if (!out.ok) throw gatewayError(out.status);
-    const result = (await out.json()) as any;
-    const url = result?.video?.url ?? result?.videos?.[0]?.url;
+  /** Télécharge la vidéo finale depuis l'URL renvoyée par le fournisseur. */
+  const download = async (url?: string) => {
     if (!url) return { status: "failed", error: "Le modèle n'a renvoyé aucune vidéo." };
     const dl = await fetch(url);
     if (!dl.ok) throw new Error("Téléchargement de la vidéo impossible.");
     return { status: "completed", bytes: new Uint8Array(await dl.arrayBuffer()) };
+  };
+
+  if (provider === "kling") {
+    const res = await fetch(`${KLING_BASE}/v1/videos/text2video/${realId}`, { headers: await klingHeaders() });
+    if (!res.ok) throw gatewayError(res.status);
+    const job = (await res.json()) as any;
+    const st = job?.data?.task_status;
+    if (st === "failed") return { status: "failed", error: job?.data?.task_status_msg ?? "Génération Kling échouée." };
+    if (st !== "succeed") return { status: "in_progress" };
+    return download(job?.data?.task_result?.videos?.[0]?.url);
   }
+
+  if (provider === "seedance") {
+    const key = await providerKey("seedance", "SEEDANCE_API_KEY");
+    const res = await fetch(`${SEEDANCE_BASE}/contents/generations/tasks/${realId}`, {
+      headers: { authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) throw gatewayError(res.status);
+    const job = (await res.json()) as any;
+    const st = String(job?.status ?? "").toLowerCase();
+    if (st === "failed" || st === "cancelled")
+      return { status: "failed", error: job?.error?.message ?? "Génération Seedance échouée." };
+    if (st !== "succeeded") return { status: "in_progress" };
+    return download(job?.content?.video_url);
+  }
+
+  if (provider === "xai") {
+    const key = await providerKey("grok", "XAI_API_KEY");
+    const res = await fetch(`${XAI_BASE}/v1/videos/generations/${realId}`, {
+      headers: { authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) throw gatewayError(res.status);
+    const job = (await res.json()) as any;
+    const st = String(job?.status ?? "").toLowerCase();
+    if (st === "failed") return { status: "failed", error: job?.error?.message ?? "Génération Grok échouée." };
+    if (st && !["completed", "succeeded", "success"].includes(st)) return { status: "in_progress" };
+    return download(job?.video?.url ?? job?.data?.[0]?.url ?? job?.url);
+  }
+
 
   const res = await fetch(`${GATEWAY}/v1/videos/${realId}`, { headers: { authorization: `Bearer ${apiKey()}` } });
   if (!res.ok) throw gatewayError(res.status);

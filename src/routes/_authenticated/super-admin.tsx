@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StripeSaasPanel } from "@/components/admin/stripe-saas-panel";
 import {
   Select,
   SelectContent,
@@ -86,6 +87,7 @@ function SuperAdminPage() {
   const planFn = useServerFn(changePlatformUserPlan);
   const qc = useQueryClient();
 
+  const [tab, setTab] = useState("dashboard");
   const [search, setSearch] = useState("");
   const [applied, setApplied] = useState("");
 

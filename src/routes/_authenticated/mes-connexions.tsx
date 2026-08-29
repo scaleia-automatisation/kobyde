@@ -78,6 +78,10 @@ function MesConnexionsPage() {
       const next = { ...prev };
       for (const c of items) {
         if (next[c.key]) continue;
+        if ((c as any).platformManaged) {
+          next[c.key] = [...(c.grantedScopes ?? [])];
+          continue;
+        }
         const def = CONNECTOR_MAP.get(c.key);
         const catalog = def?.oauth?.scopeCatalog ?? [];
         const required = catalog.filter((s) => s.required).map((s) => s.scope);
@@ -87,6 +91,19 @@ function MesConnexionsPage() {
       return next;
     });
   }, [items]);
+
+  const validateScopes = async (key: string) => {
+    setBusy(key);
+    try {
+      await validateFn({ data: { connectorKey: key, scopes: selected[key] ?? [] } });
+      toast.success("Autorisations enregistrées.");
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Enregistrement impossible.");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const toggleScope = (key: string, scope: string, on: boolean) =>
     setSelected((prev) => {

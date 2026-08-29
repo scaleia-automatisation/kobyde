@@ -18,6 +18,8 @@ export type ScopeOption = {
   label: string;
   /** Scope obligatoire (toujours coché, non décochable) */
   required?: boolean;
+  /** Catégorie affichée à l'utilisateur (Gmail, Agenda, Drive…) */
+  group?: string;
 };
 
 export type ConnectorDef = {
@@ -39,6 +41,7 @@ export type ConnectorDef = {
   oauth?: {
     authorizeUrl: string;
     tokenUrl: string;
+    revokeUrl?: string;
     scopeSeparator?: string;
     defaultScopes: string[];
     /** Autorisations cochables par l'utilisateur avant de connecter son compte */
@@ -107,7 +110,6 @@ export const CONNECTORS: ConnectorDef[] = [
     category: "ia",
     description: "Recherche web, veille, analyse concurrentielle et enrichissement de données.",
     authType: "api_key",
-    userConnect: true,
     fields: [f("api_key", "Gemini API Key")],
     services: [
       { key: "web_search", label: "Recherche web en temps réel (Google Search Grounding)" },
@@ -133,6 +135,11 @@ export const CONNECTORS: ConnectorDef[] = [
       authorizeUrl: "https://api.notion.com/v1/oauth/authorize",
       tokenUrl: "https://api.notion.com/v1/oauth/token",
       defaultScopes: [],
+      scopeCatalog: [
+        { group: "Notion", scope: "read", label: "Lire les pages et bases de données partagées", required: true },
+        { group: "Notion", scope: "insert", label: "Créer des pages" },
+        { group: "Notion", scope: "update", label: "Modifier des pages" },
+      ],
     },
   },
   {
@@ -153,19 +160,19 @@ export const CONNECTORS: ConnectorDef[] = [
       scopeSeparator: ",",
       defaultScopes: ["chat:write", "channels:read", "users:read"],
       scopeCatalog: [
-        { scope: "chat:write", label: "Envoyer des messages", required: true },
-        { scope: "channels:read", label: "Lire la liste des canaux" },
-        { scope: "channels:history", label: "Lire l'historique des canaux" },
-        { scope: "users:read", label: "Voir les membres de l'espace" },
-        { scope: "files:write", label: "Partager des fichiers" },
+        { group: "Slack", scope: "chat:write", label: "Envoyer des messages", required: true },
+        { group: "Slack", scope: "channels:read", label: "Lire la liste des canaux" },
+        { group: "Slack", scope: "channels:history", label: "Lire l'historique des canaux" },
+        { group: "Slack", scope: "users:read", label: "Voir les membres de l'espace" },
+        { group: "Slack", scope: "files:write", label: "Partager des fichiers" },
       ],
     },
   },
   {
     key: "google",
-    name: "Google Workspace",
+    name: "Google",
     category: "productivite",
-    description: "Gmail, Agenda, Drive, Docs et Sheets des comptes Google autorisés.",
+    description: "Gmail, Agenda, Drive, Docs, Sheets, Business Profile, Search Console et Analytics du compte Google autorisé.",
     authType: "oauth",
     userConnect: true,
     fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
@@ -175,40 +182,6 @@ export const CONNECTORS: ConnectorDef[] = [
       { key: "drive", label: "Google Drive" },
       { key: "docs", label: "Google Docs" },
       { key: "sheets", label: "Google Sheets" },
-    ],
-    oauth: {
-      authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-      tokenUrl: "https://oauth2.googleapis.com/token",
-      defaultScopes: [
-        "openid",
-        "email",
-        "profile",
-        "https://www.googleapis.com/auth/gmail.send",
-        "https://www.googleapis.com/auth/calendar.events",
-      ],
-      scopeCatalog: [
-        { scope: "openid", label: "Identité du compte Google", required: true },
-        { scope: "email", label: "Adresse email", required: true },
-        { scope: "profile", label: "Profil (nom, photo)", required: true },
-        { scope: "https://www.googleapis.com/auth/gmail.send", label: "Gmail — envoyer des emails" },
-        { scope: "https://www.googleapis.com/auth/gmail.readonly", label: "Gmail — lire les emails" },
-        { scope: "https://www.googleapis.com/auth/calendar.events", label: "Agenda — créer et modifier des événements" },
-        { scope: "https://www.googleapis.com/auth/calendar.readonly", label: "Agenda — consulter le planning" },
-        { scope: "https://www.googleapis.com/auth/drive.file", label: "Drive — gérer les fichiers créés par Kobyde" },
-        { scope: "https://www.googleapis.com/auth/documents", label: "Docs — créer et modifier des documents" },
-        { scope: "https://www.googleapis.com/auth/spreadsheets", label: "Sheets — créer et modifier des feuilles" },
-      ],
-    },
-  },
-  {
-    key: "google_business",
-    name: "Google Business & Analytics",
-    category: "productivite",
-    description: "Google Business Profile, Search Console et Analytics des comptes autorisés.",
-    authType: "oauth",
-    userConnect: true,
-    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
-    services: [
       { key: "business_profile", label: "Google Business Profile" },
       { key: "search_console", label: "Search Console" },
       { key: "analytics", label: "Google Analytics" },
@@ -216,13 +189,25 @@ export const CONNECTORS: ConnectorDef[] = [
     oauth: {
       authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
-      defaultScopes: ["openid", "email", "https://www.googleapis.com/auth/business.manage"],
+      revokeUrl: "https://oauth2.googleapis.com/revoke",
+      defaultScopes: ["openid", "email", "profile"],
       scopeCatalog: [
-        { scope: "openid", label: "Identité du compte Google", required: true },
-        { scope: "email", label: "Adresse email", required: true },
-        { scope: "https://www.googleapis.com/auth/business.manage", label: "Google Business Profile — gérer la fiche" },
-        { scope: "https://www.googleapis.com/auth/webmasters.readonly", label: "Search Console — consulter les performances" },
-        { scope: "https://www.googleapis.com/auth/analytics.readonly", label: "Google Analytics — consulter les statistiques" },
+        { group: "Identité", scope: "openid", label: "Identité du compte Google", required: true },
+        { group: "Identité", scope: "profile", label: "Profil (nom, photo)", required: true },
+        { group: "Identité", scope: "email", label: "Adresse email", required: true },
+        { group: "Gmail", scope: "https://www.googleapis.com/auth/gmail.readonly", label: "Lire mes emails" },
+        { group: "Gmail", scope: "https://www.googleapis.com/auth/gmail.modify", label: "Modifier mes emails" },
+        { group: "Gmail", scope: "https://www.googleapis.com/auth/gmail.send", label: "Envoyer des emails en mon nom" },
+        { group: "Agenda", scope: "https://www.googleapis.com/auth/calendar.readonly", label: "Lire mon calendrier" },
+        { group: "Agenda", scope: "https://www.googleapis.com/auth/calendar.events", label: "Créer et modifier mes événements" },
+        { group: "Drive", scope: "https://www.googleapis.com/auth/drive.readonly", label: "Lire mes fichiers" },
+        { group: "Drive", scope: "https://www.googleapis.com/auth/drive.file", label: "Accéder aux fichiers créés ou utilisés par Kobyde" },
+        { group: "Docs", scope: "https://www.googleapis.com/auth/documents", label: "Lire et rédiger les documents nécessaires" },
+        { group: "Sheets", scope: "https://www.googleapis.com/auth/spreadsheets.readonly", label: "Lire mes feuilles de calcul" },
+        { group: "Sheets", scope: "https://www.googleapis.com/auth/spreadsheets", label: "Modifier mes feuilles de calcul" },
+        { group: "Google Business", scope: "https://www.googleapis.com/auth/business.manage", label: "Lire ma fiche établissement et gérer les réponses aux avis" },
+        { group: "Search Console", scope: "https://www.googleapis.com/auth/webmasters.readonly", label: "Lire les données Search Console" },
+        { group: "Analytics", scope: "https://www.googleapis.com/auth/analytics.readonly", label: "Lire les données Analytics" },
       ],
     },
   },
@@ -300,36 +285,6 @@ export const CONNECTORS: ConnectorDef[] = [
     },
   },
   {
-    key: "microsoft",
-    name: "Microsoft 365",
-    category: "productivite",
-    description: "Outlook, Calendrier et Teams des comptes Microsoft autorisés.",
-    authType: "oauth",
-    userConnect: true,
-    fields: [f("client_id", "Client ID", false), f("client_secret", "Client Secret")],
-    optionalFields: [{ key: "tenant_id", label: "Tenant ID (si nécessaire)", secret: false }],
-    services: [
-      { key: "outlook", label: "Outlook" },
-      { key: "calendar", label: "Microsoft Calendar" },
-      { key: "teams", label: "Microsoft Teams" },
-    ],
-    oauth: {
-      authorizeUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-      tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-      defaultScopes: ["offline_access", "openid", "email", "Mail.Send", "Calendars.ReadWrite"],
-      scopeCatalog: [
-        { scope: "offline_access", label: "Maintenir la connexion active", required: true },
-        { scope: "openid", label: "Identité Microsoft", required: true },
-        { scope: "email", label: "Adresse email", required: true },
-        { scope: "Mail.Send", label: "Outlook — envoyer des emails" },
-        { scope: "Mail.Read", label: "Outlook — lire les emails" },
-        { scope: "Calendars.ReadWrite", label: "Calendrier — créer et modifier des événements" },
-        { scope: "Files.ReadWrite", label: "OneDrive — gérer les fichiers" },
-        { scope: "ChannelMessage.Send", label: "Teams — envoyer des messages" },
-      ],
-    },
-  },
-  {
     key: "apify",
     name: "Apify",
     category: "recherche",
@@ -402,7 +357,11 @@ export const CONNECTORS: ConnectorDef[] = [
     authType: "api_key",
     webhook: true,
     fields: [f("access_token", "Access Token"), f("phone_number_id", "Phone Number ID", false)],
-    optionalFields: [{ key: "business_account_id", label: "Business Account ID", secret: false }],
+    optionalFields: [
+      { key: "business_account_id", label: "Business Account ID", secret: false },
+      { key: "webhook_verify_token", label: "Webhook Verify Token", secret: true },
+      { key: "webhook_secret", label: "Webhook Secret", secret: true },
+    ],
   },
   {
     key: "fcm",
@@ -448,3 +407,14 @@ export const USER_CONNECTORS = CONNECTORS.filter((c) => c.userConnect);
 
 export const maskSecret = (v?: string | null) =>
   !v ? "" : v.length <= 8 ? "••••" : `${v.slice(0, 3)}${"•".repeat(12)}${v.slice(-4)}`;
+
+/** Regroupe les autorisations d'un connecteur par catégorie affichable. */
+export function scopeGroups(def?: ConnectorDef) {
+  const catalog = def?.oauth?.scopeCatalog ?? [];
+  const groups = new Map<string, ScopeOption[]>();
+  for (const s of catalog) {
+    const g = s.group ?? def?.name ?? "Autorisations";
+    groups.set(g, [...(groups.get(g) ?? []), s]);
+  }
+  return Array.from(groups, ([label, scopes]) => ({ label, scopes }));
+}

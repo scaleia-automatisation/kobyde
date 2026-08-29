@@ -301,6 +301,19 @@ export async function testConnector(key: string) {
       const cur = p.json?.available?.[0]?.currency?.toUpperCase?.() ?? "";
       return finish(true, `Appel API Stripe réussi (200)${cur ? ` — solde en ${cur}` : ""}.`);
     }
+    if (key === "systemeio") {
+      const miss = await need("api_key", "le jeton API Systeme.io");
+      if (miss) return miss;
+      const p = await probe("https://api.systeme.io/api/contacts?page=1&limit=1", {
+        headers: { "X-API-Key": s["api_key"] ?? "", Accept: "application/json" },
+      });
+      if (!p.ok) return finish(false, providerError("Systeme.io", p));
+      const total = p.json?.meta?.total ?? p.json?.hydra?.totalItems;
+      return finish(
+        true,
+        `Appel API Systeme.io réussi (200)${typeof total === "number" ? ` — ${total} contact(s) dans le compte` : ""}.`,
+      );
+    }
     if (key === "resend") {
       const miss = await need("api_key", "la clé API Resend");
       if (miss) return miss;

@@ -143,9 +143,21 @@ function MesConnexionsPage() {
   return (
     <AppShell
       title="Mes connexions"
-      subtitle="Connectez vos comptes une seule fois : aucune clé technique à renseigner"
+      subtitle="Configurez les identifiants de votre entreprise, puis autorisez vos comptes"
     >
+      <Tabs defaultValue="configuration" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="configuration">Configuration</TabsTrigger>
+          <TabsTrigger value="comptes">Mes comptes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="configuration">
+          <OrgConnectorConfig />
+        </TabsContent>
+
+        <TabsContent value="comptes">
       <div className="flex flex-col gap-4">
+
         <Card className="flex items-start gap-3 border-primary/20 bg-primary/5 p-4">
           <ShieldCheck className="mt-0.5 size-5 text-primary" />
           <p className="text-sm text-muted-foreground">

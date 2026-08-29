@@ -312,14 +312,23 @@ export function ConnectorsPanel() {
   }, [list.data]);
 
   const items = useMemo(() => {
-    const filtered = (list.data ?? []).filter((c) => category === "all" || c.category === category);
+    const q = query.trim().toLowerCase();
+    const filtered = (list.data ?? []).filter((c) => {
+      const matchesCategory = category === "all" || c.category === category;
+      const matchesQuery =
+        !q ||
+        c.name.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.key.toLowerCase().includes(q);
+      return matchesCategory && matchesQuery;
+    });
     return [...filtered].sort((a, b) => {
       if (sort === "name-asc") return a.name.localeCompare(b.name, "fr");
       if (sort === "name-desc") return b.name.localeCompare(a.name, "fr");
       const order = { configure: 0, erreur: 1, default: 2 };
       return (order[a.status as keyof typeof order] ?? order.default) - (order[b.status as keyof typeof order] ?? order.default);
     });
-  }, [list.data, category, sort]);
+  }, [list.data, category, sort, query]);
 
   return (
     <div className="space-y-5">

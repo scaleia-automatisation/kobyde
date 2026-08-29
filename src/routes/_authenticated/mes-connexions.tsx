@@ -90,6 +90,17 @@ function MesConnexionsPage() {
       return { ...prev, [key]: on ? Array.from(new Set([...cur, scope])) : cur.filter((s) => s !== scope) };
     });
 
+  const filteredItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q) ||
+        c.key.toLowerCase().includes(q)
+    );
+  }, [items, query]);
+
   const connect = async (key: string) => {
     setBusy(key);
     try {

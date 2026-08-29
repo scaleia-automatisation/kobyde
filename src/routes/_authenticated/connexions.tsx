@@ -137,10 +137,17 @@ function ConnecteursAdminPage() {
   };
 
   const grouped = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = items.filter((c) =>
+      !q ||
+      c.name.toLowerCase().includes(q) ||
+      c.description.toLowerCase().includes(q) ||
+      c.key.toLowerCase().includes(q)
+    );
     const map = new Map<string, typeof items>();
-    for (const c of items) map.set(c.category, [...(map.get(c.category) ?? []), c]);
+    for (const c of filtered) map.set(c.category, [...(map.get(c.category) ?? []), c]);
     return Array.from(map, ([cat, list]) => ({ cat, list: sortConnectors(list) }));
-  }, [items, sort]);
+  }, [items, sort, query]);
 
   // DEBUG
   useEffect(() => {

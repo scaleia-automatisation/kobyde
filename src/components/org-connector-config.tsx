@@ -54,7 +54,11 @@ export function OrgConnectorConfig() {
 
   const query = useQuery({
     queryKey: ["org-connectors", origin],
-    queryFn: () => listFn({ data: { origin } }),
+    queryFn: async () => {
+      const res = await listFn({ data: { origin } });
+      if (res == null) throw new Error("Votre session a expiré : rechargez la page ou reconnectez-vous.");
+      return res;
+    },
     enabled: Boolean(origin),
   });
 

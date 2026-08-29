@@ -163,6 +163,34 @@ function ConnecteursAdminPage() {
             </p>
           </Card>
 
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <span className="text-xs text-muted-foreground">Trier par</span>
+            <Button
+              size="sm"
+              variant={sort === "name-asc" ? "default" : "outline"}
+              onClick={() => setSort("name-asc")}
+              aria-label="Tri par nom croissant"
+            >
+              <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
+            </Button>
+            <Button
+              size="sm"
+              variant={sort === "name-desc" ? "default" : "outline"}
+              onClick={() => setSort("name-desc")}
+              aria-label="Tri par nom décroissant"
+            >
+              <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
+            </Button>
+            <Button
+              size="sm"
+              variant={sort === "status" ? "default" : "outline"}
+              onClick={() => setSort("status")}
+              aria-label="Tri par statut"
+            >
+              Statut
+            </Button>
+          </div>
+
           {grouped.map(({ cat, list: group }) => (
             <div key={cat} className="space-y-3">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">

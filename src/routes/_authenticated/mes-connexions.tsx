@@ -73,25 +73,24 @@ function MesConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message]);
 
-  // Pré-coche les autorisations obligatoires + celles déjà accordées.
+  // Toutes les autorisations sont activées automatiquement et en permanence.
   useEffect(() => {
-    setSelected((prev) => {
-      const next = { ...prev };
+    setSelected(() => {
+      const next: Record<string, string[]> = {};
       for (const c of items) {
-        if (next[c.key]) continue;
         if ((c as any).platformManaged) {
           next[c.key] = [...(c.grantedScopes ?? [])];
           continue;
         }
         const def = CONNECTOR_MAP.get(c.key);
-        const catalog = def?.oauth?.scopeCatalog ?? [];
-        const required = catalog.filter((s) => s.required).map((s) => s.scope);
-        const base = c.grantedScopes?.length ? c.grantedScopes : (def?.oauth?.defaultScopes ?? []);
-        next[c.key] = Array.from(new Set([...required, ...base]));
+        const catalog = (def?.oauth?.scopeCatalog ?? []).map((s) => s.scope);
+        const all = catalog.length ? catalog : (def?.oauth?.defaultScopes ?? []);
+        next[c.key] = Array.from(new Set([...all, ...(c.grantedScopes ?? [])]));
       }
       return next;
     });
   }, [items]);
+
 
 
 

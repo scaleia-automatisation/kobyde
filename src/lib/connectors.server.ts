@@ -393,20 +393,43 @@ export async function testConnector(key: string) {
 
 /* ------------------------------------------------------------- OAuth utilisateur */
 
+const splitScopes = (v?: string | null) => (v ?? "").split(/[\s,]+/).filter(Boolean);
+const joinScopes = (v: string[]) => Array.from(new Set(v)).join(" ");
+
+/** Identifiants d'application du connecteur (Super Admin uniquement). */
+function appCredentials(conf: { config: Record<string, string>; secrets: Record<string, string> } | null) {
+  const clientId =
+    conf?.config["client_id"] ?? conf?.config["app_id"] ?? conf?.config["client_key"] ?? conf?.secrets["client_id"] ?? "";
+  const clientSecret =
+    conf?.secrets["client_secret"] ?? conf?.secrets["app_secret"] ?? conf?.secrets["client_key_secret"] ?? "";
+  return { clientId, clientSecret };
+}
+
+/** Connexion utilisateur (ligne brute) — serveur uniquement. */
+async function getConnectionRow(userId: string, connectorKey: string) {
+  const supabase = await db();
+  const { data } = await supabase
+    .from("oauth_connections")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("provider", connectorKey)
+    .maybeSingle();
+  return data ?? null;
+}
+
 export async function buildAuthorizeUrl(input: {
   connectorKey: string;
   userId: string;
   orgId: string | null;
   origin?: string;
   scopes?: string[];
+  redirectTo?: string;
 }) {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def?.oauth) throw new Error("Ce connecteur ne gère pas la connexion de compte.");
   const conf = await getConnectorConfig(input.connectorKey);
   if (!conf?.isEnabled) throw new Error("Ce connecteur n'est pas encore activé par l'administrateur.");
-
-  const clientId =
-    conf.config["client_id"] ?? conf.config["app_id"] ?? conf.config["client_key"] ?? conf.secrets["client_id"];
+  const { clientId } = appCredentials(conf);
   if (!clientId) throw new Error("Connecteur incomplet : identifiant d'application manquant.");
 
   const base = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
@@ -418,34 +441,88 @@ export async function buildAuthorizeUrl(input: {
   const allowed = new Set(catalog.length ? catalog.map((s) => s.scope) : def.oauth.defaultScopes);
   const required = catalog.filter((s) => s.required).map((s) => s.scope);
   const chosen = (input.scopes ?? []).filter((s) => allowed.has(s));
-  const selected = Array.from(new Set([...required, ...(chosen.length ? chosen : def.oauth.defaultScopes)]));
+
+  // Autorisations déjà accordées : on les conserve pour ne jamais les redemander "à zéro".
+  const existing = await getConnectionRow(input.userId, input.connectorKey);
+  const alreadyGranted = existing && !existing.revoked ? splitScopes(existing.scopes_granted ?? existing.scopes) : [];
+
+  const selected = Array.from(
+    new Set([...required, ...alreadyGranted, ...(chosen.length ? chosen : def.oauth.defaultScopes)]),
+  );
+  const isNewConsent = selected.some((s) => !alreadyGranted.includes(s));
 
   await supabase.from("oauth_states").insert({
     state,
     user_id: input.userId,
     org_id: input.orgId,
     connector_key: input.connectorKey,
-    redirect_to: `${base}/mes-connexions`,
+    redirect_to: `${base}${input.redirectTo ?? "/mes-connexions"}`,
     scopes: selected.join(" "),
   });
 
-  const scopes = selected.join(def.oauth.scopeSeparator ?? " ");
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: scopes,
+    scope: selected.join(def.oauth.scopeSeparator ?? " "),
     state,
   });
-  if (input.connectorKey === "google" || input.connectorKey === "google_business") {
+  if (input.connectorKey === "google") {
     params.set("access_type", "offline");
-    params.set("prompt", "consent");
+    params.set("include_granted_scopes", "true");
+    // Consentement redemandé uniquement lorsqu'une nouvelle autorisation est nécessaire
+    // ou lorsqu'aucun refresh token n'est encore stocké.
+    if (isNewConsent || !existing?.refresh_token) params.set("prompt", "consent");
   }
   if (input.connectorKey === "tiktok") {
     params.delete("client_id");
     params.set("client_key", clientId);
   }
+  if (input.connectorKey === "notion") {
+    params.delete("scope");
+    params.set("owner", "user");
+  }
   return { url: `${def.oauth.authorizeUrl}?${params.toString()}` };
+}
+
+/** Récupère l'identité du compte connecté chez le fournisseur (email / libellé). */
+async function fetchAccountIdentity(connectorKey: string, token: string, payload: any) {
+  try {
+    if (connectorKey === "google") {
+      const r = await probe("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { id: r.json?.sub ?? null, email: r.json?.email ?? null, label: r.json?.name ?? r.json?.email ?? null };
+    }
+    if (connectorKey === "linkedin") {
+      const r = await probe("https://api.linkedin.com/v2/userinfo", { headers: { Authorization: `Bearer ${token}` } });
+      return { id: r.json?.sub ?? null, email: r.json?.email ?? null, label: r.json?.name ?? null };
+    }
+    if (connectorKey === "meta") {
+      const r = await probe(`https://graph.facebook.com/v20.0/me?fields=id,name,email&access_token=${encodeURIComponent(token)}`);
+      return { id: r.json?.id ?? null, email: r.json?.email ?? null, label: r.json?.name ?? null };
+    }
+    if (connectorKey === "slack") {
+      const r = await probe("https://slack.com/api/auth.test", { headers: { Authorization: `Bearer ${token}` } });
+      return { id: r.json?.user_id ?? null, email: null, label: r.json?.team ?? null };
+    }
+    if (connectorKey === "notion") {
+      return {
+        id: payload?.owner?.user?.id ?? payload?.bot_id ?? null,
+        email: payload?.owner?.user?.person?.email ?? null,
+        label: payload?.workspace_name ?? null,
+      };
+    }
+    if (connectorKey === "tiktok") {
+      const r = await probe("https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { id: r.json?.data?.user?.open_id ?? null, email: null, label: r.json?.data?.user?.display_name ?? null };
+    }
+  } catch {
+    /* identité non bloquante */
+  }
+  return { id: null, email: null, label: null };
 }
 
 export async function completeOAuth(connectorKey: string, code: string, state: string, origin: string) {
@@ -459,8 +536,7 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
   if (new Date(st.expires_at).getTime() < Date.now()) throw new Error("Session d'autorisation expirée.");
 
   const conf = await getConnectorConfig(connectorKey);
-  const clientId = conf?.config["client_id"] ?? conf?.config["app_id"] ?? conf?.config["client_key"] ?? "";
-  const clientSecret = conf?.secrets["client_secret"] ?? conf?.secrets["app_secret"] ?? "";
+  const { clientId, clientSecret } = appCredentials(conf);
   const redirectUri = `${origin.replace(/\/$/, "")}${callbackPath(connectorKey)}`;
 
   const body = new URLSearchParams({
@@ -470,25 +546,39 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
     client_id: clientId,
     client_secret: clientSecret,
   });
+  const headers: Record<string, string> = {
+    "content-type": "application/x-www-form-urlencoded",
+    accept: "application/json",
+  };
   if (connectorKey === "tiktok") {
     body.delete("client_id");
-    body.delete("client_secret");
     body.set("client_key", clientId);
-    body.set("client_secret", clientSecret);
+  }
+  if (connectorKey === "notion") {
+    body.delete("client_id");
+    body.delete("client_secret");
+    headers["authorization"] = `Basic ${btoa(`${clientId}:${clientSecret}`)}`;
   }
 
-  const res = await fetch(def.oauth.tokenUrl, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
-    body,
-  });
+  const res = await fetch(def.oauth.tokenUrl, { method: "POST", headers, body });
   const payload: any = await res.json().catch(() => ({}));
   if (!res.ok || (!payload.access_token && !payload?.data?.access_token)) {
     throw new Error(payload?.error_description ?? payload?.error ?? `Échange de jeton refusé (${res.status}).`);
   }
-  const token = payload.access_token ?? payload?.data?.access_token;
-  const refresh = payload.refresh_token ?? payload?.data?.refresh_token ?? null;
-  const expiresIn = Number(payload.expires_in ?? payload?.data?.expires_in ?? 0);
+  const data = payload.access_token ? payload : (payload.data ?? payload);
+  const token = data.access_token;
+  const refresh = data.refresh_token ?? null;
+  const expiresIn = Number(data.expires_in ?? 0);
+  const refreshExpiresIn = Number(data.refresh_expires_in ?? data.refresh_token_expires_in ?? 0);
+
+  const requested = splitScopes((st as any).scopes);
+  // Le fournisseur renvoie les scopes réellement accordés lorsqu'il les expose.
+  const granted = splitScopes(data.scope ?? data.scopes ?? payload.scope) ;
+  const existing = await getConnectionRow(st.user_id, connectorKey);
+  const previousGranted = existing && !existing.revoked ? splitScopes(existing.scopes_granted) : [];
+  const grantedFinal = granted.length ? Array.from(new Set([...previousGranted, ...granted])) : requested;
+
+  const identity = await fetchAccountIdentity(connectorKey, token, payload);
 
   await supabase.from("oauth_connections").upsert(
     {
@@ -496,98 +586,305 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
       org_id: st.org_id,
       provider: connectorKey,
       connector_key: connectorKey,
-      provider_user_id: String(payload.open_id ?? payload?.data?.open_id ?? payload.user_id ?? st.user_id),
+      provider_user_id: String(identity.id ?? data.open_id ?? st.user_id),
+      provider_account_id: identity.id ?? null,
+      provider_email: identity.email ?? null,
+      account_label: identity.label ?? identity.email ?? null,
       access_token: token,
-      refresh_token: refresh,
+      refresh_token: refresh ?? existing?.refresh_token ?? null,
+      token_type: data.token_type ?? "Bearer",
       expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
-      scopes: (st as any).scopes ?? def.oauth.defaultScopes.join(" "),
+      refresh_token_expires_at: refreshExpiresIn
+        ? new Date(Date.now() + refreshExpiresIn * 1000).toISOString()
+        : null,
+      scopes: joinScopes(grantedFinal),
+      scopes_requested: joinScopes(requested),
+      scopes_granted: joinScopes(grantedFinal),
       status: "active",
       revoked: false,
+      revoked_at: null,
       is_active: true,
+      connected_at: existing?.connected_at ?? new Date().toISOString(),
+      last_refresh_at: new Date().toISOString(),
       metadata: { connector: connectorKey },
     },
     { onConflict: "user_id,provider" },
   );
 
-  return { redirectTo: st.redirect_to ?? `${origin}/parametres` };
+  await logConnectorCall({
+    orgId: st.org_id,
+    userId: st.user_id,
+    provider: connectorKey,
+    action: "oauth.connect",
+    status: "ok",
+    accountId: identity.id ?? null,
+  });
+
+  return { redirectTo: st.redirect_to ?? `${origin}/mes-connexions` };
 }
+
+/* ------------------------------------------------- Renouvellement des jetons */
+
+/** Renouvelle l'access token via le refresh token lorsque le fournisseur le permet. */
+export async function refreshUserToken(userId: string, connectorKey: string) {
+  const def = CONNECTOR_MAP.get(connectorKey);
+  const row = await getConnectionRow(userId, connectorKey);
+  if (!def?.oauth || !row?.refresh_token) return { ok: false, reason: "no_refresh_token" as const };
+
+  const conf = await getConnectorConfig(connectorKey);
+  const { clientId, clientSecret } = appCredentials(conf);
+  const body = new URLSearchParams({
+    grant_type: "refresh_token",
+    refresh_token: row.refresh_token,
+    client_id: clientId,
+    client_secret: clientSecret,
+  });
+  if (connectorKey === "tiktok") {
+    body.delete("client_id");
+    body.set("client_key", clientId);
+  }
+
+  const supabase = await db();
+  try {
+    const res = await fetch(def.oauth.tokenUrl, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+      body,
+    });
+    const payload: any = await res.json().catch(() => ({}));
+    const data = payload.access_token ? payload : (payload.data ?? payload);
+    if (!res.ok || !data.access_token) {
+      await supabase
+        .from("oauth_connections")
+        .update({ status: "reconnect_required" })
+        .eq("user_id", userId)
+        .eq("provider", connectorKey);
+      return { ok: false as const, reason: "refresh_failed" as const };
+    }
+    const expiresIn = Number(data.expires_in ?? 0);
+    await supabase
+      .from("oauth_connections")
+      .update({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token ?? row.refresh_token,
+        expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
+        last_refresh_at: new Date().toISOString(),
+        status: "active",
+      })
+      .eq("user_id", userId)
+      .eq("provider", connectorKey);
+    return { ok: true as const, accessToken: data.access_token as string };
+  } catch {
+    return { ok: false as const, reason: "refresh_failed" as const };
+  }
+}
+
+export type AccessResult =
+  | { ok: true; accessToken: string; scopes: string[]; accountId: string | null; accountLabel: string | null }
+  | { ok: false; reason: "not_connected" | "reconnect_required" | "missing_scopes"; missingScopes?: string[] };
+
+/**
+ * Jeton d'accès utilisateur prêt à l'emploi :
+ * vérifie la connexion, les autorisations et renouvelle automatiquement le jeton si nécessaire.
+ */
+export async function getUserAccessToken(
+  userId: string,
+  connectorKey: string,
+  requiredScopes: string[] = [],
+): Promise<AccessResult> {
+  const row = await getConnectionRow(userId, connectorKey);
+  if (!row || row.revoked || row.is_active === false || !row.access_token) {
+    return { ok: false, reason: "not_connected" };
+  }
+  const granted = splitScopes(row.scopes_granted ?? row.scopes);
+  const missing = requiredScopes.filter((s) => !granted.includes(s));
+  if (missing.length) return { ok: false, reason: "missing_scopes", missingScopes: missing };
+
+  let token = row.access_token as string;
+  const expiresAt = row.expires_at ? new Date(row.expires_at).getTime() : 0;
+  // Renouvellement anticipé (2 minutes avant expiration).
+  if (expiresAt && expiresAt - Date.now() < 120_000) {
+    const refreshed = await refreshUserToken(userId, connectorKey);
+    if (!refreshed.ok) return { ok: false, reason: "reconnect_required" };
+    token = refreshed.accessToken;
+  }
+  const supabase = await db();
+  await supabase
+    .from("oauth_connections")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .eq("provider", connectorKey);
+
+  return {
+    ok: true,
+    accessToken: token,
+    scopes: granted,
+    accountId: row.provider_account_id ?? null,
+    accountLabel: row.account_label ?? row.provider_email ?? null,
+  };
+}
+
+/* ------------------------------------------------------------------- Journal */
+
+export async function logConnectorCall(input: {
+  orgId?: string | null;
+  userId?: string | null;
+  agentKey?: string | null;
+  provider: string;
+  accountId?: string | null;
+  action?: string;
+  endpoint?: string;
+  status?: string;
+  durationMs?: number;
+  costEur?: number;
+  credits?: number;
+  error?: string | null;
+}) {
+  try {
+    const supabase = await db();
+    await supabase.from("connector_call_logs").insert({
+      org_id: input.orgId ?? null,
+      user_id: input.userId ?? null,
+      agent_key: input.agentKey ?? null,
+      provider: input.provider,
+      account_id: input.accountId ?? null,
+      action: input.action ?? null,
+      endpoint: input.endpoint ?? null,
+      status: input.status ?? "ok",
+      duration_ms: input.durationMs ?? null,
+      cost_eur: input.costEur ?? null,
+      credits: input.credits ?? null,
+      error: input.error ?? null,
+    });
+  } catch {
+    /* le journal ne doit jamais bloquer un appel */
+  }
+}
+
+export async function listConnectorLogs(filters: {
+  provider?: string;
+  userId?: string;
+  orgId?: string;
+  agentKey?: string;
+  status?: string;
+  since?: string;
+  limit?: number;
+}) {
+  const supabase = await db();
+  let q = supabase.from("connector_call_logs").select("*").order("created_at", { ascending: false }).limit(filters.limit ?? 200);
+  if (filters.provider) q = q.eq("provider", filters.provider);
+  if (filters.userId) q = q.eq("user_id", filters.userId);
+  if (filters.orgId) q = q.eq("org_id", filters.orgId);
+  if (filters.agentKey) q = q.eq("agent_key", filters.agentKey);
+  if (filters.status) q = q.eq("status", filters.status);
+  if (filters.since) q = q.gte("created_at", filters.since);
+  const { data } = await q;
+  return data ?? [];
+}
+
+/** Statistiques par connecteur pour le tableau Super Admin. */
+export async function connectorStats() {
+  const supabase = await db();
+  const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+  const { data } = await supabase
+    .from("connector_call_logs")
+    .select("provider,status,cost_eur,created_at")
+    .gte("created_at", since);
+  const stats: Record<string, { calls: number; errors: number; cost: number; lastUsedAt: string | null }> = {};
+  for (const r of data ?? []) {
+    const s = (stats[r.provider] ??= { calls: 0, errors: 0, cost: 0, lastUsedAt: null });
+    s.calls += 1;
+    if (r.status !== "ok") s.errors += 1;
+    s.cost += Number(r.cost_eur ?? 0);
+    if (!s.lastUsedAt || r.created_at > s.lastUsedAt) s.lastUsedAt = r.created_at;
+  }
+  return stats;
+}
+
+/* --------------------------------------------- Anti double exécution */
+
+/** Exécute une action une seule fois pour une clé d'idempotence donnée. */
+export async function runOnce<T>(
+  key: string,
+  meta: { userId?: string | null; orgId?: string | null; provider?: string; action?: string },
+  fn: () => Promise<T>,
+): Promise<T> {
+  const supabase = await db();
+  const { data: existing } = await supabase
+    .from("connector_executions")
+    .select("result")
+    .eq("idempotency_key", key)
+    .maybeSingle();
+  if (existing) return (existing.result ?? null) as T;
+
+  const { error } = await supabase.from("connector_executions").insert({
+    idempotency_key: key,
+    user_id: meta.userId ?? null,
+    org_id: meta.orgId ?? null,
+    provider: meta.provider ?? null,
+    action: meta.action ?? null,
+  });
+  if (error) {
+    // Insertion concurrente : une autre exécution a déjà pris la main.
+    const { data: row } = await supabase
+      .from("connector_executions")
+      .select("result")
+      .eq("idempotency_key", key)
+      .maybeSingle();
+    return (row?.result ?? null) as T;
+  }
+  const result = await fn();
+  await supabase
+    .from("connector_executions")
+    .update({ result: (result ?? null) as any })
+    .eq("idempotency_key", key);
+  return result;
+}
+
+/* --------------------------------------------------- Connexions utilisateur */
 
 export async function listUserConnections(userId: string) {
   const supabase = await db();
   const { data } = await supabase
     .from("oauth_connections")
-    .select("id,provider,connector_key,provider_email,account_label,scopes,expires_at,status,revoked,is_active,created_at,last_used_at")
+    .select(
+      "id,provider,connector_key,provider_email,account_label,scopes,scopes_granted,scopes_requested,expires_at,status,revoked,is_active,created_at,connected_at,last_used_at",
+    )
     .eq("user_id", userId);
   const rows = new Map<string, any>((data ?? []).map((r: any) => [r.connector_key ?? r.provider, r]));
 
   const connectors = await listConnectors();
   return connectors
-    // Côté utilisateur : tous les connecteurs du catalogue destinés aux utilisateurs.
-    // Les clés API, identifiants client/secret et serveurs MCP restent gérés
-    // exclusivement par l'administrateur dans l'onglet Connecteurs.
-    .filter((c) => c.userConnect || c.isEnabled)
+    // L'utilisateur ne voit que les plateformes nécessitant SON compte.
+    // Les clés API (OpenAI, Gemini, Apify, Resend…) restent gérées par l'administrateur.
+    .filter((c) => c.userConnect)
     .map((c) => {
       const row = rows.get(c.key);
+      const granted = splitScopes(row?.scopes_granted ?? row?.scopes);
+      const def = CONNECTOR_MAP.get(c.key);
+      const catalog = def?.oauth?.scopeCatalog ?? [];
       return {
         key: c.key,
         name: c.name,
         description: c.description,
         category: c.category,
         authType: c.authType,
-        /** true = autorisation OAuth du compte utilisateur ; false = accès fourni par l'administrateur */
         oauth: c.authType === "oauth",
         available: c.isEnabled && c.status === "configure",
         connected: Boolean(row && !row.revoked),
         isActive: row ? row.is_active !== false : false,
-        lastError: (row?.metadata as any)?.last_error ?? null,
+        needsReconnect: row?.status === "reconnect_required",
         account: row?.account_label ?? row?.provider_email ?? null,
-        scopes: row?.scopes ?? "",
+        grantedScopes: granted,
+        grantedLabels: catalog.filter((s) => granted.includes(s.scope)).map((s) => s.label),
+        missingLabels: catalog.filter((s) => !granted.includes(s.scope)).map((s) => s.label),
         expiresAt: row?.expires_at ?? null,
-        connectedAt: row?.created_at ?? null,
+        connectedAt: row?.connected_at ?? row?.created_at ?? null,
+        lastUsedAt: row?.last_used_at ?? null,
         services: c.servicesCatalog,
       };
     });
 }
-
-/**
- * Active pour l'utilisateur un connecteur non-OAuth (clé API, MCP…) déjà configuré
- * par l'administrateur : aucun identifiant à saisir, l'accès utilise la configuration centrale.
- */
-export async function enableManagedUserConnection(input: {
-  userId: string;
-  orgId: string | null;
-  connectorKey: string;
-  services?: string[];
-}) {
-  const def = CONNECTOR_MAP.get(input.connectorKey);
-  if (!def) throw new Error("Connecteur inconnu.");
-  if (def.authType === "oauth") throw new Error("Ce connecteur nécessite une autorisation OAuth.");
-  const conf = await getConnectorConfig(input.connectorKey);
-  if (!conf?.isEnabled) throw new Error("Ce connecteur n'est pas encore activé par votre administrateur.");
-
-  const supabase = await db();
-  const { error } = await supabase.from("oauth_connections").upsert(
-    {
-      user_id: input.userId,
-      org_id: input.orgId,
-      provider: input.connectorKey,
-      connector_key: input.connectorKey,
-      provider_user_id: input.userId,
-      account_label: `${def.name} (accès administrateur)`,
-      scopes: (input.services ?? (def.services ?? []).map((s) => s.key)).join(" "),
-      status: "active",
-      revoked: false,
-      is_active: true,
-      metadata: { connector: input.connectorKey, managed_by_admin: true },
-    },
-    { onConflict: "user_id,provider" },
-  );
-  if (error) throw new Error(error.message);
-  return { ok: true };
-}
-
-
-
 
 export async function setUserConnectionActive(userId: string, connectorKey: string, active: boolean) {
   const supabase = await db();
@@ -600,214 +897,46 @@ export async function setUserConnectionActive(userId: string, connectorKey: stri
   return { ok: true, isActive: active };
 }
 
+/** Révoque l'autorisation chez le fournisseur lorsque c'est possible, puis supprime les jetons. */
 export async function disconnectUserConnection(userId: string, connectorKey: string) {
   const supabase = await db();
+  const row = await getConnectionRow(userId, connectorKey);
+  const def = CONNECTOR_MAP.get(connectorKey);
+  if (row?.access_token) {
+    try {
+      if (connectorKey === "google" && def?.oauth?.revokeUrl) {
+        await fetch(`${def.oauth.revokeUrl}?token=${encodeURIComponent(row.refresh_token ?? row.access_token)}`, {
+          method: "POST",
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+        });
+      } else if (connectorKey === "meta") {
+        await fetch(
+          `https://graph.facebook.com/v20.0/me/permissions?access_token=${encodeURIComponent(row.access_token)}`,
+          { method: "DELETE" },
+        );
+      } else if (connectorKey === "slack") {
+        await fetch("https://slack.com/api/auth.revoke", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${row.access_token}` },
+        });
+      }
+    } catch {
+      /* révocation best-effort */
+    }
+  }
   await supabase
     .from("oauth_connections")
-    .update({ revoked: true, status: "revoked", is_active: false, access_token: null, refresh_token: null })
+    .update({
+      revoked: true,
+      revoked_at: new Date().toISOString(),
+      status: "revoked",
+      is_active: false,
+      access_token: null,
+      refresh_token: null,
+      scopes_granted: null,
+    })
     .eq("user_id", userId)
     .eq("provider", connectorKey);
+  await logConnectorCall({ userId, provider: connectorKey, action: "oauth.disconnect", status: "ok" });
   return { ok: true };
-}
-
-/* --------------------------------------------- Connexion manuelle (jetons saisis) */
-
-export async function saveUserManualConnection(input: {
-  userId: string;
-  orgId: string | null;
-  connectorKey: string;
-  values: Record<string, string>;
-}) {
-  const def = CONNECTOR_MAP.get(input.connectorKey);
-  if (!def) throw new Error("Connecteur inconnu.");
-
-  const values = Object.fromEntries(
-    Object.entries(input.values).map(([k, v]) => [k, (v ?? "").trim()]).filter(([, v]) => v !== ""),
-  ) as Record<string, string>;
-
-  const missing = (def.fields ?? [])
-    .filter((fd) => fd.required !== false && !values[fd.key])
-    .map((fd) => fd.label);
-  if (missing.length) throw new Error(`Champs obligatoires manquants : ${missing.join(", ")}.`);
-
-  const token =
-    values["access_token"] ?? values["api_key"] ?? values["api_token"] ?? values["client_secret"] ??
-    values["app_secret"] ?? Object.values(values)[0] ?? "";
-  const label = values["account_label"] ?? values["email"] ?? null;
-
-  const supabase = await db();
-  const { error } = await supabase.from("oauth_connections").upsert(
-    {
-      user_id: input.userId,
-      org_id: input.orgId,
-      provider: input.connectorKey,
-      connector_key: input.connectorKey,
-      provider_user_id: input.userId,
-      access_token: token,
-      account_label: label,
-      status: "active",
-      revoked: false,
-      is_active: true,
-      scopes: (def.oauth?.defaultScopes ?? []).join(" "),
-      metadata: {
-        connector: input.connectorKey,
-        mode: "manual",
-        fields: Object.keys(values),
-        values,
-      },
-
-    },
-    { onConflict: "user_id,provider" },
-  );
-  if (error) throw new Error(error.message);
-  return { ok: true };
-}
-
-/* ------------------------------------------- Test de la connexion utilisateur */
-
-export async function testUserConnection(userId: string, connectorKey: string) {
-  const def = CONNECTOR_MAP.get(connectorKey);
-  const supabase = await db();
-  const { data: row } = await supabase
-    .from("oauth_connections")
-    .select("access_token, metadata, revoked, status")
-    .eq("user_id", userId)
-    .eq("provider", connectorKey)
-    .maybeSingle();
-
-  if (!row || row.revoked || !row.access_token) {
-    return { ok: false, message: "Aucun identifiant enregistré pour ce connecteur." };
-  }
-
-  const token = row.access_token as string;
-  const meta = (row.metadata ?? {}) as Record<string, any>;
-  const values = (meta["values"] ?? {}) as Record<string, string>;
-  const savedFields = ((meta["fields"] as string[] | undefined) ?? []);
-  const isAppCredential =
-    meta["mode"] === "manual" &&
-    !values["access_token"] &&
-    (Boolean(values["client_secret"] || values["app_secret"]) || savedFields.includes("client_secret") || savedFields.includes("app_secret"));
-  const accessToken = values["access_token"] ?? (isAppCredential ? "" : token);
-  const finish = async (ok: boolean, message: string) => {
-    await supabase
-      .from("oauth_connections")
-      .update({
-        status: ok ? "active" : "error",
-        metadata: { ...meta, last_test_at: new Date().toISOString(), last_error: ok ? null : message },
-      })
-      .eq("user_id", userId)
-      .eq("provider", connectorKey);
-    return { ok, message };
-  };
-
-  try {
-    // Identifiants d'application OAuth (client_id + client_secret) : on valide l'app, pas un jeton utilisateur.
-    if (!accessToken && values["client_id"] && values["client_secret"]) {
-      if (connectorKey === "google" || connectorKey === "google_ads" || connectorKey === "youtube" || connectorKey === "google_business") {
-        const r = await fetch("https://oauth2.googleapis.com/token", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            client_id: values["client_id"]!,
-            client_secret: values["client_secret"]!,
-            grant_type: "refresh_token",
-            refresh_token: "kobyde-connection-test",
-          }),
-        });
-        const j = (await r.json().catch(() => ({}))) as { error?: string; error_description?: string };
-        if (j.error === "invalid_client") {
-          return finish(false, "Identifiants Google refusés : client_id ou client_secret invalide.");
-        }
-        // invalid_grant = l'app est reconnue par Google, seul le faux refresh_token est rejeté.
-        return finish(
-          true,
-          "Identifiants d'application Google valides. Autorisez maintenant votre compte via « Connecter mon compte » pour accéder aux données.",
-        );
-      }
-      return finish(
-        true,
-        `Identifiants d'application ${def?.name ?? connectorKey} enregistrés. Lancez l'autorisation OAuth pour accéder aux données.`,
-      );
-    }
-
-    // Ancienne connexion enregistrée avant le stockage des champs : identifiants incomplets.
-    if (!accessToken && ((meta["fields"] as string[] | undefined) ?? []).includes("client_secret")) {
-      return finish(
-        false,
-        "Identifiants incomplets : ré-enregistrez votre client_id et client_secret via « Connecter mon compte » pour activer le test.",
-      );
-    }
-
-    // Connecteurs par clé API (saisie manuelle par l'utilisateur).
-    const apiKey = values["api_key"] ?? values["secret_key"] ?? values["api_token"] ?? (accessToken || "");
-    if (connectorKey === "gemini") {
-      const p = await probe(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
-      if (!p.ok) return finish(false, providerError("Gemini", p));
-      const n = Array.isArray(p.json?.models) ? p.json.models.length : 0;
-      return finish(true, `Appel API Gemini réussi (200) — ${n} modèles disponibles.`);
-    }
-    if (connectorKey === "openai") {
-      const p = await probe("https://api.openai.com/v1/models", { headers: { Authorization: `Bearer ${apiKey}` } });
-      if (!p.ok) return finish(false, providerError("OpenAI", p));
-      const n = Array.isArray(p.json?.data) ? p.json.data.length : 0;
-      return finish(true, `Appel API OpenAI réussi (200) — ${n} modèles disponibles.`);
-    }
-    if (connectorKey === "resend") {
-      const p = await probe("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${apiKey}` } });
-      if (!p.ok) return finish(false, providerError("Resend", p));
-      return finish(true, "Appel API Resend réussi (200).");
-    }
-    if (connectorKey === "apify") {
-      const p = await probe(`https://api.apify.com/v2/users/me?token=${encodeURIComponent(apiKey)}`);
-      if (!p.ok) return finish(false, providerError("Apify", p));
-      return finish(true, `Appel API Apify réussi (200)${p.json?.data?.username ? ` — compte ${p.json.data.username}` : ""}.`);
-    }
-    if (connectorKey === "meta") {
-      const p = await probe(`https://graph.facebook.com/v20.0/me?access_token=${encodeURIComponent(accessToken)}`);
-      if (!p.ok) return finish(false, providerError("Meta", p));
-      return finish(true, `Appel API Meta réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
-    }
-    if (connectorKey === "google" || connectorKey === "google_ads" || connectorKey === "youtube" || connectorKey === "google_business") {
-      const p = await probe("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!p.ok) return finish(false, providerError("Google", p));
-      return finish(true, `Appel API Google réussi (200)${p.json?.email ? ` — ${p.json.email}` : ""}.`);
-    }
-    if (connectorKey === "linkedin") {
-      const p = await probe("https://api.linkedin.com/v2/userinfo", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!p.ok) return finish(false, providerError("LinkedIn", p));
-      return finish(true, `Appel API LinkedIn réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
-    }
-    if (connectorKey === "microsoft" || connectorKey === "outlook") {
-      const p = await probe("https://graph.microsoft.com/v1.0/me", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (!p.ok) return finish(false, providerError("Microsoft", p));
-      return finish(true, `Appel API Microsoft réussi (200)${p.json?.displayName ? ` — ${p.json.displayName}` : ""}.`);
-    }
-    if (connectorKey === "slack") {
-      const p = await probe("https://slack.com/api/auth.test", { headers: { Authorization: `Bearer ${accessToken}` } });
-      if (!p.json?.ok) return finish(false, `Slack a répondu ${p.status} : ${p.json?.error ?? "échec"}.`);
-      return finish(true, `Appel API Slack réussi (200) — espace ${p.json?.team ?? ""}.`);
-    }
-    if (connectorKey === "stripe") {
-      const p = await probe("https://api.stripe.com/v1/balance", { headers: { Authorization: `Bearer ${apiKey}` } });
-      if (!p.ok) return finish(false, providerError("Stripe", p));
-      return finish(true, "Appel API Stripe réussi (200).");
-    }
-    if (connectorKey === "notion") {
-      const p = await probe("https://api.notion.com/v1/users/me", {
-        headers: { Authorization: `Bearer ${accessToken || apiKey}`, "Notion-Version": "2022-06-28" },
-      });
-      if (!p.ok) return finish(false, providerError("Notion", p));
-      return finish(true, `Appel API Notion réussi (200)${p.json?.name ? ` — ${p.json.name}` : ""}.`);
-    }
-    return finish(true, `Identifiants ${def?.name ?? connectorKey} enregistrés (aucun appel API de test disponible).`);
-
-  } catch (e) {
-    return finish(false, e instanceof Error ? e.message : "Erreur de connexion.");
-  }
 }

@@ -318,16 +318,32 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
     if (def.oauthKey) {
       const { data: conn } = await supabase
         .from("oauth_connections")
-        .select("access_token,revoked,is_active,provider")
+        .select("access_token,revoked,is_active,provider,scopes_granted")
         .eq("org_id", input.orgId)
         .eq("provider", def.oauthKey)
         .maybeSingle();
       const token = conn && !conn.revoked && conn.is_active !== false ? conn.access_token : null;
       if (token) {
         const live = await testLiveToken(def.key, token);
-        if (live) return finish(live.ok, live.message);
+        if (live && live.ok) {
+          const scopes = checkScopes(def.oauthKey, (conn?.scopes_granted ?? []) as string[]);
+          if (scopes && scopes.missing.length) {
+            return finish(
+              false,
+              `${live.message} Mais ${scopes.missing.length} autorisation(s) ne sont pas accordées par la plateforme : ${scopes.missing.join(", ")}. Reconnectez le compte pour les activer.`,
+            );
+          }
+          return finish(
+            true,
+            scopes
+              ? `${live.message} Toutes les autorisations demandées (${scopes.total}) sont accordées.`
+              : live.message,
+          );
+        }
+        if (live) return finish(false, live.message);
       }
     }
+
 
     if (input.provider === "google") {
       const r = await verifyOAuthClient({

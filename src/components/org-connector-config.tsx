@@ -353,14 +353,27 @@ export function OrgConnectorConfig() {
                     Enregistrer
                   </Button>
                   {c.docsUrl && (
-                    <a
-                      href={c.docsUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground underline"
-                    >
-                      Obtenir mes identifiants <ExternalLink className="size-3" />
-                    </a>
+                    <span className="inline-flex items-center gap-1">
+                      <a
+                        href={c.docsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-muted-foreground underline"
+                      >
+                        Obtenir mes identifiants <ExternalLink className="size-3" />
+                      </a>
+                      <button
+                        type="button"
+                        title="Copier le lien (si l'ouverture est bloquée par le navigateur)"
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(c.docsUrl!);
+                          toast.success("Lien copié — collez-le dans un nouvel onglet si l'ouverture est bloquée.");
+                        }}
+                      >
+                        <Copy className="size-3" />
+                      </button>
+                    </span>
                   )}
                 </div>
               </div>

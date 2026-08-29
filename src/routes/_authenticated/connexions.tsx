@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowDownAZ, ArrowUpAZ, Copy, Link2, ShieldCheck } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Copy, Link2, Search, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

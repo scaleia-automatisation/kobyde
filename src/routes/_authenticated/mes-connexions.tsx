@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, Link2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, Link2, RefreshCw, Search, ShieldCheck, XCircle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { OrgStripeCard } from "@/components/org-stripe-card";
 import { Card } from "@/components/ui/card";

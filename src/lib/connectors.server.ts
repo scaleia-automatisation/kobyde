@@ -967,8 +967,9 @@ export async function listUserConnections(userId: string) {
 
   // Connecteurs gérés par l'administrateur (clés API / OAuth de la plateforme) :
   // les usages activés par l'admin sont automatiquement accordés à l'utilisateur.
+  // Les connecteurs userManaged (WhatsApp Business) n'apparaissent jamais ici.
   const platformItems = connectors
-    .filter((c) => !c.userConnect && c.isEnabled && c.status === "configure")
+    .filter((c) => !c.userConnect && !c.userManaged && c.isEnabled && c.status === "configure")
     .map((c) => {
       const row = rows.get(c.key);
       const catalog: { key: string; label: string }[] = (c.servicesCatalog ?? []) as any;

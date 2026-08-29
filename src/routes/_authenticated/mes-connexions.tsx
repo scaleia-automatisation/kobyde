@@ -329,7 +329,7 @@ function MesConnexionsPage() {
                   {groups.map((g) => (
                     <div key={g.label} className="space-y-1.5">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
-                      {g.scopes.map((s) => (
+                      {g.scopes.map((s: { scope: string; label: string; required?: boolean }) => (
                         <label key={s.scope} className="flex items-center gap-2 text-sm">
                           <Checkbox
                             checked={chosen.includes(s.scope)}

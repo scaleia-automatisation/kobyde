@@ -2399,6 +2399,103 @@ export type Database = {
           },
         ]
       }
+      org_stripe_accounts: {
+        Row: {
+          business_name: string | null
+          charges_enabled: boolean
+          connected_at: string
+          connected_by: string | null
+          country: string | null
+          created_at: string
+          default_currency: string | null
+          id: string
+          last_synced_at: string | null
+          livemode: boolean
+          org_id: string
+          payouts_enabled: boolean
+          scope: string | null
+          status: string
+          stripe_account_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_name?: string | null
+          charges_enabled?: boolean
+          connected_at?: string
+          connected_by?: string | null
+          country?: string | null
+          created_at?: string
+          default_currency?: string | null
+          id?: string
+          last_synced_at?: string | null
+          livemode?: boolean
+          org_id: string
+          payouts_enabled?: boolean
+          scope?: string | null
+          status?: string
+          stripe_account_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string | null
+          charges_enabled?: boolean
+          connected_at?: string
+          connected_by?: string | null
+          country?: string | null
+          created_at?: string
+          default_currency?: string | null
+          id?: string
+          last_synced_at?: string | null
+          livemode?: boolean
+          org_id?: string
+          payouts_enabled?: boolean
+          scope?: string | null
+          status?: string
+          stripe_account_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_stripe_accounts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_stripe_oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          org_id: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          org_id: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          org_id?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_stripe_oauth_states_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address: string | null

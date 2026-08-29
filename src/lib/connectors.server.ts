@@ -518,9 +518,12 @@ export async function buildAuthorizeUrl(input: {
   const existing = await getConnectionRow(input.userId, input.connectorKey);
   const alreadyGranted = existing && !existing.revoked ? splitScopes(existing.scopes_granted ?? existing.scopes) : [];
 
+  // Toutes les autorisations du catalogue sont demandées par défaut.
+  const fullCatalog = catalog.length ? catalog.map((s) => s.scope) : def.oauth.defaultScopes;
   const selected = Array.from(
-    new Set([...required, ...alreadyGranted, ...(chosen.length ? chosen : def.oauth.defaultScopes)]),
+    new Set([...required, ...alreadyGranted, ...(chosen.length ? chosen : fullCatalog)]),
   );
+
   const isNewConsent = selected.some((s) => !alreadyGranted.includes(s));
 
   await supabase.from("oauth_states").insert({

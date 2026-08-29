@@ -6,6 +6,7 @@
 
 import { ORG_CONNECTORS, ORG_CONNECTOR_MAP, type OrgConnectorDef } from "./org-connectors.catalog";
 import { callbackPath, productionBaseUrl, logConnectorCall } from "./connectors.server";
+import { CONNECTOR_MAP } from "./connectors.catalog";
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -318,16 +319,32 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
     if (def.oauthKey) {
       const { data: conn } = await supabase
         .from("oauth_connections")
-        .select("access_token,revoked,is_active,provider")
+        .select("access_token,revoked,is_active,provider,scopes_granted")
         .eq("org_id", input.orgId)
         .eq("provider", def.oauthKey)
         .maybeSingle();
       const token = conn && !conn.revoked && conn.is_active !== false ? conn.access_token : null;
       if (token) {
         const live = await testLiveToken(def.key, token);
-        if (live) return finish(live.ok, live.message);
+        if (live && live.ok) {
+          const scopes = checkScopes(def.oauthKey, (conn?.scopes_granted ?? []) as string[]);
+          if (scopes && scopes.missing.length) {
+            return finish(
+              false,
+              `${live.message} Mais ${scopes.missing.length} autorisation(s) ne sont pas accordées par la plateforme : ${scopes.missing.join(", ")}. Reconnectez le compte pour les activer.`,
+            );
+          }
+          return finish(
+            true,
+            scopes
+              ? `${live.message} Toutes les autorisations demandées (${scopes.total}) sont accordées.`
+              : live.message,
+          );
+        }
+        if (live) return finish(false, live.message);
       }
     }
+
 
     if (input.provider === "google") {
       const r = await verifyOAuthClient({
@@ -451,7 +468,21 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
   }
 }
 
+/** Vérifie que toutes les autorisations du catalogue sont bien accordées par la plateforme. */
+function checkScopes(oauthKey: string, granted: string[]): { missing: string[]; total: number } | null {
+  const def = CONNECTOR_MAP.get(oauthKey);
+  const catalog = def?.oauth?.scopeCatalog ?? [];
+  const wanted = catalog.length ? catalog.map((s) => s.scope) : (def?.oauth?.defaultScopes ?? []);
+  if (!wanted.length) return null;
+  const has = new Set((granted ?? []).map((s) => String(s)));
+  const missing = wanted
+    .filter((s) => !has.has(s))
+    .map((s) => catalog.find((c) => c.scope === s)?.label ?? s);
+  return { missing, total: wanted.length };
+}
+
 /** Test réel avec le jeton du compte déjà autorisé. */
+
 async function testLiveToken(provider: string, token: string): Promise<{ ok: boolean; message: string } | null> {
   if (provider === "google") {
     const p = await probe("https://www.googleapis.com/oauth2/v3/userinfo", {

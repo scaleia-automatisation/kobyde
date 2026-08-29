@@ -9,7 +9,7 @@ import { OrgStripeCard } from "@/components/org-stripe-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -73,21 +73,19 @@ function MesConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message]);
 
-  // Pré-coche les autorisations obligatoires + celles déjà accordées.
+  // Toutes les autorisations sont activées automatiquement et en permanence.
   useEffect(() => {
-    setSelected((prev) => {
-      const next = { ...prev };
+    setSelected(() => {
+      const next: Record<string, string[]> = {};
       for (const c of items) {
-        if (next[c.key]) continue;
         if ((c as any).platformManaged) {
           next[c.key] = [...(c.grantedScopes ?? [])];
           continue;
         }
         const def = CONNECTOR_MAP.get(c.key);
-        const catalog = def?.oauth?.scopeCatalog ?? [];
-        const required = catalog.filter((s) => s.required).map((s) => s.scope);
-        const base = c.grantedScopes?.length ? c.grantedScopes : (def?.oauth?.defaultScopes ?? []);
-        next[c.key] = Array.from(new Set([...required, ...base]));
+        const catalog = (def?.oauth?.scopeCatalog ?? []).map((s) => s.scope);
+        const all = catalog.length ? catalog : (def?.oauth?.defaultScopes ?? []);
+        next[c.key] = Array.from(new Set([...all, ...(c.grantedScopes ?? [])]));
       }
       return next;
     });
@@ -96,11 +94,7 @@ function MesConnexionsPage() {
 
 
 
-  const toggleScope = (key: string, scope: string, on: boolean) =>
-    setSelected((prev) => {
-      const cur = prev[key] ?? [];
-      return { ...prev, [key]: on ? Array.from(new Set([...cur, scope])) : cur.filter((s) => s !== scope) };
-    });
+
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -305,28 +299,27 @@ function MesConnexionsPage() {
 
               {showPerms && groups.length > 0 && (
                 <div className="space-y-3 rounded-lg border p-4">
-                  <p className="text-sm font-medium">Autorisations demandées</p>
+                  <p className="text-sm font-medium">
+                    Autorisations demandées — toutes activées automatiquement ({chosen.length})
+                  </p>
                   {groups.map((g) => (
                     <div key={g.label} className="space-y-1.5">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
                       {g.scopes.map((s: { scope: string; label: string; required?: boolean }) => (
-                        <label key={s.scope} className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={chosen.includes(s.scope)}
-                            disabled={s.required}
-                            onCheckedChange={(v) => toggleScope(c.key, s.scope, Boolean(v))}
-                          />
+                        <div key={s.scope} className="flex items-center gap-2 text-sm text-emerald-700">
+                          <CheckCircle2 className="size-3.5" />
                           <span>{s.label}</span>
-                          {s.required && <span className="text-xs text-muted-foreground">(obligatoire)</span>}
-                        </label>
+                        </div>
                       ))}
                     </div>
                   ))}
                   <p className="text-xs text-muted-foreground">
-                    Le consentement final est demandé par la plateforme elle-même.
+                    Toutes les autorisations sont demandées en une seule fois : le consentement final est donné par la
+                    plateforme elle-même.
                   </p>
                 </div>
               )}
+
 
               <div className="flex flex-wrap gap-2">
                 {!c.connected ? (

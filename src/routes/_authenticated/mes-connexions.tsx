@@ -95,11 +95,6 @@ function MesConnexionsPage() {
 
 
 
-  const toggleScope = (key: string, scope: string, on: boolean) =>
-    setSelected((prev) => {
-      const cur = prev[key] ?? [];
-      return { ...prev, [key]: on ? Array.from(new Set([...cur, scope])) : cur.filter((s) => s !== scope) };
-    });
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();

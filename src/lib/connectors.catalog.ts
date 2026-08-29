@@ -330,8 +330,11 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Paiements, abonnements et webhooks de facturation.",
     authType: "api_key",
     webhook: true,
-    fields: [f("secret_key", "Secret Key"), f("webhook_secret", "Webhook Signing Secret")],
-    optionalFields: [{ key: "publishable_key", label: "Publishable Key", secret: false }],
+    fields: [f("secret_key", "Secret Key")],
+    optionalFields: [
+      { key: "webhook_secret", label: "Webhook Signing Secret", secret: true },
+      { key: "publishable_key", label: "Publishable Key", secret: false },
+    ],
   },
   {
     key: "twilio",

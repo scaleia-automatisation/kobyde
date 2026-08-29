@@ -52,15 +52,19 @@ async function userHasAccount(userId: string, connectorKey: string) {
  * Résout le connecteur à utiliser pour une capacité donnée.
  * Vérifie : activation, configuration Super Admin, compte utilisateur connecté.
  */
-export async function resolveConnector(capability: Capability, ctx: { userId?: string | null }) {
+export async function resolveConnector(capability: Capability, ctx: { userId?: string | null; orgId?: string | null }) {
   const routes = CAPABILITY_ROUTES[capability] ?? [];
   const checked: { connector: string; reason: string }[] = [];
+  const { getOrgCredentials } = await import("./org-connectors.server");
   for (const route of routes) {
     const conf = await getConnectorConfig(route.connector);
-    if (!conf?.isEnabled) {
+    // L'entreprise peut fournir ses propres identifiants (onglet « Mes connexions » → Configuration).
+    const own = ctx.orgId ? await getOrgCredentials(ctx.orgId, route.connector) : null;
+    if (!conf?.isEnabled && !own) {
       checked.push({ connector: route.connector, reason: "non activé par l'administrateur" });
       continue;
     }
+
     if (route.needsUserAccount) {
       if (!ctx.userId || !(await userHasAccount(ctx.userId, route.connector))) {
         checked.push({ connector: route.connector, reason: "compte utilisateur non connecté ou connecteur désactivé" });

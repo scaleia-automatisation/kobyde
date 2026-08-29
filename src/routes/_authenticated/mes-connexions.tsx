@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { CheckCircle2, Link2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Link2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,12 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   disconnectConnection,
-  enableManagedConnection,
   myConnections,
   startConnection,
   toggleMyConnection,
 } from "@/lib/connectors.functions";
-import { CATEGORY_LABELS, CONNECTOR_MAP } from "@/lib/connectors.catalog";
+import { CONNECTOR_MAP, scopeGroups } from "@/lib/connectors.catalog";
 
 type Search = { connexion?: string | undefined; message?: string | undefined };
 
@@ -34,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/mes-connexions")({
       {
         name: "description",
         content:
-          "Connectez vos comptes Google, Microsoft, Meta, LinkedIn, Slack ou Notion une seule fois et choisissez les autorisations données à vos agents IA.",
+          "Connectez vos comptes Google, Meta, LinkedIn, TikTok, Slack ou Notion une seule fois et choisissez les autorisations données à vos agents IA Kobyde.",
       },
       { property: "og:title", content: "Mes connexions — Kobyde" },
       {
@@ -53,21 +52,21 @@ function MesConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
-  const enableFn = useServerFn(enableManagedConnection);
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: ["my-connections"], queryFn: () => listFn({ data: undefined }) });
   const items = useMemo(() => list.data ?? [], [list.data]);
 
   const [selected, setSelected] = useState<Record<string, string[]>>({});
-  const [connecting, setConnecting] = useState<string | null>(null);
+  const [openPerms, setOpenPerms] = useState<Record<string, boolean>>({});
+  const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
-    if (search.connexion === "ok") toast.success("Compte connecté avec succès.");
+    if (search.connexion === "ok") toast.success("Compte connecté : vos autorisations sont enregistrées.");
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message]);
 
-  // Pré-coche les autorisations par défaut de chaque connecteur.
+  // Pré-coche les autorisations obligatoires + celles déjà accordées.
   useEffect(() => {
     setSelected((prev) => {
       const next = { ...prev };
@@ -75,13 +74,9 @@ function MesConnexionsPage() {
         if (next[c.key]) continue;
         const def = CONNECTOR_MAP.get(c.key);
         const catalog = def?.oauth?.scopeCatalog ?? [];
-        if (!c.oauth) {
-          next[c.key] = (def?.services ?? []).map((sv) => sv.key);
-          continue;
-        }
-        next[c.key] = catalog.length
-          ? catalog.filter((s) => s.required || (def?.oauth?.defaultScopes ?? []).includes(s.scope)).map((s) => s.scope)
-          : (def?.oauth?.defaultScopes ?? []);
+        const required = catalog.filter((s) => s.required).map((s) => s.scope);
+        const base = c.grantedScopes?.length ? c.grantedScopes : (def?.oauth?.defaultScopes ?? []);
+        next[c.key] = Array.from(new Set([...required, ...base]));
       }
       return next;
     });
@@ -89,19 +84,13 @@ function MesConnexionsPage() {
 
   const toggleScope = (key: string, scope: string, on: boolean) =>
     setSelected((prev) => {
-      const current = prev[key] ?? [];
-      return { ...prev, [key]: on ? Array.from(new Set([...current, scope])) : current.filter((s) => s !== scope) };
+      const cur = prev[key] ?? [];
+      return { ...prev, [key]: on ? Array.from(new Set([...cur, scope])) : cur.filter((s) => s !== scope) };
     });
 
-  const connect = async (key: string, isOauth: boolean) => {
-    setConnecting(key);
+  const connect = async (key: string) => {
+    setBusy(key);
     try {
-      if (!isOauth) {
-        await enableFn({ data: { connectorKey: key, services: selected[key] ?? [] } });
-        toast.success("Service activé pour vos agents IA.");
-        void qc.invalidateQueries({ queryKey: ["my-connections"] });
-        return;
-      }
       const res = await startFn({
         data: { connectorKey: key, origin: window.location.origin, scopes: selected[key] ?? [] },
       });
@@ -109,21 +98,28 @@ function MesConnexionsPage() {
         window.location.href = res.url;
         return;
       }
-      toast.error(
-        res?.error ??
-          "Ce service n'est pas encore activé par votre administrateur. Aucune information n'est à saisir de votre côté.",
-      );
+      toast.error(res?.error ?? "Ce service n'est pas encore disponible. Contactez votre administrateur.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Ce service n'est pas encore activé par votre administrateur.");
+      toast.error(e instanceof Error ? e.message : "Connexion impossible.");
     } finally {
-      setConnecting(null);
+      setBusy(null);
     }
   };
 
-  const toggleActive = async (key: string, active: boolean) => {
+  const disconnect = async (key: string, name: string) => {
+    if (!window.confirm(`Déconnecter ${name} ? Vos agents ne pourront plus utiliser ce compte.`)) return;
+    try {
+      await stopFn({ data: { connectorKey: key } });
+      toast.success(`${name} déconnecté.`);
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Déconnexion impossible.");
+    }
+  };
+
+  const setActive = async (key: string, active: boolean) => {
     try {
       await toggleFn({ data: { connectorKey: key, active } });
-      toast.success(active ? "Compte activé pour vos agents." : "Compte désactivé : vos agents ne l'utiliseront plus.");
       void qc.invalidateQueries({ queryKey: ["my-connections"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Modification impossible.");
@@ -133,131 +129,143 @@ function MesConnexionsPage() {
   return (
     <AppShell
       title="Mes connexions"
-      subtitle="Connectez vos comptes une seule fois et choisissez ce que vos agents IA peuvent faire"
+      subtitle="Connectez vos comptes une seule fois : aucune clé technique à renseigner"
     >
       <div className="flex flex-col gap-4">
-        <Card className="flex items-start gap-3 p-4 text-sm text-muted-foreground">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-600" />
-          <p>
-            Vous n'avez aucune clé API ni identifiant à renseigner : tout est configuré par votre administrateur. Vous
-            autorisez simplement la connexion, une seule fois, sur la page officielle du fournisseur. Kobyde n'accède
-            qu'aux autorisations que vous cochez et vous pouvez retirer l'accès à tout moment.
+        <Card className="flex items-start gap-3 border-primary/20 bg-primary/5 p-4">
+          <ShieldCheck className="mt-0.5 size-5 text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Choisissez les autorisations que vous souhaitez accorder, puis connectez-vous à la plateforme. Votre
+            autorisation est mémorisée et renouvelée automatiquement : elle ne vous sera plus redemandée, sauf si une
+            nouvelle permission est nécessaire ou si vous révoquez l'accès.
           </p>
         </Card>
 
         {items.map((c) => {
-          const cdef = CONNECTOR_MAP.get(c.key);
-          const catalog = c.oauth
-            ? (cdef?.oauth?.scopeCatalog ?? [])
-            : (cdef?.services ?? []).map((sv) => ({ scope: sv.key, label: sv.label, required: false }));
+          const def = CONNECTOR_MAP.get(c.key);
+          const groups = scopeGroups(def);
           const chosen = selected[c.key] ?? [];
+          const showPerms = openPerms[c.key] ?? !c.connected;
           return (
             <Card key={c.key} className="space-y-4 p-5">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <Link2 className="size-4 text-muted-foreground" />
                     <h3 className="font-medium">{c.name}</h3>
-                    {c.connected ? (
-                      <Badge className={c.isActive ? "bg-emerald-500/15 text-emerald-600" : "bg-muted text-muted-foreground"}>
-                        {c.isActive ? "Compte connecté" : "Connecté — désactivé"}
-                      </Badge>
+                    {c.needsReconnect ? (
+                      <Badge className="bg-amber-500/15 text-amber-600">Reconnexion nécessaire</Badge>
+                    ) : c.connected ? (
+                      <Badge className="bg-emerald-500/15 text-emerald-600">Connecté</Badge>
+                    ) : c.available ? (
+                      <Badge variant="secondary">Disponible</Badge>
                     ) : (
-                      <Badge variant="secondary">Non connecté</Badge>
+                      <Badge variant="outline">Bientôt disponible</Badge>
                     )}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {CATEGORY_LABELS[c.category as keyof typeof CATEGORY_LABELS] ?? c.category}
-                  </p>
+                  {c.account && <p className="mt-1 text-xs text-muted-foreground">Compte : {c.account}</p>}
                 </div>
                 {c.connected && (
                   <div className="flex shrink-0 items-center gap-2">
-                    <Label htmlFor={`mc-toggle-${c.key}`} className="text-xs text-muted-foreground">
-                      {c.isActive ? "Activé" : "Désactivé"}
+                    <Label htmlFor={`act-${c.key}`} className="text-xs text-muted-foreground">
+                      {c.isActive ? "Actif" : "En pause"}
                     </Label>
-                    <Switch
-                      id={`mc-toggle-${c.key}`}
-                      checked={c.isActive}
-                      onCheckedChange={(v) => void toggleActive(c.key, v)}
-                    />
+                    <Switch id={`act-${c.key}`} checked={c.isActive} onCheckedChange={(v) => void setActive(c.key, v)} />
                   </div>
                 )}
               </div>
 
-              {c.connected && c.account && <p className="text-xs">Compte : {c.account}</p>}
-
-              {catalog.length > 0 ? (
-                <div className="space-y-2 rounded-lg border p-3">
-                  <p className="text-xs font-medium">
-                    {c.oauth ? "Autorisations à accorder" : "Fonctions accessibles à vos agents"}
-                  </p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {catalog.map((s) => (
-                      <label key={s.scope} className="flex items-start gap-2 text-sm">
-                        <Checkbox
-                          checked={s.required || chosen.includes(s.scope)}
-                          disabled={Boolean(s.required)}
-                          onCheckedChange={(v) => toggleScope(c.key, s.scope, v === true)}
-                        />
-                        <span className={s.required ? "text-muted-foreground" : ""}>
-                          {s.label}
-                          {s.required && " (obligatoire)"}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                c.services.length > 0 && (
-                  <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    {c.services.map((s: { key: string; label: string }) => (
-                      <li key={s.key} className="flex items-center gap-1.5 whitespace-nowrap">
-                        <CheckCircle2 className="size-3 shrink-0 text-emerald-600" /> {s.label}
-                      </li>
-                    ))}
-                  </ul>
-                )
+              {c.needsReconnect && (
+                <p className="rounded-md bg-amber-500/10 p-3 text-sm text-amber-700">
+                  Votre connexion doit être renouvelée.
+                </p>
               )}
 
-              <div className="flex flex-wrap items-center gap-2">
-                {c.connected ? (
+              {c.connected && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Permissions accordées</p>
+                    <ul className="mt-1 space-y-1 text-sm">
+                      {(c.grantedLabels ?? []).map((l) => (
+                        <li key={l} className="flex items-center gap-2 text-emerald-700">
+                          <CheckCircle2 className="size-3.5" /> {l}
+                        </li>
+                      ))}
+                      {!(c.grantedLabels ?? []).length && <li className="text-muted-foreground">—</li>}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Non accordées</p>
+                    <ul className="mt-1 space-y-1 text-sm">
+                      {(c.missingLabels ?? []).map((l) => (
+                        <li key={l} className="flex items-center gap-2 text-muted-foreground">
+                          <XCircle className="size-3.5" /> {l}
+                        </li>
+                      ))}
+                      {!(c.missingLabels ?? []).length && <li className="text-muted-foreground">—</li>}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {showPerms && groups.length > 0 && (
+                <div className="space-y-3 rounded-lg border p-4">
+                  <p className="text-sm font-medium">Autorisations demandées</p>
+                  {groups.map((g) => (
+                    <div key={g.label} className="space-y-1.5">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</p>
+                      {g.scopes.map((s) => (
+                        <label key={s.scope} className="flex items-center gap-2 text-sm">
+                          <Checkbox
+                            checked={chosen.includes(s.scope)}
+                            disabled={s.required}
+                            onCheckedChange={(v) => toggleScope(c.key, s.scope, Boolean(v))}
+                          />
+                          <span>{s.label}</span>
+                          {s.required && <span className="text-xs text-muted-foreground">(obligatoire)</span>}
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    Le consentement final est demandé par la plateforme elle-même.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                {!c.connected ? (
+                  <Button disabled={!c.available || busy === c.key} onClick={() => void connect(c.key)}>
+                    {busy === c.key ? "Redirection…" : `Se connecter à ${c.name}`}
+                  </Button>
+                ) : (
                   <>
-                    <Button disabled={connecting === c.key} onClick={() => void connect(c.key, c.oauth)}>
-                      {c.oauth ? "Mettre à jour les autorisations" : "Mettre à jour les fonctions"}
+                    <Button variant="outline" onClick={() => setOpenPerms((p) => ({ ...p, [c.key]: !showPerms }))}>
+                      {showPerms ? "Masquer les permissions" : "Gérer les permissions"}
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={async () => {
-                        await stopFn({ data: { connectorKey: c.key } });
-                        toast.success("Compte déconnecté.");
-                        void qc.invalidateQueries({ queryKey: ["my-connections"] });
-                      }}
-                    >
-                      {c.oauth ? "Déconnecter le compte" : "Désactiver le service"}
+                    <Button disabled={busy === c.key} onClick={() => void connect(c.key)}>
+                      Ajouter une permission
+                    </Button>
+                    <Button variant="outline" disabled={busy === c.key} onClick={() => void connect(c.key)}>
+                      <RefreshCw className="mr-1 size-4" /> Reconnecter
+                    </Button>
+                    <Button variant="ghost" className="text-destructive" onClick={() => void disconnect(c.key, c.name)}>
+                      Déconnecter
                     </Button>
                   </>
-                ) : (
-                  <Button disabled={connecting === c.key} onClick={() => void connect(c.key, c.oauth)}>
-                    {connecting === c.key
-                      ? "Activation…"
-                      : c.oauth
-                        ? "Connecter le compte"
-                        : "Activer ce service"}
-                  </Button>
                 )}
               </div>
             </Card>
           );
         })}
 
-        {items.length === 0 && !list.isLoading && (
+        {!items.length && !list.isLoading && (
           <Card className="p-6 text-sm text-muted-foreground">
-            Aucun compte n'est encore disponible à la connexion. Revenez bientôt.
+            Aucun service à connecter pour le moment. Votre administrateur doit d'abord activer les connecteurs.
           </Card>
         )}
       </div>
-
     </AppShell>
   );
 }

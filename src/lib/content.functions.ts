@@ -48,7 +48,7 @@ const paramsSchema = z
     style: z.string().max(80).optional(),
     realism: z.string().max(80).optional(),
     count: z.number().min(1).max(4).optional(),
-    duration: z.number().min(4).max(8).optional(),
+    duration: z.number().min(4).max(12).optional(),
     audio: z.boolean().optional(),
     camera: z.string().max(60).optional(),
     language: z.string().max(40).optional(),

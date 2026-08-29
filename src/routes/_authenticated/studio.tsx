@@ -461,7 +461,7 @@ function StudioPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {[4, 6, 8].map((d) => (
+                        {videoCaps(model.key).durations.map((d) => (
                           <SelectItem key={d} value={String(d)}>
                             {d} secondes
                           </SelectItem>
@@ -482,8 +482,11 @@ function StudioPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="720p">720p</SelectItem>
-                        <SelectItem value="1080p">1080p (8 s)</SelectItem>
+                        {videoCaps(model.key).resolutions.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

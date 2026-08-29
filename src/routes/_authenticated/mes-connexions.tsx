@@ -307,6 +307,9 @@ function MesConnexionsPage() {
           </Card>
         )}
       </div>
+        </TabsContent>
+      </Tabs>
     </AppShell>
   );
 }
+

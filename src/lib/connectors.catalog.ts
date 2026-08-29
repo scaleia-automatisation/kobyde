@@ -36,6 +36,8 @@ export type ConnectorDef = {
   services?: { key: string; label: string }[];
   /** Le connecteur nécessite une connexion du compte utilisateur (OAuth) */
   userConnect?: boolean;
+  /** Géré par chaque utilisateur lui-même (ses propres identifiants), jamais par l'admin de la plateforme */
+  userManaged?: boolean;
   /** Le connecteur reçoit des webhooks */
   webhook?: boolean;
   oauth?: {
@@ -389,8 +391,10 @@ export const CONNECTORS: ConnectorDef[] = [
     key: "whatsapp",
     name: "WhatsApp Business API",
     category: "sms",
-    description: "Messages WhatsApp professionnels.",
+    description: "Messages WhatsApp professionnels envoyés depuis votre propre numéro (Access Token + Phone Number ID de votre compte).",
     authType: "api_key",
+    userConnect: true,
+    userManaged: true,
     webhook: true,
     fields: [f("access_token", "Access Token"), f("phone_number_id", "Phone Number ID", false)],
     optionalFields: [

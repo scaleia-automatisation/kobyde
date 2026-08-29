@@ -934,7 +934,9 @@ export async function listUserConnections(userId: string) {
   const userItems = connectors
     // L'utilisateur ne voit que les plateformes nécessitant SON compte.
     // Les clés API (OpenAI, Gemini, Apify, Resend…) restent gérées par l'administrateur.
-    .filter((c) => c.userConnect)
+    // WhatsApp Business est géré par chaque utilisateur via sa carte dédiée
+    // (Access Token + Phone Number ID), pas par un flux OAuth ni par l'admin.
+    .filter((c) => c.userConnect && c.authType === "oauth")
     .map((c) => {
       const row = rows.get(c.key);
       const granted = splitScopes(row?.scopes_granted ?? row?.scopes);

@@ -378,22 +378,73 @@ export async function startVideoJob(model: ContentModel, prompt: string, params:
     return `openai|${engine}|${job.id}`;
   }
 
-  /* ------------------- fal.ai : Kling, Seedance, Grok Imagine ------------------- */
-  if (engine.startsWith("fal-ai/")) {
-    const key = await providerKey("fal", "FAL_KEY");
-    if (!key) throw new Error("Clé fal.ai manquante : configurez le connecteur fal.ai (Kling / Seedance / Grok).");
-    const input: Record<string, unknown> = { prompt, aspect_ratio: ratio, duration: String(duration) };
-    if (/seedance|grok/.test(engine)) input["resolution"] = resolution;
-    if (/kling/.test(engine)) input["negative_prompt"] = "blur, distort, low quality";
-    const res = await fetch(`https://queue.fal.run/${engine}`, {
+  /* --------------------------- Kling AI (API officielle) --------------------------- */
+  if (engine.startsWith("kling/")) {
+    const res = await fetch(`${KLING_BASE}/v1/videos/text2video`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Key ${key}` },
-      body: JSON.stringify(input),
+      headers: await klingHeaders(),
+      body: JSON.stringify({
+        model_name: engine.replace("kling/", ""),
+        prompt,
+        negative_prompt: "blur, distort, low quality",
+        mode: resolution === "1080p" ? "pro" : "std",
+        duration: String(duration),
+        aspect_ratio: ratio,
+      }),
     });
-    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo (${res.status})`);
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo Kling (${res.status})`);
     const job = (await res.json()) as any;
-    return `fal|${engine}|${job.request_id}`;
+    if (job?.code && job.code !== 0) throw new Error(job?.message ?? "Kling a refusé la demande.");
+    const taskId = job?.data?.task_id;
+    if (!taskId) throw new Error("Kling n'a renvoyé aucune tâche.");
+    return `kling|${engine}|${taskId}`;
   }
+
+  /* ------------------------ Seedance (API officielle ModelArk) ------------------------ */
+  if (engine.startsWith("seedance/")) {
+    const key = await providerKey("seedance", "SEEDANCE_API_KEY");
+    if (!key) throw new Error("Clé Seedance manquante : configurez le connecteur Seedance.");
+    const res = await fetch(`${SEEDANCE_BASE}/contents/generations/tasks`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: engine.replace("seedance/", ""),
+        content: [
+          {
+            type: "text",
+            text: `${prompt} --resolution ${resolution} --duration ${duration} --ratio ${ratio}`,
+          },
+        ],
+      }),
+    });
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo Seedance (${res.status})`);
+    const job = (await res.json()) as any;
+    if (!job?.id) throw new Error("Seedance n'a renvoyé aucune tâche.");
+    return `seedance|${engine}|${job.id}`;
+  }
+
+  /* --------------------------- Grok Imagine (API xAI) --------------------------- */
+  if (engine.startsWith("xai/")) {
+    const key = await providerKey("grok", "XAI_API_KEY");
+    if (!key) throw new Error("Clé Grok manquante : configurez le connecteur Grok (xAI).");
+    const res = await fetch(`${XAI_BASE}/v1/videos/generations`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: engine.replace("xai/", ""),
+        prompt,
+        duration_seconds: duration,
+        aspect_ratio: ratio,
+        resolution,
+      }),
+    });
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo Grok (${res.status})`);
+    const job = (await res.json()) as any;
+    const jobId = job?.id ?? job?.request_id;
+    if (!jobId) throw new Error("Grok n'a renvoyé aucune tâche.");
+    return `xai|${engine}|${jobId}`;
+  }
+
 
   /* ----------------------------- Passerelle (Veo) ----------------------------- */
   const res = await fetch(`${GATEWAY}/v1/videos`, {

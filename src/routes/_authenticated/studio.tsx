@@ -46,6 +46,7 @@ import {
   VIDEO_CAMERA,
   detectKindLocal,
   platformLabel,
+  videoCaps,
   type ContentKind,
   type ContentModel,
   type ContentParams,
@@ -454,14 +455,18 @@ function StudioPage() {
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Durée</Label>
                     <Select
-                      value={String(params.duration ?? 8)}
+                      value={String(
+                        videoCaps(model.key).durations.includes(Number(params.duration))
+                          ? params.duration
+                          : videoCaps(model.key).durations[0],
+                      )}
                       onValueChange={(v) => setParams((p) => ({ ...p, duration: Number(v) }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {[4, 6, 8].map((d) => (
+                        {videoCaps(model.key).durations.map((d) => (
                           <SelectItem key={d} value={String(d)}>
                             {d} secondes
                           </SelectItem>
@@ -475,15 +480,22 @@ function StudioPage() {
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Résolution</Label>
                     <Select
-                      value={params.resolution ?? "720p"}
+                      value={
+                        videoCaps(model.key).resolutions.includes(String(params.resolution))
+                          ? String(params.resolution)
+                          : (videoCaps(model.key).resolutions[0] as string)
+                      }
                       onValueChange={(v) => setParams((p) => ({ ...p, resolution: v }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="720p">720p</SelectItem>
-                        <SelectItem value="1080p">1080p (8 s)</SelectItem>
+                        {videoCaps(model.key).resolutions.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

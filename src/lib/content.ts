@@ -71,6 +71,24 @@ export const VIDEO_CAMERA = [
   "Caméra à l'épaule",
 ] as const;
 
+/** Durées et résolutions réellement supportées par chaque famille de modèles vidéo. */
+export type VideoCaps = { durations: number[]; resolutions: string[] };
+
+const VIDEO_CAPS: { match: RegExp; caps: VideoCaps }[] = [
+  { match: /^veo/, caps: { durations: [4, 6, 8], resolutions: ["720p", "1080p"] } },
+  { match: /^sora/, caps: { durations: [4, 8, 12], resolutions: ["720p", "1080p"] } },
+  { match: /^kling/, caps: { durations: [5, 10], resolutions: ["720p", "1080p"] } },
+  { match: /^seedance/, caps: { durations: [5, 10], resolutions: ["480p", "720p", "1080p"] } },
+  { match: /^grok/, caps: { durations: [6], resolutions: ["720p"] } },
+];
+
+export function videoCaps(modelKey: string): VideoCaps {
+  return (
+    VIDEO_CAPS.find((c) => c.match.test(modelKey))?.caps ?? { durations: [4, 6, 8], resolutions: ["720p", "1080p"] }
+  );
+}
+
+
 export type ContentModel = {
   id: string;
   key: string;

@@ -1,12 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadCompanyMemory } from "./eric.server";
-import { OBJECTIVES, PLATFORMS, TONES, type ContentKind, type ContentModel, type ContentParams } from "./content";
+import {
+  OBJECTIVES,
+  PLATFORMS,
+  TONES,
+  videoCaps,
+  type ContentKind,
+  type ContentModel,
+  type ContentParams,
+} from "./content";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { aiFetch } from "./ai-provider.server";
 
+import { getConnectorConfig } from "./connectors.server";
+
 const GATEWAY = "https://ai.gateway.lovable.dev";
+const OPENAI_API = "https://api.openai.com";
 
 function apiKey() {
   const key = process.env["LOVABLE_API_KEY"];
@@ -258,21 +269,99 @@ export function openaiSize(ratio?: string) {
 
 /* ------------------------------ Génération vidéo ------------------------------ */
 
+/**
+ * Trois familles de fournisseurs vidéo :
+ *  - `openai/…`  → API OpenAI Vidéos (Sora 2, Sora 2 Pro)
+ *  - `fal-ai/…`  → file d'attente fal.ai (Kling, Seedance, Grok Imagine)
+ *  - `google/…`  → passerelle Lovable (Veo 3.1)
+ * L'identifiant de tâche renvoyé encode le fournisseur : `provider|engine|id`.
+ */
+
+async function providerKey(connector: string, envVar: string): Promise<string> {
+  let key = "";
+  try {
+    const conf = await getConnectorConfig(connector);
+    if (conf?.isEnabled !== false) key = conf?.secrets?.["api_key"] ?? "";
+  } catch {
+    /* base indisponible */
+  }
+  return key || process.env[envVar] || "";
+}
+
+const videoDuration = (model: ContentModel, params: ContentParams) => {
+  const allowed = videoCaps(model.key).durations;
+  const wanted = Number(params.duration);
+  return allowed.includes(wanted) ? wanted : (allowed[allowed.length - 1] as number);
+};
+
+const videoResolution = (model: ContentModel, params: ContentParams) => {
+  const allowed = videoCaps(model.key).resolutions;
+  return allowed.includes(String(params.resolution)) ? String(params.resolution) : (allowed[0] as string);
+};
+
+const videoRatio = (params: ContentParams) => (params.ratio === "9:16" ? "9:16" : params.ratio === "1:1" ? "1:1" : "16:9");
+
+const SORA_SIZE: Record<string, Record<string, string>> = {
+  "720p": { "16:9": "1280x720", "9:16": "720x1280", "1:1": "720x720" },
+  "1080p": { "16:9": "1920x1080", "9:16": "1080x1920", "1:1": "1080x1080" },
+};
+
 export async function startVideoJob(model: ContentModel, prompt: string, params: ContentParams): Promise<string> {
-  if (!model.engine)
+  const engine = model.engine;
+  if (!engine)
     throw new Error(`Le modèle « ${model.label} » n'est pas encore raccordé à une API. Choisissez un autre modèle.`);
-  const duration = [4, 6, 8].includes(Number(params.duration)) ? Number(params.duration) : 8;
-  const resolution = params.resolution === "1080p" ? "1080p" : "720p";
+
+  const duration = videoDuration(model, params);
+  const resolution = videoResolution(model, params);
+  const ratio = videoRatio(params);
+
+  /* ------------------------------- OpenAI Sora ------------------------------- */
+  if (engine.startsWith("openai/")) {
+    const key = await providerKey("openai", "OPENAI_API_KEY");
+    if (!key) throw new Error("Clé OpenAI manquante : configurez le connecteur OpenAI.");
+    const res = await fetch(`${OPENAI_API}/v1/videos`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: engine.replace("openai/", ""),
+        prompt,
+        seconds: String(duration),
+        size: SORA_SIZE[resolution]?.[ratio] ?? "1280x720",
+      }),
+    });
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo (${res.status})`);
+    const job = (await res.json()) as any;
+    return `openai|${engine}|${job.id}`;
+  }
+
+  /* ------------------- fal.ai : Kling, Seedance, Grok Imagine ------------------- */
+  if (engine.startsWith("fal-ai/")) {
+    const key = await providerKey("fal", "FAL_KEY");
+    if (!key) throw new Error("Clé fal.ai manquante : configurez le connecteur fal.ai (Kling / Seedance / Grok).");
+    const input: Record<string, unknown> = { prompt, aspect_ratio: ratio, duration: String(duration) };
+    if (/seedance|grok/.test(engine)) input["resolution"] = resolution;
+    if (/kling/.test(engine)) input["negative_prompt"] = "blur, distort, low quality";
+    const res = await fetch(`https://queue.fal.run/${engine}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Key ${key}` },
+      body: JSON.stringify(input),
+    });
+    if (!res.ok) throw new Error((await providerMessage(res)) ?? `Erreur du modèle vidéo (${res.status})`);
+    const job = (await res.json()) as any;
+    return `fal|${engine}|${job.request_id}`;
+  }
+
+  /* ----------------------------- Passerelle (Veo) ----------------------------- */
   const res = await fetch(`${GATEWAY}/v1/videos`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey()}` },
     body: JSON.stringify({
-      model: model.engine,
+      model: engine,
       instances: [{ prompt }],
       parameters: {
         durationSeconds: resolution === "1080p" ? 8 : duration,
         resolution,
-        aspectRatio: params.ratio === "9:16" ? "9:16" : "16:9",
+        aspectRatio: ratio === "9:16" ? "9:16" : "16:9",
         sampleCount: 1,
         generateAudio: params.audio !== false,
       },
@@ -283,19 +372,68 @@ export async function startVideoJob(model: ContentModel, prompt: string, params:
     throw new Error(err?.message ?? `Erreur du modèle vidéo (${res.status})`);
   }
   const job = (await res.json()) as any;
-  return String(job.id);
+  return `gateway||${job.id}`;
+}
+
+async function providerMessage(res: Response): Promise<string | null> {
+  const txt = await res.text().catch(() => "");
+  try {
+    const j = JSON.parse(txt);
+    return j?.error?.message ?? j?.message ?? j?.detail?.[0]?.msg ?? null;
+  } catch {
+    return txt.slice(0, 200) || null;
+  }
 }
 
 export async function pollVideoJob(id: string): Promise<{ status: string; bytes?: Uint8Array; error?: string }> {
-  const res = await fetch(`${GATEWAY}/v1/videos/${id}`, { headers: { authorization: `Bearer ${apiKey()}` } });
+  const [provider, engine, realId] = id.includes("|") ? id.split("|") : ["gateway", "", id];
+
+  if (provider === "openai") {
+    const key = await providerKey("openai", "OPENAI_API_KEY");
+    const res = await fetch(`${OPENAI_API}/v1/videos/${realId}`, { headers: { authorization: `Bearer ${key}` } });
+    if (!res.ok) throw gatewayError(res.status);
+    const job = (await res.json()) as any;
+    if (job.status === "failed") return { status: "failed", error: job?.error?.message ?? "Génération vidéo échouée." };
+    if (job.status !== "completed") return { status: "in_progress" };
+    const dl = await fetch(`${OPENAI_API}/v1/videos/${realId}/content`, {
+      headers: { authorization: `Bearer ${key}` },
+    });
+    if (!dl.ok) throw gatewayError(dl.status);
+    return { status: "completed", bytes: new Uint8Array(await dl.arrayBuffer()) };
+  }
+
+  if (provider === "fal") {
+    const key = await providerKey("fal", "FAL_KEY");
+    const st = await fetch(`https://queue.fal.run/${engine}/requests/${realId}/status`, {
+      headers: { authorization: `Key ${key}` },
+    });
+    if (!st.ok) throw gatewayError(st.status);
+    const status = (await st.json()) as any;
+    if (String(status?.status).toUpperCase() !== "COMPLETED") return { status: "in_progress" };
+    const out = await fetch(`https://queue.fal.run/${engine}/requests/${realId}`, {
+      headers: { authorization: `Key ${key}` },
+    });
+    if (!out.ok) throw gatewayError(out.status);
+    const result = (await out.json()) as any;
+    const url = result?.video?.url ?? result?.videos?.[0]?.url;
+    if (!url) return { status: "failed", error: "Le modèle n'a renvoyé aucune vidéo." };
+    const dl = await fetch(url);
+    if (!dl.ok) throw new Error("Téléchargement de la vidéo impossible.");
+    return { status: "completed", bytes: new Uint8Array(await dl.arrayBuffer()) };
+  }
+
+  const res = await fetch(`${GATEWAY}/v1/videos/${realId}`, { headers: { authorization: `Bearer ${apiKey()}` } });
   if (!res.ok) throw gatewayError(res.status);
   const job = (await res.json()) as any;
   if (job.status === "failed") return { status: "failed", error: job?.error?.message ?? "Génération vidéo échouée." };
   if (job.status !== "completed") return { status: "in_progress" };
-  const dl = await fetch(`${GATEWAY}/v1/videos/${id}/content`, { headers: { authorization: `Bearer ${apiKey()}` } });
+  const dl = await fetch(`${GATEWAY}/v1/videos/${realId}/content`, {
+    headers: { authorization: `Bearer ${apiKey()}` },
+  });
   if (!dl.ok) throw gatewayError(dl.status);
   return { status: "completed", bytes: new Uint8Array(await dl.arrayBuffer()) };
 }
+
 
 /* -------------------------------- Stockage -------------------------------- */
 

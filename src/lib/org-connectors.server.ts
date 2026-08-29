@@ -330,23 +330,21 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
     }
 
     if (input.provider === "google") {
-      return finish(
-        ...(Object.values(
-          await verifyOAuthClient({
-            tokenUrl: "https://oauth2.googleapis.com/token",
-            body: new URLSearchParams({
-              grant_type: "authorization_code",
-              code: "kobyde-connection-test",
-              redirect_uri: redirectUri,
-              client_id: config["client_id"] ?? "",
-              client_secret: secrets["client_secret"] ?? "",
-            }),
-            clientErrors: ["invalid_client", "unauthorized_client"],
-            name: "Google",
-          }),
-        ) as [boolean, string]),
-      );
+      const r = await verifyOAuthClient({
+        tokenUrl: "https://oauth2.googleapis.com/token",
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code: "kobyde-connection-test",
+          redirect_uri: redirectUri,
+          client_id: config["client_id"] ?? "",
+          client_secret: secrets["client_secret"] ?? "",
+        }),
+        clientErrors: ["invalid_client", "unauthorized_client"],
+        name: "Google",
+      });
+      return finish(r.ok, r.message);
     }
+
 
     if (input.provider === "meta") {
       const p = await probe(

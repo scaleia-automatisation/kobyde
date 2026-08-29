@@ -283,12 +283,14 @@ export function openaiSize(ratio?: string) {
 async function connectorSecrets(connector: string): Promise<Record<string, string>> {
   try {
     const conf = await getConnectorConfig(connector);
-    if (conf?.isEnabled !== false) return (conf?.secrets ?? {}) as Record<string, string>;
+    if (conf?.isEnabled !== false)
+      return { ...(conf?.config ?? {}), ...(conf?.secrets ?? {}) } as Record<string, string>;
   } catch {
     /* base indisponible */
   }
   return {};
 }
+
 
 async function providerKey(connector: string, envVar: string): Promise<string> {
   const s = await connectorSecrets(connector);

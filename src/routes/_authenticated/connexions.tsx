@@ -171,32 +171,44 @@ function ConnecteursAdminPage() {
             </p>
           </Card>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <span className="text-xs text-muted-foreground">Trier par</span>
-            <Button
-              size="sm"
-              variant={sort === "name-asc" ? "default" : "outline"}
-              onClick={() => setSort("name-asc")}
-              aria-label="Tri par nom croissant"
-            >
-              <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
-            </Button>
-            <Button
-              size="sm"
-              variant={sort === "name-desc" ? "default" : "outline"}
-              onClick={() => setSort("name-desc")}
-              aria-label="Tri par nom décroissant"
-            >
-              <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
-            </Button>
-            <Button
-              size="sm"
-              variant={sort === "status" ? "default" : "outline"}
-              onClick={() => setSort("status")}
-              aria-label="Tri par statut"
-            >
-              Statut
-            </Button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Rechercher un connecteur…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-64 pl-9 text-sm"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">Trier par</span>
+              <Button
+                size="sm"
+                variant={sort === "name-asc" ? "default" : "outline"}
+                onClick={() => setSort("name-asc")}
+                aria-label="Tri par nom croissant"
+              >
+                <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
+              </Button>
+              <Button
+                size="sm"
+                variant={sort === "name-desc" ? "default" : "outline"}
+                onClick={() => setSort("name-desc")}
+                aria-label="Tri par nom décroissant"
+              >
+                <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
+              </Button>
+              <Button
+                size="sm"
+                variant={sort === "status" ? "default" : "outline"}
+                onClick={() => setSort("status")}
+                aria-label="Tri par statut"
+              >
+                Statut
+              </Button>
+            </div>
           </div>
 
           {grouped.map(({ cat, list: group }) => (

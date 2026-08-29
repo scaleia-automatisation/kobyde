@@ -156,9 +156,18 @@ function MesConnexionsPage() {
 
         <OrgStripeCard />
 
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Rechercher un connecteur…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full pl-9 text-sm"
+          />
+        </div>
 
-
-        {items.map((c) => {
+        {filteredItems.map((c) => {
           const def = CONNECTOR_MAP.get(c.key);
           const groups = scopeGroups(def);
           const chosen = selected[c.key] ?? [];

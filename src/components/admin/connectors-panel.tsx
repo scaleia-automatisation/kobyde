@@ -381,7 +381,17 @@ export function ConnectorsPanel() {
             </Button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Rechercher un connecteur…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-56 pl-9 text-sm"
+            />
+          </div>
           <span className="text-xs text-muted-foreground">Trier par</span>
           <Button
             size="sm"

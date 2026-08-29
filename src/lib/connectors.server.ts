@@ -608,7 +608,8 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
   if (new Date(st.expires_at).getTime() < Date.now()) throw new Error("Session d'autorisation expirée.");
 
   const conf = await getConnectorConfig(connectorKey);
-  const { clientId, clientSecret } = appCredentials(conf);
+  const { clientId, clientSecret } = await resolveOAuthApp(connectorKey, st.org_id, conf);
+
   const redirectUri = `${origin.replace(/\/$/, "")}${callbackPath(connectorKey)}`;
 
   const body = new URLSearchParams({

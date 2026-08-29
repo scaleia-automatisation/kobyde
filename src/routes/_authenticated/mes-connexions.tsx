@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Link2, RefreshCw, Search, ShieldCheck, XCircle } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { OrgStripeCard } from "@/components/org-stripe-card";
+import { OrgWhatsappCard } from "@/components/org-whatsapp-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -98,14 +99,17 @@ function MesConnexionsPage() {
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
+    // WhatsApp Business est géré par l'utilisateur lui-même (carte dédiée).
+    const base = items.filter((c) => c.key !== "whatsapp");
+    if (!q) return base;
+    return base.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.description.toLowerCase().includes(q) ||
         c.key.toLowerCase().includes(q)
     );
   }, [items, query]);
+
 
   const connect = async (key: string) => {
     setBusy(key);
@@ -184,6 +188,9 @@ function MesConnexionsPage() {
         </div>
 
         {"stripe connect".includes(query.trim().toLowerCase()) && <OrgStripeCard />}
+
+        {"whatsapp business".includes(query.trim().toLowerCase()) && <OrgWhatsappCard />}
+
 
 
         {filteredItems.map((c) => {

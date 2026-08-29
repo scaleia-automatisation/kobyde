@@ -1,12 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadCompanyMemory } from "./eric.server";
-import { OBJECTIVES, PLATFORMS, TONES, type ContentKind, type ContentModel, type ContentParams } from "./content";
+import {
+  OBJECTIVES,
+  PLATFORMS,
+  TONES,
+  videoCaps,
+  type ContentKind,
+  type ContentModel,
+  type ContentParams,
+} from "./content";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { aiFetch } from "./ai-provider.server";
 
+import { getConnectorConfig } from "./connectors.server";
+
 const GATEWAY = "https://ai.gateway.lovable.dev";
+const OPENAI_API = "https://api.openai.com";
 
 function apiKey() {
   const key = process.env["LOVABLE_API_KEY"];

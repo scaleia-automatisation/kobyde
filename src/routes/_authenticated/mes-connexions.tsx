@@ -94,18 +94,8 @@ function MesConnexionsPage() {
     });
   }, [items]);
 
-  const validateScopes = async (key: string) => {
-    setBusy(key);
-    try {
-      await validateFn({ data: { connectorKey: key, scopes: selected[key] ?? [] } });
-      toast.success("Autorisations enregistrées.");
-      void qc.invalidateQueries({ queryKey: ["my-connections"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Enregistrement impossible.");
-    } finally {
-      setBusy(null);
-    }
-  };
+
+
 
   const toggleScope = (key: string, scope: string, on: boolean) =>
     setSelected((prev) => {

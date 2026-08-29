@@ -312,6 +312,21 @@ export const CONNECTORS: ConnectorDef[] = [
     ],
   },
   {
+    key: "systemeio",
+    name: "Systeme.io",
+    category: "email",
+    description: "Funnels, campagnes email, contacts et automatisations Systeme.io.",
+    authType: "api_key",
+    fields: [f("api_key", "Jeton API (X-API-Key)")],
+    services: [
+      { key: "contacts", label: "Contacts et tags" },
+      { key: "campaigns", label: "Campagnes email" },
+      { key: "funnels", label: "Funnels et pages" },
+      { key: "automation", label: "Automatisations et règles" },
+    ],
+    optionalFields: [{ key: "monthly_budget_eur", label: "Budget mensuel (€)", secret: false }],
+  },
+  {
     key: "brevo",
     name: "Brevo / MailerLite",
     category: "email",

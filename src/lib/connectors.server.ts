@@ -928,7 +928,7 @@ export async function listUserConnections(userId: string) {
   const rows = new Map<string, any>((data ?? []).map((r: any) => [r.connector_key ?? r.provider, r]));
 
   const connectors = await listConnectors();
-  return connectors
+  const userItems = connectors
     // L'utilisateur ne voit que les plateformes nécessitant SON compte.
     // Les clés API (OpenAI, Gemini, Apify, Resend…) restent gérées par l'administrateur.
     .filter((c) => c.userConnect)

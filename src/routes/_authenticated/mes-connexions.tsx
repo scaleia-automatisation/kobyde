@@ -190,23 +190,19 @@ function MesConnexionsPage() {
           const showPerms = openPerms[c.key] ?? !c.connected;
           return (
             <Card key={c.key} className="space-y-4 p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Link2 className="size-4 text-muted-foreground" />
-                    <h3 className="font-medium">{c.name}</h3>
-                    {c.needsReconnect ? (
-                      <Badge className="bg-amber-500/15 text-amber-600">Reconnexion nécessaire</Badge>
-                    ) : c.connected ? (
-                      <Badge className="bg-emerald-500/15 text-emerald-600">Connecté</Badge>
-                    ) : c.available ? (
-                      <Badge variant="secondary">Disponible</Badge>
-                    ) : (
-                      <Badge variant="outline">Bientôt disponible</Badge>
-                    )}
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>
-                  {c.account && <p className="mt-1 text-xs text-muted-foreground">Compte : {c.account}</p>}
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:justify-between">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Link2 className="size-4 shrink-0 text-muted-foreground" />
+                  <h3 className="truncate font-medium">{c.name}</h3>
+                  {c.needsReconnect ? (
+                    <Badge className="shrink-0 bg-amber-500/15 text-amber-600">Reconnexion nécessaire</Badge>
+                  ) : c.connected ? (
+                    <Badge className="shrink-0 bg-emerald-500/15 text-emerald-600">Connecté</Badge>
+                  ) : c.available ? (
+                    <Badge className="shrink-0" variant="secondary">Disponible</Badge>
+                  ) : (
+                    <Badge className="shrink-0" variant="outline">Bientôt disponible</Badge>
+                  )}
                 </div>
                 {c.connected && (
                   <div className="flex shrink-0 items-center gap-2">
@@ -216,6 +212,11 @@ function MesConnexionsPage() {
                     <Switch id={`act-${c.key}`} checked={c.isActive} onCheckedChange={(v) => void setActive(c.key, v)} />
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">{c.description}</p>
+                {c.account && <p className="text-xs text-muted-foreground">Compte : {c.account}</p>}
               </div>
 
               {c.needsReconnect && (

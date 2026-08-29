@@ -363,12 +363,41 @@ export function ConnectorsPanel() {
         </div>
       </Card>
 
-      <div className="flex flex-wrap gap-2">
-        {categories.map((c) => (
-          <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => setCategory(c)}>
-            {c === "all" ? "Tous" : (CATEGORY_LABELS[c as keyof typeof CATEGORY_LABELS] ?? c)}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <Button key={c} size="sm" variant={category === c ? "default" : "outline"} onClick={() => setCategory(c)}>
+              {c === "all" ? "Tous" : (CATEGORY_LABELS[c as keyof typeof CATEGORY_LABELS] ?? c)}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Trier par</span>
+          <Button
+            size="sm"
+            variant={sort === "name-asc" ? "default" : "outline"}
+            onClick={() => setSort("name-asc")}
+            aria-label="Tri par nom croissant"
+          >
+            <ArrowDownAZ className="mr-1 size-4" /> Nom A-Z
           </Button>
-        ))}
+          <Button
+            size="sm"
+            variant={sort === "name-desc" ? "default" : "outline"}
+            onClick={() => setSort("name-desc")}
+            aria-label="Tri par nom décroissant"
+          >
+            <ArrowUpAZ className="mr-1 size-4" /> Nom Z-A
+          </Button>
+          <Button
+            size="sm"
+            variant={sort === "status" ? "default" : "outline"}
+            onClick={() => setSort("status")}
+            aria-label="Tri par statut"
+          >
+            Statut
+          </Button>
+        </div>
       </div>
 
       {list.isLoading && <Card className="p-6 text-sm text-muted-foreground">Chargement…</Card>}

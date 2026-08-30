@@ -111,6 +111,46 @@ export function OrgConnectorConfig() {
     }
   };
 
+  const addToPlatform = async (c: { key: string; name: string; authType: string }, values: Record<string, string>) => {
+    setBusy(`add-${c.key}`);
+    try {
+      if (c.authType === "oauth") {
+        // Enregistre d'abord les identifiants saisis, puis lance l'autorisation.
+        await saveFn({ data: { provider: c.key, values } });
+        setDrafts((prev) => {
+          const next = { ...prev };
+          delete next[c.key];
+          return next;
+        });
+        const res = await connectFn({ data: { provider: c.key, origin } });
+        if (res?.url) {
+          toast.success(`Redirection vers ${c.name} pour autoriser Kobyde…`);
+          window.location.href = res.url;
+          return;
+        }
+        toast.error(res?.error ?? "Autorisation impossible.");
+        await qc.invalidateQueries({ queryKey: ["org-connectors"] });
+        return;
+      }
+      // Clé API : enregistrer puis vérifier la connexion.
+      await saveFn({ data: { provider: c.key, values } });
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[c.key];
+        return next;
+      });
+      const res = await testFn({ data: { provider: c.key, origin } });
+      setResults((prev) => ({ ...prev, [c.key]: res as TestResult }));
+      if (res.ok) toast.success(`${c.name} ajouté et connecté.`);
+      else toast.error(`${c.name} enregistré, mais le test a échoué.`);
+      await qc.invalidateQueries({ queryKey: ["org-connectors"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : `Impossible d'ajouter ${c.name}.`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const test = async (key: string) => {
     setBusy(`test-${key}`);
     setResults((prev) => {
@@ -375,6 +415,17 @@ export function OrgConnectorConfig() {
                       </button>
                     </span>
                   )}
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    disabled={!canManage || busy === `add-${c.key}`}
+                    onClick={() => void addToPlatform(c, values)}
+                  >
+                    {busy === `add-${c.key}` ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}
+                    Ajouter à {c.name}
+                  </Button>
                 </div>
               </div>
             )}

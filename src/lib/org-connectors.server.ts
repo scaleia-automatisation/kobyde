@@ -61,8 +61,8 @@ async function decryptSecrets(stored?: string | null): Promise<Record<string, st
 
 /* ------------------------------------------------------------------- Accès */
 
-export const orgRedirectUri = (def: OrgConnectorDef, origin?: string) =>
-  def.oauthKey ? `${(origin ?? productionBaseUrl()).replace(/\/$/, "")}${callbackPath(def.oauthKey)}` : null;
+export const orgRedirectUri = (def: OrgConnectorDef, _origin?: string) =>
+  def.oauthKey ? `${productionBaseUrl()}${callbackPath(def.oauthKey)}` : null;
 
 async function rowFor(orgId: string, provider: string) {
   const supabase = await db();

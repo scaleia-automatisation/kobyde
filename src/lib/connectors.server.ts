@@ -602,12 +602,24 @@ export async function buildAuthorizeUrl(input: {
   if (input.connectorKey === "google") {
     params.set("access_type", "offline");
     params.set("include_granted_scopes", "true");
-    // Ne pas envoyer login_hint : Google doit afficher le sélecteur de comptes
-    // et laisser l'utilisateur choisir explicitement le compte à connecter.
-    // Consentement redemandé uniquement lorsqu'une nouvelle autorisation est nécessaire
-    // ou lorsqu'aucun refresh token n'est encore stocké.
-    params.set("prompt", isNewConsent || !existing?.refresh_token ? "consent select_account" : "select_account");
+    const knownEmail = (existing as any)?.provider_email ?? (existing as any)?.account_label ?? null;
+    if (isNewConsent || !existing?.refresh_token) {
+      // Première autorisation ou nouvelles permissions : afficher le sélecteur
+      // de comptes et l'écran de consentement.
+      params.set("prompt", "consent select_account");
+    } else {
+      // Compte déjà connecté et autorisé : réutiliser directement la session
+      // Google existante et revenir immédiatement sur l'onglet Comptes.
+      if (knownEmail && typeof knownEmail === "string" && knownEmail.includes("@")) {
+        params.set("login_hint", knownEmail);
+      }
+      // Pas de paramètre « prompt » : Google réutilise la session existante et
+      // redirige aussitôt, sans redemander le choix du compte ni le consentement.
+      params.delete("prompt");
+
+    }
   }
+
   if (input.connectorKey === "tiktok") {
     params.delete("client_id");
     params.set("client_key", clientId);

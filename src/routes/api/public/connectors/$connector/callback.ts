@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
           new Response(null, {
             status: 302,
             headers: {
-              location: `${origin}/mes-connexions?connexion=${status}&connecteur=${encodeURIComponent(
+              location: `${origin}/tableau-de-bord?connexion=${status}&connecteur=${encodeURIComponent(
                 params.connector,
               )}${message ? `&message=${encodeURIComponent(message)}` : ""}`,
             },

@@ -79,14 +79,10 @@ export function OrgConnectorConfig() {
   type ScopeOpt = { scope: string; label: string; required?: boolean };
   const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {
     if (scopeSel[c.key]) return scopeSel[c.key]!;
+    // Par défaut toutes les autorisations de la plateforme sont validées automatiquement.
     const catalog = c.scopeCatalog ?? [];
     const granted = c.grantedScopes ?? [];
-    return Array.from(
-      new Set([
-        ...catalog.filter((s) => s.required).map((s) => s.scope),
-        ...catalog.filter((s) => granted.includes(s.scope)).map((s) => s.scope),
-      ]),
-    );
+    return Array.from(new Set([...catalog.map((s) => s.scope), ...granted]));
   };
 
   const toggleScope = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }, scope: string) => {

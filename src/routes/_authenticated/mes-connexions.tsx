@@ -164,8 +164,8 @@ function MesConnexionsPage() {
     >
       <Tabs defaultValue="configuration" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="configuration">Configuration</TabsTrigger>
-          <TabsTrigger value="comptes">Mes comptes</TabsTrigger>
+          <TabsTrigger value="configuration">Comptes</TabsTrigger>
+          <TabsTrigger value="comptes">Autorisations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuration">

@@ -111,7 +111,36 @@ export function OrgConnectorConfig() {
     }
   };
 
+  const openAuthorizationWindow = (name: string) => {
+    const width = 560;
+    const height = 760;
+    const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
+    const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
+    const popup = window.open(
+      "about:blank",
+      "kobyde-oauth",
+      `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
+    );
+    if (popup) {
+      popup.document.title = `Connexion à ${name}`;
+      popup.document.body.textContent = `Ouverture de ${name}…`;
+    }
+    return popup;
+  };
+
+  const navigateToAuthorization = (popup: Window | null, url: string, name: string) => {
+    if (!popup) {
+      toast.error(`La fenêtre de connexion à ${name} a été bloquée. Autorisez les fenêtres contextuelles puis réessayez.`);
+      return false;
+    }
+    popup.location.replace(url);
+    popup.focus();
+    toast.success(`Choisissez votre compte ${name} dans la fenêtre qui vient de s'ouvrir.`);
+    return true;
+  };
+
   const addToPlatform = async (c: { key: string; name: string; authType: string }, values: Record<string, string>) => {
+    const authorizationWindow = c.authType === "oauth" ? openAuthorizationWindow(c.name) : null;
     setBusy(`add-${c.key}`);
     try {
       if (c.authType === "oauth") {
@@ -124,10 +153,10 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin } });
         if (res?.url) {
-          toast.success(`Redirection vers ${c.name} pour autoriser Kobyde…`);
-          window.location.href = res.url;
+          navigateToAuthorization(authorizationWindow, res.url, c.name);
           return;
         }
+        authorizationWindow?.close();
         toast.error(res?.error ?? "Autorisation impossible.");
         await qc.invalidateQueries({ queryKey: ["org-connectors"] });
         return;
@@ -145,6 +174,7 @@ export function OrgConnectorConfig() {
       else toast.error(`${c.name} enregistré, mais le test a échoué.`);
       await qc.invalidateQueries({ queryKey: ["org-connectors"] });
     } catch (e) {
+      authorizationWindow?.close();
       toast.error(e instanceof Error ? e.message : `Impossible d'ajouter ${c.name}.`);
     } finally {
       setBusy(null);
@@ -174,15 +204,22 @@ export function OrgConnectorConfig() {
   };
 
   const connect = async (key: string) => {
+    const connector = items.find((item) => item.key === key);
+    const connectorName = connector?.name ?? key;
+    // Ouvrir la fenêtre pendant le clic utilisateur évite le blocage du navigateur.
+    // Google refuse d'être chargé dans l'iframe de prévisualisation (403).
+    const authorizationWindow = openAuthorizationWindow(connectorName);
     setBusy(`connect-${key}`);
     try {
       const res = await connectFn({ data: { provider: key, origin } });
       if (res?.url) {
-        window.location.href = res.url;
+        navigateToAuthorization(authorizationWindow, res.url, connectorName);
         return;
       }
+      authorizationWindow?.close();
       toast.error(res?.error ?? "Autorisation impossible.");
     } catch (e) {
+      authorizationWindow?.close();
       toast.error(e instanceof Error ? e.message : "Autorisation impossible.");
     } finally {
       setBusy(null);

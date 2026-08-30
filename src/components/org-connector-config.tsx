@@ -342,15 +342,17 @@ export function OrgConnectorConfig() {
                       size="sm"
                       variant={c.connected ? "secondary" : "default"}
                       className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
-                      disabled={!c.complete || busy === `connect-${c.key}` || (c.key === "google" && !googleAuthorizationUrl)}
+                      disabled={!c.complete || busy === `connect-${c.key}`}
                       onClick={() => void connect(c.key)}
                     >
-                      {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
-                      {c.key === "google" && !googleAuthorizationUrl
-                        ? "Préparation de Google…"
-                        : c.connected
-                          ? "Connexion réussie"
-                          : `Se connecter à ${c.name}`}
+                      {busy === `connect-${c.key}` ? (
+                        <Loader2 className="mr-1 size-4 animate-spin" />
+                      ) : c.connected ? (
+                        <CheckCircle2 className="mr-1 size-4" />
+                      ) : (
+                        <RefreshCw className="mr-1 size-4" />
+                      )}
+                      {c.connected ? "Connexion réussie" : `Se connecter à ${c.name}`}
                     </Button>
                   )
                 ) : (

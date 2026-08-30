@@ -48,7 +48,20 @@ const statusTone: Record<string, string> = {
 };
 
 type TestResult = { ok: boolean; message: string };
-type PendingAuthorization = { url: string; name: string };
+
+/** Ouvre la page d'autorisation dans la même fenêtre (hors iframe d'aperçu). */
+function gotoAuthorization(url: string) {
+  try {
+    if (window.top && window.top !== window) {
+      window.top.location.href = url;
+      return;
+    }
+  } catch {
+    /* iframe cross-origin : on retombe sur la navigation locale */
+  }
+  window.location.href = url;
+}
+
 
 export function OrgConnectorConfig() {
   const listFn = useServerFn(listMyOrgConnectors);

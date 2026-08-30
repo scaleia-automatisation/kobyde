@@ -77,9 +77,14 @@ function MesConnexionsPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
-    if (search.connexion === "ok") toast.success("Compte connecté : vos autorisations sont enregistrées.");
+    if (search.connexion === "ok") {
+      toast.success("Connexion réussie : votre compte est autorisé.");
+      void qc.invalidateQueries({ queryKey: ["org-connectors"] });
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    }
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
-  }, [search.connexion, search.message]);
+  }, [search.connexion, search.message, qc]);
+
 
   // Toutes les autorisations sont activées automatiquement et en permanence.
   useEffect(() => {

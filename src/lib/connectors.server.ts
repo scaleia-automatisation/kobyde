@@ -113,8 +113,21 @@ export async function saveConnector(input: {
     const isSecret = field ? Boolean(field.secret) : true;
     if (v === "" || v == null) return; // champ laissé vide = valeur conservée
     if (v.includes("•")) return; // valeur masquée non modifiée
-    if (isSecret) secrets[k] = v;
-    else config[k] = v;
+    const clean = String(v)
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .trim()
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .trim();
+    if (input.key === "meta" && k === "app_id" && !/^\d{10,20}$/.test(clean)) {
+      throw new Error("App ID Meta invalide : saisissez uniquement l’identifiant numérique de l’application.");
+    }
+    if (input.key === "meta" && k === "app_secret" && !/^[a-f0-9]{32}$/i.test(clean)) {
+      throw new Error(
+        "App Secret Meta invalide : la clé secrète contient exactement 32 caractères hexadécimaux. Ne collez pas un jeton d’accès utilisateur ou système.",
+      );
+    }
+    if (isSecret) secrets[k] = clean;
+    else config[k] = clean;
   });
 
   const payload = {
@@ -362,13 +375,38 @@ export async function testConnector(key: string) {
       return finish(true, `Appel API Apify réussi (200)${u ? ` — compte ${u}` : ""}.`);
     }
     if (key === "meta") {
-      const p = await probe(
-        `https://graph.facebook.com/oauth/access_token?client_id=${encodeURIComponent(
-          conf.config["app_id"] ?? "",
-        )}&client_secret=${encodeURIComponent(s["app_secret"] ?? "")}&grant_type=client_credentials`,
+      const appId = String(conf.config["app_id"] ?? "").trim();
+      const appSecret = String(s["app_secret"] ?? "").trim();
+      if (!/^\d{10,20}$/.test(appId)) {
+        return finish(false, "App ID Meta invalide : saisissez uniquement l’identifiant numérique de l’application.");
+      }
+      if (!/^[a-f0-9]{32}$/i.test(appSecret)) {
+        return finish(
+          false,
+          "App Secret Meta invalide : la valeur enregistrée n’est pas la clé secrète de 32 caractères. Ouvrez Paramètres de l’application > Général, affichez « Clé secrète », puis recopiez-la. Un jeton d’accès ne peut pas remplacer cette clé.",
+        );
+      }
+
+      const tokenProbe = await probe("https://graph.facebook.com/v20.0/oauth/access_token", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+        body: new URLSearchParams({ client_id: appId, client_secret: appSecret, grant_type: "client_credentials" }),
+      });
+      if (tokenProbe.ok) return finish(true, "Appel API Meta réussi (200) — application authentifiée.");
+
+      const appProbe = await probe(
+        `https://graph.facebook.com/v20.0/${encodeURIComponent(appId)}?fields=id,name&access_token=${encodeURIComponent(`${appId}|${appSecret}`)}`,
       );
-      if (!p.ok) return finish(false, providerError("Meta", p));
-      return finish(true, "Appel API Meta réussi (200) — jeton d'application obtenu.");
+      if (appProbe.ok && String(appProbe.json?.id ?? "") === appId) {
+        return finish(true, "Appel API Meta réussi (200) — application authentifiée.");
+      }
+
+      const detail = appProbe.json?.error?.message ?? tokenProbe.json?.error?.message ?? "identifiants refusés";
+      const code = appProbe.json?.error?.code ?? tokenProbe.json?.error?.code;
+      return finish(
+        false,
+        `Meta refuse ce couple App ID / App Secret${code ? ` (code ${code})` : ""} : ${detail}. Vérifiez que les deux valeurs proviennent exactement de la même application Meta et que celle-ci est active.`,
+      );
     }
     if (key === "notion") {
       const { clientId, clientSecret } = appCredentials(conf);

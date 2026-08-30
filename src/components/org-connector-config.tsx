@@ -233,15 +233,16 @@ export function OrgConnectorConfig() {
         data: { provider: key, origin, scopes: connector ? scopesFor(connector as never) : [] },
       });
       if (res?.url) {
-        if (key === "google" && isEmbeddedPreview) {
-          setGoogleAuthorizationUrl(res.url);
-          toast.info("Google est prêt. Cliquez de nouveau sur « Se connecter à Google ».");
-          return;
-        }
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        window.location.assign(res.url);
+        if (isEmbeddedPreview) {
+          setGoogleAuthorizationUrl(key === "google" ? res.url : null);
+          window.open(res.url, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.assign(res.url);
+        }
         return;
       }
+
       toast.error(res?.error ?? "Autorisation impossible.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Autorisation impossible.");

@@ -450,6 +450,27 @@ export function OrgConnectorConfig() {
               <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{c.lastError}</p>
             )}
 
+            {c.authType === "oauth" && !c.connected && c.redirectUri && (
+              <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+                <p className="text-xs font-medium text-amber-800">
+                  Avant de cliquer sur « Se connecter à {c.name} », cette URL de redirection doit être déclarée à
+                  l'identique dans votre application {c.name}
+                  {c.key === "notion"
+                    ? " (Notion › Mes intégrations › votre intégration › type « Public » › Redirect URIs)"
+                    : ""}
+                  . Sinon la plateforme affiche « redirect_uri manquant ou non valide ».
+                </p>
+                <div className="flex gap-2">
+                  <Input readOnly value={c.redirectUri} className="font-mono text-xs" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => void copy(c.redirectUri!)}>
+                    <Copy className="mr-1 size-4" />
+                    Copier
+                  </Button>
+                </div>
+              </div>
+            )}
+
+
             {c.authType === "oauth" && (c.scopeCatalog?.length ?? 0) > 0 && (
               <div className="space-y-2 rounded-lg border bg-background/60 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">

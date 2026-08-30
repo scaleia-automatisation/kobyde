@@ -179,7 +179,7 @@ export async function saveOrgConnector(input: {
   for (const field of def.fields) {
     const raw = input.values[field.key];
     if (raw === undefined) continue;
-    const value = raw.trim();
+    const value = sanitizeCredential(field.key, raw);
     if (field.secret) {
       if (!value) continue; // champ laissé vide = secret existant conservé
       secrets[field.key] = value;
@@ -187,6 +187,7 @@ export async function saveOrgConnector(input: {
       config[field.key] = value;
     }
   }
+
 
   const configured = Object.keys(secrets).filter((k) => secrets[k]);
   const complete = isComplete(def, config, configured);

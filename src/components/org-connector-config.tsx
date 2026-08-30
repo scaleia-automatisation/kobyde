@@ -235,38 +235,7 @@ export function OrgConnectorConfig() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Dialog open={Boolean(pendingAuthorization)} onOpenChange={(isOpen) => !isOpen && setPendingAuthorization(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Se connecter à {pendingAuthorization?.name}</DialogTitle>
-            <DialogDescription>
-              Continuez vers la page sécurisée, puis choisissez le compte à autoriser. Google s’ouvrira en pleine page
-              afin que le navigateur intégré ne bloque pas la connexion.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingAuthorization(null)}>
-              Annuler
-            </Button>
-            {pendingAuthorization ? (
-              <Button asChild>
-                <a
-                  href={pendingAuthorization.url}
-                  target="_top"
-                  rel="noopener noreferrer"
-                  onClick={() => {
-                    toast.success(`Ouverture de la connexion à ${pendingAuthorization.name}.`);
-                    setPendingAuthorization(null);
-                  }}
-                >
-                  Continuer vers {pendingAuthorization.name}
-                  <ExternalLink className="size-4" />
-                </a>
-              </Button>
-            ) : null}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
 
       <Card className="flex items-start gap-3 border-primary/20 bg-primary/5 p-4">
         <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />

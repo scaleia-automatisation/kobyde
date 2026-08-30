@@ -595,7 +595,7 @@ export async function buildAuthorizeUrl(input: {
     user_id: input.userId,
     org_id: input.orgId,
     connector_key: input.connectorKey,
-    redirect_to: `${returnBase}${input.redirectTo ?? "/tableau-de-bord"}`,
+    redirect_to: `${returnBase}${input.redirectTo ?? "/mes-connexions"}`,
     scopes: selected.join(" "),
   });
 
@@ -786,7 +786,7 @@ export async function completeOAuth(
     accountId: identity.id ?? null,
   });
 
-  return { redirectTo: st.redirect_to ?? `${origin}/tableau-de-bord` };
+  return { redirectTo: st.redirect_to ?? `${origin}/mes-connexions` };
 }
 
 /* ------------------------------------------------- Renouvellement des jetons */

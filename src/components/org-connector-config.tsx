@@ -177,14 +177,12 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin, scopes: scopeSel[c.key] ?? [] } });
         if (res?.url) {
-          if (c.key === "google") {
-            setGoogleAuthorizationUrl(res.url);
-            toast.success("Identifiants enregistrés. Cliquez maintenant sur « Se connecter à Google ».");
-            await qc.invalidateQueries({ queryKey: ["org-connectors"] });
-            return;
-          }
+          setOauthUrls((prev) => ({ ...prev, [c.key]: res.url! }));
           toast.success(`Ouverture de la connexion à ${c.name}…`);
-          window.location.assign(res.url);
+          // Nouvel onglet via la route relais : l'aperçu est dans une iframe,
+          // où le fournisseur refuserait de s'afficher (page cassée).
+          window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
+          await qc.invalidateQueries({ queryKey: ["org-connectors"] });
           return;
         }
         toast.error(res?.error ?? "Autorisation impossible.");
@@ -241,8 +239,9 @@ export function OrgConnectorConfig() {
         data: { provider: key, origin, scopes: connector ? scopesFor(connector as never) : [] },
       });
       if (res?.url) {
+        setOauthUrls((prev) => ({ ...prev, [key]: res.url! }));
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        window.location.assign(res.url);
+        window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
         return;
       }
 

@@ -238,6 +238,24 @@ function TestimonialCard({
 function Landing() {
   const lead = AGENTS.find((a) => a.key === "directeur") ?? AGENTS[0]!;
   const rest = AGENTS.filter((a) => a.key !== lead.key);
+  const { session } = useSession();
+  const navigate = useNavigate();
+
+  // Retour d'une connexion (Google ou email) : on renvoie vers le tableau de bord.
+  useEffect(() => {
+    if (!session || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    const fromAuth =
+      params.has("code") ||
+      params.has("access_token") ||
+      hash.includes("access_token") ||
+      window.sessionStorage.getItem("kobyde:auth-redirect") === "1";
+    if (fromAuth) {
+      window.sessionStorage.removeItem("kobyde:auth-redirect");
+      navigate({ to: "/tableau-de-bord", replace: true });
+    }
+  }, [session, navigate]);
 
   return (
     <div className="min-h-screen bg-background">

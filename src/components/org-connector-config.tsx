@@ -158,6 +158,7 @@ export function OrgConnectorConfig() {
   };
 
   const addToPlatform = async (c: { key: string; name: string; authType: string }, values: Record<string, string>) => {
+    const oauthWindow = c.key === "google" && isEmbeddedPreview ? window.open("about:blank", "_blank") : null;
     setBusy(`add-${c.key}`);
     try {
       if (c.authType === "oauth") {
@@ -171,9 +172,15 @@ export function OrgConnectorConfig() {
         const res = await connectFn({ data: { provider: c.key, origin, scopes: scopeSel[c.key] ?? [] } });
         if (res?.url) {
           toast.success(`Ouverture de la connexion à ${c.name}…`);
-          window.location.assign(res.url);
+          const destination =
+            c.key === "google" && isEmbeddedPreview
+              ? `/oauth/continue?destination=${encodeURIComponent(res.url)}`
+              : res.url;
+          if (oauthWindow) oauthWindow.location.assign(destination);
+          else window.location.assign(destination);
           return;
         }
+        oauthWindow?.close();
         toast.error(res?.error ?? "Autorisation impossible.");
         await qc.invalidateQueries({ queryKey: ["org-connectors"] });
         return;
@@ -191,6 +198,7 @@ export function OrgConnectorConfig() {
       else toast.error(`${c.name} enregistré, mais le test a échoué.`);
       await qc.invalidateQueries({ queryKey: ["org-connectors"] });
     } catch (e) {
+      oauthWindow?.close();
       toast.error(e instanceof Error ? e.message : `Impossible d'ajouter ${c.name}.`);
     } finally {
       setBusy(null);
@@ -222,6 +230,7 @@ export function OrgConnectorConfig() {
   const connect = async (key: string) => {
     const connector = items.find((item) => item.key === key);
     const connectorName = connector?.name ?? key;
+    const oauthWindow = key === "google" && isEmbeddedPreview ? window.open("about:blank", "_blank") : null;
     setBusy(`connect-${key}`);
     try {
       const res = await connectFn({
@@ -229,11 +238,18 @@ export function OrgConnectorConfig() {
       });
       if (res?.url) {
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        window.location.assign(res.url);
+        const destination =
+          key === "google" && isEmbeddedPreview
+            ? `/oauth/continue?destination=${encodeURIComponent(res.url)}`
+            : res.url;
+        if (oauthWindow) oauthWindow.location.assign(destination);
+        else window.location.assign(destination);
         return;
       }
+      oauthWindow?.close();
       toast.error(res?.error ?? "Autorisation impossible.");
     } catch (e) {
+      oauthWindow?.close();
       toast.error(e instanceof Error ? e.message : "Autorisation impossible.");
     } finally {
       setBusy(null);

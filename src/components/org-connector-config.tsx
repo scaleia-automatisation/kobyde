@@ -70,15 +70,15 @@ export function OrgConnectorConfig() {
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TestResult>>({});
-  const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
+  const [oauthUrls, setOauthUrls] = useState<Record<string, string>>({});
   const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
 
-  // L'aperçu Kobyde est lui-même dans une iframe : une navigation `_top` y est
-  // bloquée silencieusement par le navigateur. Le nouvel onglet ouvre d'abord
-  // une route Kobyde, qui redirige ensuite Google côté serveur sans iframe.
-  const googleLink = googleAuthorizationUrl
-    ? `/auth/google/launch?url=${encodeURIComponent(googleAuthorizationUrl)}`
-    : null;
+  // L'aperçu Kobyde est lui-même dans une iframe : les fournisseurs (Google,
+  // Meta, LinkedIn, TikTok, Slack, Notion…) refusent de s'y afficher
+  // (X-Frame-Options → page cassée). Le lien s'ouvre dans un nouvel onglet sur
+  // une route Kobyde qui redirige ensuite côté serveur, hors iframe.
+  const launchLink = (key: string) =>
+    oauthUrls[key] ? `/oauth/launch?url=${encodeURIComponent(oauthUrls[key]!)}` : null;
 
   type ScopeOpt = { scope: string; label: string; required?: boolean };
   const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {
@@ -93,26 +93,35 @@ export function OrgConnectorConfig() {
     const current = scopesFor(c);
     const next = current.includes(scope) ? current.filter((s) => s !== scope) : [...current, scope];
     setScopeSel((prev) => ({ ...prev, [c.key]: next }));
-    if (c.key === "google") setGoogleAuthorizationUrl(null);
+    // Les scopes changent : il faut régénérer l'URL d'autorisation.
+    setOauthUrls((prev) => {
+      if (!prev[c.key]) return prev;
+      const nextUrls = { ...prev };
+      delete nextUrls[c.key];
+      return nextUrls;
+    });
   };
 
-  const googleScopesKey = (scopeSel["google"] ?? []).join(" ");
+  const scopesKey = JSON.stringify(scopeSel);
 
   // Prépare l'URL avant le clic afin d'éviter qu'un appel asynchrone fasse perdre
   // le geste utilisateur et déclenche le bloqueur de fenêtres du navigateur.
   useEffect(() => {
-    const google = items.find((item) => item.key === "google");
-    if (!origin || !google?.complete || googleAuthorizationUrl) return;
+    if (!origin) return;
     let active = true;
-    const scopes = scopeSel["google"] ?? scopesFor(google as never);
-    void connectFn({ data: { provider: "google", origin, scopes } }).then((result) => {
-      if (active && result?.url) setGoogleAuthorizationUrl(result.url);
-    });
+    for (const item of items) {
+      if (item.authType !== "oauth" || !item.complete || oauthUrls[item.key]) continue;
+      const scopes = scopeSel[item.key] ?? scopesFor(item as never);
+      void connectFn({ data: { provider: item.key, origin, scopes } }).then((result) => {
+        if (active && result?.url) setOauthUrls((prev) => ({ ...prev, [item.key]: result.url! }));
+      });
+    }
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, origin, googleAuthorizationUrl, connectFn, googleScopesKey]);
+  }, [items, origin, connectFn, scopesKey, oauthUrls]);
+
 
 
   const filtered = useMemo(() => {

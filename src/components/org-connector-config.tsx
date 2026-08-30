@@ -332,75 +332,56 @@ export function OrgConnectorConfig() {
                   Tester la connexion
                 </Button>
                 {c.authType === "oauth" ? (
-                  c.key === "google" && googleLink ? (
-                    <Button
-                      asChild
-                      size="sm"
-                      variant={c.connected ? "secondary" : "default"}
-                      className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
-                    >
-                      <a
-                        href={googleLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                  // OAuth : le clic d'autorisation n'est possible qu'une fois les identifiants enregistrés.
+                  !c.complete ? (
+                    <Badge variant="outline" className="shrink-0 text-muted-foreground">
+                      Identifiants à configurer d'abord
+                    </Badge>
+                  ) : c.connected ? (
+                    <span className="flex items-center gap-2">
+                      <Badge className="shrink-0 bg-emerald-500/15 text-emerald-700">
+                        <CheckCircle2 className="mr-1 size-3.5" /> Connecté
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy === `connect-${c.key}`}
+                        title="Renouveler l'autorisation (utile après un changement de permissions)"
+                        onClick={() => void connect(c.key)}
                       >
-                        {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
-                        {c.connected ? "Connexion réussie" : "Se connecter à Google"}
+                        {busy === `connect-${c.key}` ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="size-4" />
+                        )}
+                      </Button>
+                    </span>
+                  ) : c.key === "google" && googleLink ? (
+                    <Button asChild size="sm">
+                      <a href={googleLink} target="_blank" rel="noopener noreferrer">
+                        <RefreshCw className="mr-1 size-4" />
+                        Se connecter à Google
                       </a>
                     </Button>
-                  ) : c.key === "google" ? (
-                    <Button
-                      size="sm"
-                      variant={c.connected ? "secondary" : "default"}
-                      className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
-                      disabled={!c.complete || busy === `connect-${c.key}`}
-                      onClick={() => void connect(c.key)}
-                    >
-                      {busy === `connect-${c.key}` ? (
-                        <Loader2 className="mr-1 size-4 animate-spin" />
-                      ) : c.connected ? (
-                        <CheckCircle2 className="mr-1 size-4" />
-                      ) : (
-                        <RefreshCw className="mr-1 size-4" />
-                      )}
-                      {c.connected ? "Connexion réussie" : "Se connecter à Google"}
-                    </Button>
-
                   ) : (
-                    <Button
-                      size="sm"
-                      variant={c.connected ? "secondary" : "default"}
-                      className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
-                      disabled={!c.complete || busy === `connect-${c.key}`}
-                      onClick={() => void connect(c.key)}
-                    >
+                    <Button size="sm" disabled={busy === `connect-${c.key}`} onClick={() => void connect(c.key)}>
                       {busy === `connect-${c.key}` ? (
                         <Loader2 className="mr-1 size-4 animate-spin" />
-                      ) : c.connected ? (
-                        <CheckCircle2 className="mr-1 size-4" />
                       ) : (
                         <RefreshCw className="mr-1 size-4" />
                       )}
-                      {c.connected ? "Connexion réussie" : `Se connecter à ${c.name}`}
+                      Se connecter à {c.name}
                     </Button>
                   )
+                ) : // Clé API : aucun bouton « Se connecter » — l'enregistrement des clés suffit.
+                c.complete ? (
+                  <Badge className="shrink-0 bg-emerald-500/15 text-emerald-700">
+                    <CheckCircle2 className="mr-1 size-3.5" /> Connecté — clé API active
+                  </Badge>
                 ) : (
-                  <Button
-                    size="sm"
-                    disabled={!canManage || busy === `add-${c.key}`}
-                    title={`Enregistre vos identifiants et autorise Kobyde à utiliser ${c.name} pour votre compte.`}
-                    onClick={() => {
-                      if (!isOpen) setOpen((p) => ({ ...p, [c.key]: true }));
-                      void addToPlatform(c, values);
-                    }}
-                  >
-                    {busy === `add-${c.key}` ? (
-                      <Loader2 className="mr-1 size-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-1 size-4" />
-                    )}
-                    Se connecter à {c.name}
-                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    Renseignez vos clés via « Configurer » — aucune autorisation n'est nécessaire.
+                  </span>
                 )}
                 {(c.complete || c.connected) && canManage && (
                   <Button

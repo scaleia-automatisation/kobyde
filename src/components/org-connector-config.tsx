@@ -79,10 +79,14 @@ export function OrgConnectorConfig() {
   type ScopeOpt = { scope: string; label: string; required?: boolean };
   const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {
     if (scopeSel[c.key]) return scopeSel[c.key]!;
-    // Par défaut toutes les autorisations de la plateforme sont validées automatiquement.
     const catalog = c.scopeCatalog ?? [];
     const granted = c.grantedScopes ?? [];
-    return Array.from(new Set([...catalog.map((s) => s.scope), ...granted]));
+    return Array.from(
+      new Set([
+        ...catalog.filter((s) => s.required).map((s) => s.scope),
+        ...catalog.filter((s) => granted.includes(s.scope)).map((s) => s.scope),
+      ]),
+    );
   };
 
   const toggleScope = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }, scope: string) => {
@@ -208,28 +212,6 @@ export function OrgConnectorConfig() {
       const message = e instanceof Error ? e.message : "Test impossible.";
       setResults((prev) => ({ ...prev, [key]: { ok: false, message } }));
       toast.error(message);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  // Valide les scopes cochés : relance l'autorisation OAuth avec la sélection
-  // pour que les permissions soient réellement mises à jour chez la plateforme.
-  const validateScopes = async (c: { key: string; name: string }) => {
-    const connector = items.find((item) => item.key === c.key);
-    if (!connector) return;
-    setBusy(`scopes-${c.key}`);
-    try {
-      const scopes = scopesFor(connector as never);
-      const res = await connectFn({ data: { provider: c.key, origin, scopes } });
-      if (res?.url) {
-        toast.success(`Mise à jour des permissions ${c.name}…`);
-        window.location.assign(res.url);
-        return;
-      }
-      toast.error(res?.error ?? "Impossible de valider les permissions.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Impossible de valider les permissions.");
     } finally {
       setBusy(null);
     }
@@ -484,6 +466,7 @@ export function OrgConnectorConfig() {
                 <div className="grid gap-2 sm:grid-cols-2">
                   {c.scopeCatalog!.map((s) => {
                     const checked = scopesFor(c).includes(s.scope);
+                    const granted = (c.grantedScopes ?? []).includes(s.scope);
                     return (
                       <label
                         key={s.scope}
@@ -498,25 +481,20 @@ export function OrgConnectorConfig() {
                         <span className="min-w-0">
                           <span className="block truncate">{s.label}</span>
                           <span className="block truncate text-[11px] text-muted-foreground">
-                            {s.required ? "Obligatoire" : "Optionnelle"}
+                            {s.required ? "Obligatoire · " : ""}
+                            {granted ? "Déjà accordée" : "Non accordée"}
                           </span>
                         </span>
                       </label>
                     );
                   })}
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                {c.connected && (
                   <p className="text-xs text-muted-foreground">
-                    Cliquez sur « Valider les permissions » pour appliquer les cases cochées chez {c.name}.
+                    Après modification des cases, cliquez sur « Se connecter à {c.name} » pour appliquer les nouvelles
+                    permissions.
                   </p>
-                  <Button
-                    size="sm"
-                    disabled={busy === `scopes-${c.key}`}
-                    onClick={() => void validateScopes({ key: c.key, name: c.name })}
-                  >
-                    {busy === `scopes-${c.key}` ? "Validation…" : "Valider les permissions"}
-                  </Button>
-                </div>
+                )}
               </div>
             )}
 

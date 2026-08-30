@@ -428,6 +428,76 @@ export function OrgConnectorConfig() {
               <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{c.lastError}</p>
             )}
 
+            {c.authType === "oauth" && (c.scopeCatalog?.length ?? 0) > 0 && (
+              <div className="space-y-2 rounded-lg border bg-background/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium">Permissions à autoriser</p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setScopeSel((prev) => ({ ...prev, [c.key]: c.scopeCatalog!.map((s) => s.scope) }));
+                        if (c.key === "google") setGoogleAuthorizationUrl(null);
+                      }}
+                    >
+                      Tout cocher
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setScopeSel((prev) => ({
+                          ...prev,
+                          [c.key]: c.scopeCatalog!.filter((s) => s.required).map((s) => s.scope),
+                        }));
+                        if (c.key === "google") setGoogleAuthorizationUrl(null);
+                      }}
+                    >
+                      Tout décocher
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Cochez ce que vos agents pourront faire sur {c.name}. Les cases cochées sont activées et autorisées
+                  dès la connexion à {c.name}.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {c.scopeCatalog!.map((s) => {
+                    const checked = scopesFor(c).includes(s.scope);
+                    const granted = (c.grantedScopes ?? []).includes(s.scope);
+                    return (
+                      <label
+                        key={s.scope}
+                        className="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          disabled={s.required}
+                          onCheckedChange={() => toggleScope(c, s.scope)}
+                          className="mt-0.5"
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate">{s.label}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">
+                            {s.required ? "Obligatoire · " : ""}
+                            {granted ? "Déjà accordée" : "Non accordée"}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {c.connected && (
+                  <p className="text-xs text-muted-foreground">
+                    Après modification des cases, cliquez sur « Se connecter à {c.name} » pour appliquer les nouvelles
+                    permissions.
+                  </p>
+                )}
+              </div>
+            )}
+
+
             {isOpen && (
               <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
                 {c.redirectUri && (

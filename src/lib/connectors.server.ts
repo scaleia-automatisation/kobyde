@@ -751,8 +751,9 @@ export async function completeOAuth(
       provider_account_id: identity.id ?? null,
       provider_email: identity.email ?? null,
       account_label: identity.label ?? identity.email ?? null,
-      access_token: token,
-      refresh_token: refresh ?? existing?.refresh_token ?? null,
+      access_token: await encryptToken(token),
+      refresh_token: await encryptToken(refresh ?? existing?.refresh_token ?? null),
+
       token_type: data.token_type ?? "Bearer",
       expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
       refresh_token_expires_at: refreshExpiresIn

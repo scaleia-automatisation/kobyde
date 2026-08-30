@@ -499,8 +499,8 @@ export function OrgConnectorConfig() {
                 </div>
                 {c.connected && (
                   <p className="text-xs text-muted-foreground">
-                    Après modification des cases, cliquez sur « Se connecter à {c.name} » pour appliquer les nouvelles
-                    permissions.
+                    Après modification des cases, cliquez sur l'icône de reconnexion (⟳) à côté du badge « Connecté »
+                    pour appliquer les nouvelles permissions.
                   </p>
                 )}
               </div>

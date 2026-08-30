@@ -206,7 +206,7 @@ export function OrgWhatsappCard() {
       <div className="flex flex-wrap gap-2">
         <Button disabled={!canManage} onClick={() => setOpen((v) => !v)}>
           <Link2 className="mr-1 size-4" />
-          {connected ? "Reconnecter WhatsApp Business" : "Se connecter à WhatsApp Business"}
+          {connected ? "Modifier mes identifiants" : "Configurer mes identifiants"}
         </Button>
         <Button variant="outline" disabled={!connected || busy === "test"} onClick={() => void test()}>
           {busy === "test" ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}

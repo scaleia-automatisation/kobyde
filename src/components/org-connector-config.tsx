@@ -51,6 +51,8 @@ export function OrgConnectorConfig() {
 
   const [origin, setOrigin] = useState<string>("");
   useEffect(() => setOrigin(window.location.origin), []);
+  const isEmbeddedPreview =
+    origin.includes("lovableproject.com") || origin.includes("-preview--") || origin.includes("localhost");
 
   const query = useQuery({
     queryKey: ["org-connectors", origin],
@@ -301,7 +303,11 @@ export function OrgConnectorConfig() {
                       variant={c.connected ? "secondary" : "default"}
                       className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
                     >
-                      <a href={googleAuthorizationUrl} target="_top">
+                      <a
+                        href={googleAuthorizationUrl}
+                        target={isEmbeddedPreview ? "_blank" : "_self"}
+                        rel={isEmbeddedPreview ? "noopener noreferrer" : undefined}
+                      >
                         {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
                         {c.connected ? "Connexion réussie" : "Se connecter à Google"}
                       </a>

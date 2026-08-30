@@ -64,6 +64,7 @@ import { Route as AuthenticatedDevisIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDevisIdRouteImport } from './routes/_authenticated/devis.$id'
 import { Route as AuthenticatedProjetsIndexRouteImport } from './routes/_authenticated/projets.index'
 import { Route as AuthenticatedProjetsIdRouteImport } from './routes/_authenticated/projets.$id'
+import { Route as AuthGoogleLaunchRouteImport } from './routes/auth.google.launch'
 import { Route as ApiPublicEventsWebhookRouteImport } from './routes/api/public/events/webhook'
 import { Route as ApiPublicMetaDeauthRouteImport } from './routes/api/public/meta/deauth'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -354,6 +355,11 @@ const AuthenticatedProjetsIdRoute = AuthenticatedProjetsIdRouteImport.update({
   path: '/projets/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthGoogleLaunchRoute = AuthGoogleLaunchRouteImport.update({
+  id: '/google/launch',
+  path: '/google/launch',
+  getParentRoute: () => AuthRoute,
+} as any)
 const ApiPublicEventsWebhookRoute = ApiPublicEventsWebhookRouteImport.update({
   id: '/api/public/events/webhook',
   path: '/api/public/events/webhook',
@@ -451,6 +457,7 @@ export interface FileRoutesByFullPath {
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
+  '/auth/google/launch': typeof AuthGoogleLaunchRoute
   '/clients/': typeof AuthenticatedClientsIndexRoute
   '/devis/': typeof AuthenticatedDevisIndexRoute
   '/projets/': typeof AuthenticatedProjetsIndexRoute
@@ -515,6 +522,7 @@ export interface FileRoutesByTo {
   '/clients/$id': typeof AuthenticatedClientsIdRoute
   '/devis/$id': typeof AuthenticatedDevisIdRoute
   '/projets/$id': typeof AuthenticatedProjetsIdRoute
+  '/auth/google/launch': typeof AuthGoogleLaunchRoute
   '/clients': typeof AuthenticatedClientsIndexRoute
   '/devis': typeof AuthenticatedDevisIndexRoute
   '/projets': typeof AuthenticatedProjetsIndexRoute
@@ -581,6 +589,7 @@ export interface FileRoutesById {
   '/_authenticated/clients/$id': typeof AuthenticatedClientsIdRoute
   '/_authenticated/devis/$id': typeof AuthenticatedDevisIdRoute
   '/_authenticated/projets/$id': typeof AuthenticatedProjetsIdRoute
+  '/auth/google/launch': typeof AuthGoogleLaunchRoute
   '/_authenticated/clients/': typeof AuthenticatedClientsIndexRoute
   '/_authenticated/devis/': typeof AuthenticatedDevisIndexRoute
   '/_authenticated/projets/': typeof AuthenticatedProjetsIndexRoute
@@ -647,6 +656,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
+    | '/auth/google/launch'
     | '/clients/'
     | '/devis/'
     | '/projets/'
@@ -711,6 +721,7 @@ export interface FileRouteTypes {
     | '/clients/$id'
     | '/devis/$id'
     | '/projets/$id'
+    | '/auth/google/launch'
     | '/clients'
     | '/devis'
     | '/projets'
@@ -776,6 +787,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clients/$id'
     | '/_authenticated/devis/$id'
     | '/_authenticated/projets/$id'
+    | '/auth/google/launch'
     | '/_authenticated/clients/'
     | '/_authenticated/devis/'
     | '/_authenticated/projets/'
@@ -1202,6 +1214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjetsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/google/launch': {
+      id: '/auth/google/launch'
+      path: '/google/launch'
+      fullPath: '/auth/google/launch'
+      preLoaderRoute: typeof AuthGoogleLaunchRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/api/public/events/webhook': {
       id: '/api/public/events/webhook'
       path: '/api/public/events/webhook'
@@ -1350,10 +1369,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthGoogleLaunchRoute: typeof AuthGoogleLaunchRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthGoogleLaunchRoute: AuthGoogleLaunchRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

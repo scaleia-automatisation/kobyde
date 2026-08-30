@@ -41,20 +41,6 @@ const statusTone: Record<string, string> = {
 
 type TestResult = { ok: boolean; message: string };
 
-/** Ouvre la page d'autorisation dans la même fenêtre (hors iframe d'aperçu). */
-function gotoAuthorization(url: string) {
-  try {
-    if (window.top && window.top !== window) {
-      window.top.location.href = url;
-      return;
-    }
-  } catch {
-    /* iframe cross-origin : on retombe sur la navigation locale */
-  }
-  window.location.href = url;
-}
-
-
 export function OrgConnectorConfig() {
   const listFn = useServerFn(listMyOrgConnectors);
   const saveFn = useServerFn(saveMyOrgConnector);
@@ -84,6 +70,21 @@ export function OrgConnectorConfig() {
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TestResult>>({});
+  const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
+
+  // Prépare l'URL avant le clic. Le clic reste ainsi un geste utilisateur direct
+  // sur un lien target="_top", seul mécanisme accepté par Google depuis l'aperçu intégré.
+  useEffect(() => {
+    const google = items.find((item) => item.key === "google");
+    if (!origin || !google?.complete || googleAuthorizationUrl) return;
+    let active = true;
+    void connectFn({ data: { provider: "google", origin } }).then((result) => {
+      if (active && result?.url) setGoogleAuthorizationUrl(result.url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [items, origin, googleAuthorizationUrl, connectFn]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -139,7 +140,7 @@ export function OrgConnectorConfig() {
         const res = await connectFn({ data: { provider: c.key, origin } });
         if (res?.url) {
           toast.success(`Ouverture de la connexion à ${c.name}…`);
-          gotoAuthorization(res.url);
+          window.location.assign(res.url);
           return;
         }
         toast.error(res?.error ?? "Autorisation impossible.");
@@ -195,7 +196,7 @@ export function OrgConnectorConfig() {
       const res = await connectFn({ data: { provider: key, origin } });
       if (res?.url) {
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        gotoAuthorization(res.url);
+        window.location.assign(res.url);
         return;
       }
       toast.error(res?.error ?? "Autorisation impossible.");
@@ -293,16 +294,34 @@ export function OrgConnectorConfig() {
                   Tester la connexion
                 </Button>
                 {c.authType === "oauth" ? (
-                  <Button
-                    size="sm"
-                    variant={c.connected ? "secondary" : "default"}
-                    className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
-                    disabled={!c.complete || busy === `connect-${c.key}`}
-                    onClick={() => void connect(c.key)}
-                  >
-                    {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
-                    {c.connected ? "Connexion réussie" : `Se connecter à ${c.name}`}
-                  </Button>
+                  c.key === "google" && googleAuthorizationUrl ? (
+                    <Button
+                      asChild
+                      size="sm"
+                      variant={c.connected ? "secondary" : "default"}
+                      className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
+                    >
+                      <a href={googleAuthorizationUrl} target="_top">
+                        {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
+                        {c.connected ? "Connexion réussie" : "Se connecter à Google"}
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant={c.connected ? "secondary" : "default"}
+                      className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
+                      disabled={!c.complete || busy === `connect-${c.key}` || (c.key === "google" && !googleAuthorizationUrl)}
+                      onClick={() => void connect(c.key)}
+                    >
+                      {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
+                      {c.key === "google" && !googleAuthorizationUrl
+                        ? "Préparation de Google…"
+                        : c.connected
+                          ? "Connexion réussie"
+                          : `Se connecter à ${c.name}`}
+                    </Button>
+                  )
                 ) : (
                   <Button
                     size="sm"

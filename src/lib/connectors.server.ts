@@ -571,15 +571,15 @@ export async function buildAuthorizeUrl(input: {
   const required = catalog.filter((s) => s.required).map((s) => s.scope);
   const chosen = (input.scopes ?? []).filter((s) => allowed.has(s));
 
-  // Autorisations déjà accordées : on les conserve pour ne jamais les redemander "à zéro".
+  // Autorisations déjà accordées : on les conserve lorsqu'aucune sélection
+  // explicite n'est fournie. Avec une sélection, le fournisseur se charge de
+  // conserver les droits existants via include_granted_scopes.
   const existing = await getConnectionRow(input.userId, input.connectorKey);
   const alreadyGranted = existing && !existing.revoked ? splitScopes(existing.scopes_granted ?? existing.scopes) : [];
 
   // Toutes les autorisations du catalogue sont demandées par défaut.
   const fullCatalog = catalog.length ? catalog.map((s) => s.scope) : def.oauth.defaultScopes;
-  const selected = Array.from(
-    new Set([...required, ...alreadyGranted, ...(chosen.length ? chosen : fullCatalog)]),
-  );
+  const selected = Array.from(new Set([...required, ...(chosen.length ? chosen : [...alreadyGranted, ...fullCatalog])]));
 
   const isNewConsent = selected.some((s) => !alreadyGranted.includes(s));
 
@@ -602,13 +602,8 @@ export async function buildAuthorizeUrl(input: {
   if (input.connectorKey === "google") {
     params.set("access_type", "offline");
     params.set("include_granted_scopes", "true");
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("email")
-      .eq("user_id", input.userId)
-      .maybeSingle();
-    const accountEmail = typeof profile?.email === "string" ? profile.email.trim() : "";
-    if (accountEmail) params.set("login_hint", accountEmail);
+    // Ne pas envoyer login_hint : Google doit afficher le sélecteur de comptes
+    // et laisser l'utilisateur choisir explicitement le compte à connecter.
     // Consentement redemandé uniquement lorsqu'une nouvelle autorisation est nécessaire
     // ou lorsqu'aucun refresh token n'est encore stocké.
     params.set("prompt", isNewConsent || !existing?.refresh_token ? "consent select_account" : "select_account");

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/auth/callback")({
           new Response(null, {
             status: 302,
             headers: {
-              location: `/mes-connexions?connexion=${status}&connecteur=google${
+              location: `/mes-connexions?onglet=comptes&connexion=${status}&connecteur=google${
                 message ? `&message=${encodeURIComponent(message)}` : ""
               }`,
             },
@@ -37,11 +37,9 @@ export const Route = createFileRoute("/auth/callback")({
         try {
           const { completeOAuth } = await import("@/lib/connectors.server");
           const callbackUri = `${url.origin}/auth/callback`;
-          const result = await completeOAuth("google", code, state, url.origin, callbackUri);
-          const target = new URL(result.redirectTo);
-          target.searchParams.set("connexion", "ok");
-          target.searchParams.set("connecteur", "google");
-          return new Response(null, { status: 302, headers: { location: target.toString() } });
+          await completeOAuth("google", code, state, url.origin, callbackUri);
+          // Retour systématique dans « Mes connexions », onglet Comptes.
+          return back("ok");
         } catch (caught) {
           return back("error", caught instanceof Error ? caught.message : "Connexion Google impossible.");
         }

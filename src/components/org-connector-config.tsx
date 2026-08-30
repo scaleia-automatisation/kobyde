@@ -458,23 +458,21 @@ export function OrgConnectorConfig() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        setScopeSel((prev) => ({ ...prev, [c.key]: c.scopeCatalog!.map((s) => s.scope) }));
-                        if (c.key === "google") setGoogleAuthorizationUrl(null);
-                      }}
+                      onClick={() =>
+                        setScopeSel((prev) => ({ ...prev, [c.key]: c.scopeCatalog!.map((s) => s.scope) }))
+                      }
                     >
                       Tout cocher
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => {
+                      onClick={() =>
                         setScopeSel((prev) => ({
                           ...prev,
                           [c.key]: c.scopeCatalog!.filter((s) => s.required).map((s) => s.scope),
-                        }));
-                        if (c.key === "google") setGoogleAuthorizationUrl(null);
-                      }}
+                        }))
+                      }
                     >
                       Tout décocher
                     </Button>

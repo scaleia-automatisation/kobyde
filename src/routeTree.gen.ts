@@ -55,7 +55,6 @@ import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
 import { Route as EspaceTokenRouteImport } from './routes/espace.$token'
-import { Route as OauthLaunchRouteImport } from './routes/oauth.launch'
 import { Route as PayerTokenRouteImport } from './routes/payer.$token'
 import { Route as AuthenticatedAgentNameRouteImport } from './routes/_authenticated/agent.$name'
 import { Route as AuthenticatedClientsIndexRouteImport } from './routes/_authenticated/clients.index'
@@ -307,11 +306,6 @@ const EspaceTokenRoute = EspaceTokenRouteImport.update({
   path: '/espace/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OauthLaunchRoute = OauthLaunchRouteImport.update({
-  id: '/oauth/launch',
-  path: '/oauth/launch',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PayerTokenRoute = PayerTokenRouteImport.update({
   id: '/payer/$token',
   path: '/payer/$token',
@@ -444,7 +438,6 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
-  '/oauth/launch': typeof OauthLaunchRoute
   '/payer/$token': typeof PayerTokenRoute
   '/blog/': typeof BlogIndexRoute
   '/agent/$name': typeof AuthenticatedAgentNameRoute
@@ -508,7 +501,6 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
-  '/oauth/launch': typeof OauthLaunchRoute
   '/payer/$token': typeof PayerTokenRoute
   '/blog': typeof BlogIndexRoute
   '/agent/$name': typeof AuthenticatedAgentNameRoute
@@ -574,7 +566,6 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
-  '/oauth/launch': typeof OauthLaunchRoute
   '/payer/$token': typeof PayerTokenRoute
   '/blog/': typeof BlogIndexRoute
   '/_authenticated/agent/$name': typeof AuthenticatedAgentNameRoute
@@ -640,7 +631,6 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
-    | '/oauth/launch'
     | '/payer/$token'
     | '/blog/'
     | '/agent/$name'
@@ -704,7 +694,6 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
-    | '/oauth/launch'
     | '/payer/$token'
     | '/blog'
     | '/agent/$name'
@@ -769,7 +758,6 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
-    | '/oauth/launch'
     | '/payer/$token'
     | '/blog/'
     | '/_authenticated/agent/$name'
@@ -802,7 +790,6 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   EntretienTokenRoute: typeof EntretienTokenRoute
   EspaceTokenRoute: typeof EspaceTokenRoute
-  OauthLaunchRoute: typeof OauthLaunchRoute
   PayerTokenRoute: typeof PayerTokenRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicEventsWebhookRoute: typeof ApiPublicEventsWebhookRoute
@@ -1139,13 +1126,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EspaceTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oauth/launch': {
-      id: '/oauth/launch'
-      path: '/oauth/launch'
-      fullPath: '/oauth/launch'
-      preLoaderRoute: typeof OauthLaunchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/payer/$token': {
       id: '/payer/$token'
       path: '/payer/$token'
@@ -1371,7 +1351,6 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   EntretienTokenRoute: EntretienTokenRoute,
   EspaceTokenRoute: EspaceTokenRoute,
-  OauthLaunchRoute: OauthLaunchRoute,
   PayerTokenRoute: PayerTokenRoute,
   BlogIndexRoute: BlogIndexRoute,
   ApiPublicEventsWebhookRoute: ApiPublicEventsWebhookRoute,

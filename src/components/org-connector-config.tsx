@@ -356,20 +356,25 @@ export function OrgConnectorConfig() {
                         variant="ghost"
                         disabled={busy === `connect-${c.key}`}
                         title="Renouveler l'autorisation (utile après un changement de permissions)"
-                        onClick={() => void connect(c.key)}
+                        asChild={Boolean(launchLink(c.key))}
+                        onClick={launchLink(c.key) ? undefined : () => void connect(c.key)}
                       >
-                        {busy === `connect-${c.key}` ? (
+                        {launchLink(c.key) ? (
+                          <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
+                            <RefreshCw className="size-4" />
+                          </a>
+                        ) : busy === `connect-${c.key}` ? (
                           <Loader2 className="size-4 animate-spin" />
                         ) : (
                           <RefreshCw className="size-4" />
                         )}
                       </Button>
                     </span>
-                  ) : c.key === "google" && googleLink ? (
+                  ) : launchLink(c.key) ? (
                     <Button asChild size="sm">
-                      <a href={googleLink} target="_blank" rel="noopener noreferrer">
+                      <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
                         <RefreshCw className="mr-1 size-4" />
-                        Se connecter à Google
+                        Se connecter à {c.name}
                       </a>
                     </Button>
                   ) : (

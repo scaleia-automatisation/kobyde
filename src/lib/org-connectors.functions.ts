@@ -94,6 +94,10 @@ export const connectMyOrgConnector = createServerFn({ method: "POST" })
         connectorKey: def.oauthKey,
         userId: context.userId,
         orgId,
+        // La connexion depuis « Comptes » associe d'abord l'identité du compte.
+        // Les permissions métier sensibles sont ajoutées séparément depuis
+        // « Autorisations » afin que Google ne bloque pas l'écran de connexion.
+        ...(def.oauthKey === "google" ? { scopes: ["openid", "email", "profile"] } : {}),
         ...(data.origin ? { origin: data.origin } : {}),
       });
       return { url: res.url as string | null, error: null as string | null };

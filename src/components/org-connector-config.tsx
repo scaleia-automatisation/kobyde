@@ -73,6 +73,29 @@ export function OrgConnectorConfig() {
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TestResult>>({});
   const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
+  const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
+
+  type ScopeOpt = { scope: string; label: string; required?: boolean };
+  const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {
+    if (scopeSel[c.key]) return scopeSel[c.key]!;
+    const catalog = c.scopeCatalog ?? [];
+    const granted = c.grantedScopes ?? [];
+    return Array.from(
+      new Set([
+        ...catalog.filter((s) => s.required).map((s) => s.scope),
+        ...catalog.filter((s) => granted.includes(s.scope)).map((s) => s.scope),
+      ]),
+    );
+  };
+
+  const toggleScope = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }, scope: string) => {
+    const current = scopesFor(c);
+    const next = current.includes(scope) ? current.filter((s) => s !== scope) : [...current, scope];
+    setScopeSel((prev) => ({ ...prev, [c.key]: next }));
+    if (c.key === "google") setGoogleAuthorizationUrl(null);
+  };
+
+  const googleScopesKey = (scopeSel["google"] ?? []).join(" ");
 
   // Prépare l'URL avant le clic. Le clic reste ainsi un geste utilisateur direct
   // sur un lien target="_top", seul mécanisme accepté par Google depuis l'aperçu intégré.
@@ -80,13 +103,16 @@ export function OrgConnectorConfig() {
     const google = items.find((item) => item.key === "google");
     if (!origin || !google?.complete || googleAuthorizationUrl) return;
     let active = true;
-    void connectFn({ data: { provider: "google", origin } }).then((result) => {
+    const scopes = scopeSel["google"] ?? scopesFor(google as never);
+    void connectFn({ data: { provider: "google", origin, scopes } }).then((result) => {
       if (active && result?.url) setGoogleAuthorizationUrl(result.url);
     });
     return () => {
       active = false;
     };
-  }, [items, origin, googleAuthorizationUrl, connectFn]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, origin, googleAuthorizationUrl, connectFn, googleScopesKey]);
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

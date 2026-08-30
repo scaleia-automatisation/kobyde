@@ -55,12 +55,6 @@ export function OrgConnectorConfig() {
   const isEmbeddedPreview =
     origin.includes("lovableproject.com") || origin.includes("-preview--") || origin.includes("localhost");
 
-  const googleLink = googleAuthorizationUrl
-    ? isEmbeddedPreview
-      ? `/oauth/continue?destination=${encodeURIComponent(googleAuthorizationUrl)}`
-      : googleAuthorizationUrl
-    : null;
-
   const query = useQuery({
     queryKey: ["org-connectors", origin],
     queryFn: async () => {
@@ -81,6 +75,12 @@ export function OrgConnectorConfig() {
   const [results, setResults] = useState<Record<string, TestResult>>({});
   const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
   const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
+
+  const googleLink = googleAuthorizationUrl
+    ? isEmbeddedPreview
+      ? `/oauth/continue?destination=${encodeURIComponent(googleAuthorizationUrl)}`
+      : googleAuthorizationUrl
+    : null;
 
   type ScopeOpt = { scope: string; label: string; required?: boolean };
   const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {

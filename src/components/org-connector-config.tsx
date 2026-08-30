@@ -74,9 +74,11 @@ export function OrgConnectorConfig() {
   const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
 
   // L'aperçu Kobyde est lui-même dans une iframe : une navigation `_top` y est
-  // bloquée silencieusement par le navigateur. L'URL est préparée à l'avance
-  // afin que le clic natif puisse ouvrir Google dans un onglet indépendant.
-  const googleLink = googleAuthorizationUrl;
+  // bloquée silencieusement par le navigateur. Le nouvel onglet ouvre d'abord
+  // une route Kobyde, qui redirige ensuite Google côté serveur sans iframe.
+  const googleLink = googleAuthorizationUrl
+    ? `/auth/google/launch?url=${encodeURIComponent(googleAuthorizationUrl)}`
+    : null;
 
   type ScopeOpt = { scope: string; label: string; required?: boolean };
   const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {

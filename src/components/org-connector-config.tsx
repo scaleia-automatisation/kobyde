@@ -52,9 +52,6 @@ export function OrgConnectorConfig() {
 
   const [origin, setOrigin] = useState<string>("");
   useEffect(() => setOrigin(window.location.origin), []);
-  const isEmbeddedPreview =
-    origin.includes("lovableproject.com") || origin.includes("-preview--") || origin.includes("localhost");
-
   const query = useQuery({
     queryKey: ["org-connectors", origin],
     queryFn: async () => {
@@ -77,8 +74,8 @@ export function OrgConnectorConfig() {
   const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
 
   // Google refuse d'être affiché dans une iframe ou dans une fenêtre auxiliaire
-  // héritant du bac à sable de l'aperçu. Le lien doit donc viser directement
-  // Google et remplacer la fenêtre de premier niveau lors du geste utilisateur.
+  // héritant du bac à sable de l'aperçu. Le lien natif doit donc remplacer la
+  // fenêtre de premier niveau pendant le geste utilisateur.
   const googleLink = googleAuthorizationUrl;
 
   type ScopeOpt = { scope: string; label: string; required?: boolean };
@@ -169,7 +166,7 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin, scopes: scopeSel[c.key] ?? [] } });
         if (res?.url) {
-          if (c.key === "google" && isEmbeddedPreview) {
+          if (c.key === "google") {
             setGoogleAuthorizationUrl(res.url);
             toast.success("Identifiants enregistrés. Cliquez maintenant sur « Se connecter à Google ».");
             await qc.invalidateQueries({ queryKey: ["org-connectors"] });
@@ -234,12 +231,7 @@ export function OrgConnectorConfig() {
       });
       if (res?.url) {
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        if (isEmbeddedPreview) {
-          setGoogleAuthorizationUrl(key === "google" ? res.url : null);
-          window.open(res.url, "_blank", "noopener,noreferrer");
-        } else {
-          window.location.assign(res.url);
-        }
+        window.location.assign(res.url);
         return;
       }
 
@@ -347,8 +339,7 @@ export function OrgConnectorConfig() {
                     >
                       <a
                         href={googleLink}
-                        target={isEmbeddedPreview ? "_blank" : "_self"}
-                        rel={isEmbeddedPreview ? "noopener noreferrer" : undefined}
+                        target="_top"
                       >
                         {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
                         {c.connected ? "Connexion réussie" : "Se connecter à Google"}

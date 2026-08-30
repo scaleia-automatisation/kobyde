@@ -70,15 +70,15 @@ export function OrgConnectorConfig() {
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TestResult>>({});
-  const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
+  const [oauthUrls, setOauthUrls] = useState<Record<string, string>>({});
   const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
 
-  // L'aperçu Kobyde est lui-même dans une iframe : une navigation `_top` y est
-  // bloquée silencieusement par le navigateur. Le nouvel onglet ouvre d'abord
-  // une route Kobyde, qui redirige ensuite Google côté serveur sans iframe.
-  const googleLink = googleAuthorizationUrl
-    ? `/auth/google/launch?url=${encodeURIComponent(googleAuthorizationUrl)}`
-    : null;
+  // L'aperçu Kobyde est lui-même dans une iframe : les fournisseurs (Google,
+  // Meta, LinkedIn, TikTok, Slack, Notion…) refusent de s'y afficher
+  // (X-Frame-Options → page cassée). Le lien s'ouvre dans un nouvel onglet sur
+  // une route Kobyde qui redirige ensuite côté serveur, hors iframe.
+  const launchLink = (key: string) =>
+    oauthUrls[key] ? `/oauth/launch?url=${encodeURIComponent(oauthUrls[key]!)}` : null;
 
   type ScopeOpt = { scope: string; label: string; required?: boolean };
   const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {
@@ -93,26 +93,35 @@ export function OrgConnectorConfig() {
     const current = scopesFor(c);
     const next = current.includes(scope) ? current.filter((s) => s !== scope) : [...current, scope];
     setScopeSel((prev) => ({ ...prev, [c.key]: next }));
-    if (c.key === "google") setGoogleAuthorizationUrl(null);
+    // Les scopes changent : il faut régénérer l'URL d'autorisation.
+    setOauthUrls((prev) => {
+      if (!prev[c.key]) return prev;
+      const nextUrls = { ...prev };
+      delete nextUrls[c.key];
+      return nextUrls;
+    });
   };
 
-  const googleScopesKey = (scopeSel["google"] ?? []).join(" ");
+  const scopesKey = JSON.stringify(scopeSel);
 
   // Prépare l'URL avant le clic afin d'éviter qu'un appel asynchrone fasse perdre
   // le geste utilisateur et déclenche le bloqueur de fenêtres du navigateur.
   useEffect(() => {
-    const google = items.find((item) => item.key === "google");
-    if (!origin || !google?.complete || googleAuthorizationUrl) return;
+    if (!origin) return;
     let active = true;
-    const scopes = scopeSel["google"] ?? scopesFor(google as never);
-    void connectFn({ data: { provider: "google", origin, scopes } }).then((result) => {
-      if (active && result?.url) setGoogleAuthorizationUrl(result.url);
-    });
+    for (const item of items) {
+      if (item.authType !== "oauth" || !item.complete || oauthUrls[item.key]) continue;
+      const scopes = scopeSel[item.key] ?? scopesFor(item as never);
+      void connectFn({ data: { provider: item.key, origin, scopes } }).then((result) => {
+        if (active && result?.url) setOauthUrls((prev) => ({ ...prev, [item.key]: result.url! }));
+      });
+    }
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, origin, googleAuthorizationUrl, connectFn, googleScopesKey]);
+  }, [items, origin, connectFn, scopesKey, oauthUrls]);
+
 
 
   const filtered = useMemo(() => {
@@ -168,14 +177,12 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin, scopes: scopeSel[c.key] ?? [] } });
         if (res?.url) {
-          if (c.key === "google") {
-            setGoogleAuthorizationUrl(res.url);
-            toast.success("Identifiants enregistrés. Cliquez maintenant sur « Se connecter à Google ».");
-            await qc.invalidateQueries({ queryKey: ["org-connectors"] });
-            return;
-          }
+          setOauthUrls((prev) => ({ ...prev, [c.key]: res.url! }));
           toast.success(`Ouverture de la connexion à ${c.name}…`);
-          window.location.assign(res.url);
+          // Nouvel onglet via la route relais : l'aperçu est dans une iframe,
+          // où le fournisseur refuserait de s'afficher (page cassée).
+          window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
+          await qc.invalidateQueries({ queryKey: ["org-connectors"] });
           return;
         }
         toast.error(res?.error ?? "Autorisation impossible.");
@@ -232,8 +239,9 @@ export function OrgConnectorConfig() {
         data: { provider: key, origin, scopes: connector ? scopesFor(connector as never) : [] },
       });
       if (res?.url) {
+        setOauthUrls((prev) => ({ ...prev, [key]: res.url! }));
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        window.location.assign(res.url);
+        window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
         return;
       }
 
@@ -347,20 +355,25 @@ export function OrgConnectorConfig() {
                         variant="ghost"
                         disabled={busy === `connect-${c.key}`}
                         title="Renouveler l'autorisation (utile après un changement de permissions)"
-                        onClick={() => void connect(c.key)}
+                        asChild={Boolean(launchLink(c.key))}
+                        onClick={launchLink(c.key) ? undefined : () => void connect(c.key)}
                       >
-                        {busy === `connect-${c.key}` ? (
+                        {launchLink(c.key) ? (
+                          <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
+                            <RefreshCw className="size-4" />
+                          </a>
+                        ) : busy === `connect-${c.key}` ? (
                           <Loader2 className="size-4 animate-spin" />
                         ) : (
                           <RefreshCw className="size-4" />
                         )}
                       </Button>
                     </span>
-                  ) : c.key === "google" && googleLink ? (
+                  ) : launchLink(c.key) ? (
                     <Button asChild size="sm">
-                      <a href={googleLink} target="_blank" rel="noopener noreferrer">
+                      <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
                         <RefreshCw className="mr-1 size-4" />
-                        Se connecter à Google
+                        Se connecter à {c.name}
                       </a>
                     </Button>
                   ) : (
@@ -447,7 +460,11 @@ export function OrgConnectorConfig() {
                       variant="outline"
                       onClick={() => {
                         setScopeSel((prev) => ({ ...prev, [c.key]: c.scopeCatalog!.map((s) => s.scope) }));
-                        if (c.key === "google") setGoogleAuthorizationUrl(null);
+                        setOauthUrls((prev) => {
+                          const next = { ...prev };
+                          delete next[c.key];
+                          return next;
+                        });
                       }}
                     >
                       Tout cocher
@@ -460,7 +477,11 @@ export function OrgConnectorConfig() {
                           ...prev,
                           [c.key]: c.scopeCatalog!.filter((s) => s.required).map((s) => s.scope),
                         }));
-                        if (c.key === "google") setGoogleAuthorizationUrl(null);
+                        setOauthUrls((prev) => {
+                          const next = { ...prev };
+                          delete next[c.key];
+                          return next;
+                        });
                       }}
                     >
                       Tout décocher

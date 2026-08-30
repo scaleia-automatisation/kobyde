@@ -276,16 +276,24 @@ export function OrgConnectorConfig() {
                 {c.authType === "oauth" ? (
                   <Button size="sm" disabled={!c.complete || busy === `connect-${c.key}`} onClick={() => void connect(c.key)}>
                     <RefreshCw className="mr-1 size-4" />
-                    {c.connected ? "Reconnecter" : "Autoriser mon compte"}
+                    {c.connected ? "Reconnecter" : `Se connecter à ${c.name}`}
                   </Button>
                 ) : (
                   <Button
                     size="sm"
-                    disabled
-                    title="Aucune autorisation à donner : la clé API de votre entreprise suffit."
+                    disabled={!canManage || busy === `add-${c.key}`}
+                    title={`Enregistre vos identifiants et autorise Kobyde à utiliser ${c.name} pour votre compte.`}
+                    onClick={() => {
+                      if (!isOpen) setOpen((p) => ({ ...p, [c.key]: true }));
+                      void addToPlatform(c, values);
+                    }}
                   >
-                    <RefreshCw className="mr-1 size-4" />
-                    Autoriser mon compte
+                    {busy === `add-${c.key}` ? (
+                      <Loader2 className="mr-1 size-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-1 size-4" />
+                    )}
+                    Se connecter à {c.name}
                   </Button>
                 )}
                 {(c.complete || c.connected) && canManage && (

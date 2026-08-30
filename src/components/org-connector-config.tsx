@@ -505,12 +505,18 @@ export function OrgConnectorConfig() {
                     );
                   })}
                 </div>
-                {c.connected && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
-                    Après modification des cases, cliquez sur « Se connecter à {c.name} » pour appliquer les nouvelles
-                    permissions.
+                    Cliquez sur « Valider les permissions » pour appliquer les cases cochées chez {c.name}.
                   </p>
-                )}
+                  <Button
+                    size="sm"
+                    disabled={busy === `scopes-${c.key}`}
+                    onClick={() => void validateScopes({ key: c.key, name: c.name })}
+                  >
+                    {busy === `scopes-${c.key}` ? "Validation…" : "Valider les permissions"}
+                  </Button>
+                </div>
               </div>
             )}
 

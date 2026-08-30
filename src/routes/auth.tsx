@@ -57,6 +57,7 @@ function AuthPage() {
   const onGoogle = async () => {
     setGoogleLoading(true);
     try {
+      window.sessionStorage.setItem("kobyde:auth-redirect", "1");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });

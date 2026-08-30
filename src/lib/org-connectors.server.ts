@@ -400,14 +400,29 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
 
 
     if (input.provider === "meta") {
+      const appId = config["app_id"] ?? "";
+      const appSecret = secrets["app_secret"] ?? "";
+      const fmt =
+        checkCredentialFormat("meta", "app_id", appId) ?? checkCredentialFormat("meta", "app_secret", appSecret);
+      if (fmt) return finish(false, fmt);
       const p = await probe(
         `https://graph.facebook.com/oauth/access_token?client_id=${encodeURIComponent(
-          config["app_id"] ?? "",
-        )}&client_secret=${encodeURIComponent(secrets["app_secret"] ?? "")}&grant_type=client_credentials`,
+          appId,
+        )}&client_secret=${encodeURIComponent(appSecret)}&grant_type=client_credentials`,
       );
-      if (!p.ok) return finish(false, `Meta a répondu ${p.status} : ${detailOf(p)}.`);
+      if (!p.ok) {
+        const code = p.json?.error?.code;
+        if (code === 101 || code === 1) {
+          return finish(
+            false,
+            "Meta refuse ce couple App ID / App Secret. Vérifiez qu'ils proviennent de la même application (Paramètres > Général) et que l'App Secret fait 32 caractères.",
+          );
+        }
+        return finish(false, `Meta a répondu ${p.status} : ${detailOf(p)}.`);
+      }
       return finish(true, "Appel API Meta réussi (200) — application authentifiée.");
     }
+
 
     if (input.provider === "linkedin") {
       const r = await verifyOAuthClient({

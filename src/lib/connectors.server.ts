@@ -542,6 +542,8 @@ export async function buildAuthorizeUrl(input: {
   origin?: string;
   scopes?: string[];
   redirectTo?: string;
+  /** E-mail du compte avec lequel l'utilisateur s'est connecté à Kobyde. */
+  userEmail?: string | null;
 }) {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def?.oauth) throw new Error("Ce connecteur ne gère pas la connexion de compte.");
@@ -602,22 +604,25 @@ export async function buildAuthorizeUrl(input: {
   if (input.connectorKey === "google") {
     params.set("access_type", "offline");
     params.set("include_granted_scopes", "true");
-    const knownEmail = (existing as any)?.provider_email ?? (existing as any)?.account_label ?? null;
+    // On cible directement le compte avec lequel l'utilisateur s'est connecté
+    // à Kobyde : aucun sélecteur de compte n'est nécessaire.
+    const candidate =
+      (existing as any)?.provider_email ??
+      (existing as any)?.account_label ??
+      input.userEmail ??
+      null;
+    const knownEmail =
+      typeof candidate === "string" && candidate.includes("@") ? candidate : null;
+    if (knownEmail) params.set("login_hint", knownEmail);
     if (isNewConsent || !existing?.refresh_token) {
-      // Première autorisation ou nouvelles permissions : afficher le sélecteur
-      // de comptes et l'écran de consentement.
-      params.set("prompt", "consent select_account");
+      // Première autorisation ou nouvelles permissions : écran de consentement
+      // seul, sans sélecteur de comptes puisque l'e-mail est déjà connu.
+      params.set("prompt", knownEmail ? "consent" : "consent select_account");
     } else {
-      // Compte déjà connecté et autorisé : réutiliser directement la session
-      // Google existante et revenir immédiatement sur l'onglet Comptes.
-      if (knownEmail && typeof knownEmail === "string" && knownEmail.includes("@")) {
-        params.set("login_hint", knownEmail);
-      }
-      // Pas de paramètre « prompt » : Google réutilise la session existante et
-      // redirige aussitôt, sans redemander le choix du compte ni le consentement.
+      // Compte déjà autorisé : Google réutilise la session et redirige aussitôt.
       params.delete("prompt");
-
     }
+
   }
 
   if (input.connectorKey === "tiktok") {

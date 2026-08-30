@@ -248,6 +248,7 @@ export const startConnection = createServerFn({ method: "POST" })
         connectorKey: data.connectorKey,
         userId: context.userId,
         orgId: profile?.current_org_id ?? null,
+        userEmail: (context as any).claims?.email ?? null,
         ...(data.origin ? { origin: data.origin } : {}),
         ...(data.scopes ? { scopes: data.scopes } : {}),
       });

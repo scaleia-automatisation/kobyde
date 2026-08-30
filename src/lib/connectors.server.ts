@@ -13,6 +13,21 @@ export async function db() {
 export function productionBaseUrl() {
   return (process.env["PUBLIC_APP_URL"] ?? "https://kobyde.com").replace(/\/$/, "");
 }
+
+export function oauthBaseUrl(origin?: string) {
+  const fallback = productionBaseUrl();
+  if (!origin) return fallback;
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname.toLowerCase();
+    if (url.protocol === "https:" && (hostname === "kobyde.com" || hostname === "www.kobyde.com")) {
+      return url.origin.replace(/\/$/, "");
+    }
+  } catch {
+    // Une origine invalide ne doit jamais être reflétée dans une redirection OAuth.
+  }
+  return fallback;
+}
 export function devBaseUrl() {
   return "http://localhost:8080";
 }
@@ -546,7 +561,7 @@ export async function buildAuthorizeUrl(input: {
   // le fournisseur. Les domaines éphémères de prévisualisation sont conservés
   // uniquement comme destination de retour après l'autorisation.
   const returnBase = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
-  const redirectUri = `${productionBaseUrl()}${callbackPath(input.connectorKey)}`;
+  const redirectUri = `${oauthBaseUrl(input.origin)}${callbackPath(input.connectorKey)}`;
   const state = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
   const supabase = await db();

@@ -346,7 +346,8 @@ export function OrgConnectorConfig() {
                     >
                       <a
                         href={googleLink}
-                        target={isEmbeddedPreview ? "_top" : "_self"}
+                        target={isEmbeddedPreview ? "_blank" : "_self"}
+                        rel={isEmbeddedPreview ? "noopener noreferrer" : undefined}
                       >
                         {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
                         {c.connected ? "Connexion réussie" : "Se connecter à Google"}

@@ -25,11 +25,15 @@ export const Route = createFileRoute("/auth/callback")({
           new Response(null, {
             status: 302,
             headers: {
-              location: `/mes-connexions?onglet=comptes&connexion=${status}&connecteur=google${
-                message ? `&message=${encodeURIComponent(message)}` : ""
-              }`,
+              location:
+                status === "ok"
+                  ? "/tableau-de-bord?connexion=ok&connecteur=google"
+                  : `/mes-connexions?onglet=comptes&connexion=error&connecteur=google${
+                      message ? `&message=${encodeURIComponent(message)}` : ""
+                    }`,
             },
           });
+
 
         if (error) return back("error", error);
         if (!code || !state) return back("error", "Réponse d'autorisation Google incomplète.");

@@ -233,15 +233,16 @@ export function OrgConnectorConfig() {
         data: { provider: key, origin, scopes: connector ? scopesFor(connector as never) : [] },
       });
       if (res?.url) {
-        if (key === "google" && isEmbeddedPreview) {
-          setGoogleAuthorizationUrl(res.url);
-          toast.info("Google est prêt. Cliquez de nouveau sur « Se connecter à Google ».");
-          return;
-        }
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        window.location.assign(res.url);
+        if (isEmbeddedPreview) {
+          setGoogleAuthorizationUrl(key === "google" ? res.url : null);
+          window.open(res.url, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.assign(res.url);
+        }
         return;
       }
+
       toast.error(res?.error ?? "Autorisation impossible.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Autorisation impossible.");
@@ -353,16 +354,24 @@ export function OrgConnectorConfig() {
                         {c.connected ? "Connexion réussie" : "Se connecter à Google"}
                       </a>
                     </Button>
-                  ) : c.key === "google" && isEmbeddedPreview ? (
+                  ) : c.key === "google" ? (
                     <Button
                       size="sm"
                       variant={c.connected ? "secondary" : "default"}
                       className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
-                      disabled
+                      disabled={!c.complete || busy === `connect-${c.key}`}
+                      onClick={() => void connect(c.key)}
                     >
-                      {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
+                      {busy === `connect-${c.key}` ? (
+                        <Loader2 className="mr-1 size-4 animate-spin" />
+                      ) : c.connected ? (
+                        <CheckCircle2 className="mr-1 size-4" />
+                      ) : (
+                        <RefreshCw className="mr-1 size-4" />
+                      )}
                       {c.connected ? "Connexion réussie" : "Se connecter à Google"}
                     </Button>
+
                   ) : (
                     <Button
                       size="sm"

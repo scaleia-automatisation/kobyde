@@ -199,6 +199,7 @@ export function OrgConnectorConfig() {
           toast.success(`Ouverture de la connexion à ${c.name}…`);
           // Nouvel onglet via la route relais : l'aperçu est dans une iframe,
           // où le fournisseur refuserait de s'afficher (page cassée).
+          await persistSessionForOAuthReturn();
           window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
           await qc.invalidateQueries({ queryKey: ["org-connectors"] });
           return;

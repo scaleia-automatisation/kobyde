@@ -405,22 +405,40 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
       const fmt =
         checkCredentialFormat("meta", "app_id", appId) ?? checkCredentialFormat("meta", "app_secret", appSecret);
       if (fmt) return finish(false, fmt);
-      const p = await probe(
-        `https://graph.facebook.com/oauth/access_token?client_id=${encodeURIComponent(
-          appId,
-        )}&client_secret=${encodeURIComponent(appSecret)}&grant_type=client_credentials`,
-      );
-      if (!p.ok) {
-        const code = p.json?.error?.code;
-        if (code === 101 || code === 1) {
-          return finish(
-            false,
-            "Meta refuse ce couple App ID / App Secret. Vérifiez qu'ils proviennent de la même application (Paramètres > Général) et que l'App Secret fait 32 caractères.",
-          );
-        }
-        return finish(false, `Meta a répondu ${p.status} : ${detailOf(p)}.`);
+      const tokenProbe = await probe("https://graph.facebook.com/oauth/access_token", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+        body: new URLSearchParams({
+          client_id: appId,
+          client_secret: appSecret,
+          grant_type: "client_credentials",
+        }),
+      });
+      if (tokenProbe.ok) {
+        return finish(true, "Appel API Meta réussi (200) — application authentifiée.");
       }
-      return finish(true, "Appel API Meta réussi (200) — application authentifiée.");
+
+      // Meta peut répondre 400 « Cannot get application info due to a system error » à
+      // client_credentials même pour une application valide. Le jeton d'application au
+      // format officiel app_id|app_secret permet une vérification indépendante et fiable.
+      const appProbe = await probe(
+        `https://graph.facebook.com/${encodeURIComponent(appId)}?fields=id,name&access_token=${encodeURIComponent(
+          `${appId}|${appSecret}`,
+        )}`,
+      );
+      if (appProbe.ok && String(appProbe.json?.id ?? "") === appId) {
+        return finish(true, "Appel API Meta réussi (200) — application authentifiée.");
+      }
+
+      const errorCode = appProbe.json?.error?.code ?? tokenProbe.json?.error?.code;
+      const errorDetail = detailOf(appProbe) || detailOf(tokenProbe);
+      if (errorCode === 101 || errorCode === 190 || errorCode === 1) {
+        return finish(
+          false,
+          "Meta refuse ce couple App ID / App Secret. Vérifiez qu'ils proviennent de la même application (Paramètres > Général) et que l'application n'est pas désactivée.",
+        );
+      }
+      return finish(false, `Meta a répondu ${appProbe.status || tokenProbe.status} : ${errorDetail}.`);
     }
 
 

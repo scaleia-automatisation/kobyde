@@ -73,9 +73,9 @@ export function OrgConnectorConfig() {
   const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
   const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
 
-  // Google refuse d'être affiché dans une iframe ou dans une fenêtre auxiliaire
-  // héritant du bac à sable de l'aperçu. Le lien natif doit donc remplacer la
-  // fenêtre de premier niveau pendant le geste utilisateur.
+  // L'aperçu Kobyde est lui-même dans une iframe : une navigation `_top` y est
+  // bloquée silencieusement par le navigateur. L'URL est préparée à l'avance
+  // afin que le clic natif puisse ouvrir Google dans un onglet indépendant.
   const googleLink = googleAuthorizationUrl;
 
   type ScopeOpt = { scope: string; label: string; required?: boolean };
@@ -96,8 +96,8 @@ export function OrgConnectorConfig() {
 
   const googleScopesKey = (scopeSel["google"] ?? []).join(" ");
 
-  // Prépare l'URL avant le clic. Le clic reste ainsi un geste utilisateur direct
-  // sur un lien target="_top", seul mécanisme accepté par Google depuis l'aperçu intégré.
+  // Prépare l'URL avant le clic afin d'éviter qu'un appel asynchrone fasse perdre
+  // le geste utilisateur et déclenche le bloqueur de fenêtres du navigateur.
   useEffect(() => {
     const google = items.find((item) => item.key === "google");
     if (!origin || !google?.complete || googleAuthorizationUrl) return;
@@ -339,7 +339,8 @@ export function OrgConnectorConfig() {
                     >
                       <a
                         href={googleLink}
-                        target="_top"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
                         {c.connected ? "Connexion réussie" : "Se connecter à Google"}

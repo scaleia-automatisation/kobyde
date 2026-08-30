@@ -162,7 +162,22 @@ export async function listOrgConnectors(orgId: string, origin?: string) {
 
 /* ------------------------------------------------------------ Enregistrement */
 
+/**
+ * Nettoie une valeur saisie : espaces, caractères invisibles, guillemets et surtout le préfixe
+ * « http(s):// » que les navigateurs ajoutent parfois en collant un identifiant (client_id…).
+ */
+function sanitizeCredential(fieldKey: string, raw: string) {
+  let v = String(raw ?? "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .replace(/^["'`]+|["'`]+$/g, "")
+    .trim();
+  if (!/url/i.test(fieldKey)) v = v.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  return v;
+}
+
 export async function saveOrgConnector(input: {
+
   orgId: string;
   userId: string;
   provider: string;

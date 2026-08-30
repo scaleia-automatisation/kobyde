@@ -476,8 +476,7 @@ export function OrgConnectorConfig() {
                         <span className="min-w-0">
                           <span className="block truncate">{s.label}</span>
                           <span className="block truncate text-[11px] text-muted-foreground">
-                            {s.required ? "Obligatoire · " : ""}
-                            {granted ? "Déjà accordée" : "Non accordée"}
+                            {s.required ? "Obligatoire" : "Optionnelle"}
                           </span>
                         </span>
                       </label>

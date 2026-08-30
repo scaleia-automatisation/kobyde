@@ -104,6 +104,7 @@ export const connectMyOrgConnector = createServerFn({ method: "POST" })
         connectorKey: def.oauthKey,
         userId: context.userId,
         orgId,
+        userEmail: (context as any).claims?.email ?? null,
         ...(scopes.length
           ? { scopes }
           : def.oauthKey === "google"

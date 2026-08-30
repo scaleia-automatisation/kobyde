@@ -22,6 +22,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   connectMyOrgConnector,
   deleteMyOrgConnector,
   listMyOrgConnectors,
@@ -40,6 +48,7 @@ const statusTone: Record<string, string> = {
 };
 
 type TestResult = { ok: boolean; message: string };
+type PendingAuthorization = { url: string; name: string };
 
 export function OrgConnectorConfig() {
   const listFn = useServerFn(listMyOrgConnectors);
@@ -70,6 +79,7 @@ export function OrgConnectorConfig() {
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TestResult>>({});
+  const [pendingAuthorization, setPendingAuthorization] = useState<PendingAuthorization | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -111,36 +121,7 @@ export function OrgConnectorConfig() {
     }
   };
 
-  const openAuthorizationWindow = (name: string) => {
-    const width = 560;
-    const height = 760;
-    const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
-    const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
-    const popup = window.open(
-      "about:blank",
-      "kobyde-oauth",
-      `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
-    );
-    if (popup) {
-      popup.document.title = `Connexion à ${name}`;
-      popup.document.body.textContent = `Ouverture de ${name}…`;
-    }
-    return popup;
-  };
-
-  const navigateToAuthorization = (popup: Window | null, url: string, name: string) => {
-    if (!popup) {
-      toast.error(`La fenêtre de connexion à ${name} a été bloquée. Autorisez les fenêtres contextuelles puis réessayez.`);
-      return false;
-    }
-    popup.location.replace(url);
-    popup.focus();
-    toast.success(`Choisissez votre compte ${name} dans la fenêtre qui vient de s'ouvrir.`);
-    return true;
-  };
-
   const addToPlatform = async (c: { key: string; name: string; authType: string }, values: Record<string, string>) => {
-    const authorizationWindow = c.authType === "oauth" ? openAuthorizationWindow(c.name) : null;
     setBusy(`add-${c.key}`);
     try {
       if (c.authType === "oauth") {
@@ -153,10 +134,9 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin } });
         if (res?.url) {
-          navigateToAuthorization(authorizationWindow, res.url, c.name);
+          setPendingAuthorization({ url: res.url, name: c.name });
           return;
         }
-        authorizationWindow?.close();
         toast.error(res?.error ?? "Autorisation impossible.");
         await qc.invalidateQueries({ queryKey: ["org-connectors"] });
         return;
@@ -174,7 +154,6 @@ export function OrgConnectorConfig() {
       else toast.error(`${c.name} enregistré, mais le test a échoué.`);
       await qc.invalidateQueries({ queryKey: ["org-connectors"] });
     } catch (e) {
-      authorizationWindow?.close();
       toast.error(e instanceof Error ? e.message : `Impossible d'ajouter ${c.name}.`);
     } finally {
       setBusy(null);
@@ -206,20 +185,15 @@ export function OrgConnectorConfig() {
   const connect = async (key: string) => {
     const connector = items.find((item) => item.key === key);
     const connectorName = connector?.name ?? key;
-    // Ouvrir la fenêtre pendant le clic utilisateur évite le blocage du navigateur.
-    // Google refuse d'être chargé dans l'iframe de prévisualisation (403).
-    const authorizationWindow = openAuthorizationWindow(connectorName);
     setBusy(`connect-${key}`);
     try {
       const res = await connectFn({ data: { provider: key, origin } });
       if (res?.url) {
-        navigateToAuthorization(authorizationWindow, res.url, connectorName);
+        setPendingAuthorization({ url: res.url, name: connectorName });
         return;
       }
-      authorizationWindow?.close();
       toast.error(res?.error ?? "Autorisation impossible.");
     } catch (e) {
-      authorizationWindow?.close();
       toast.error(e instanceof Error ? e.message : "Autorisation impossible.");
     } finally {
       setBusy(null);
@@ -261,6 +235,39 @@ export function OrgConnectorConfig() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Dialog open={Boolean(pendingAuthorization)} onOpenChange={(isOpen) => !isOpen && setPendingAuthorization(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Se connecter à {pendingAuthorization?.name}</DialogTitle>
+            <DialogDescription>
+              Ouvrez la page sécurisée dans un nouvel onglet, puis choisissez le compte à autoriser. Cette ouverture
+              directe empêche le navigateur intégré de bloquer la page de connexion.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingAuthorization(null)}>
+              Annuler
+            </Button>
+            {pendingAuthorization ? (
+              <Button asChild>
+                <a
+                  href={pendingAuthorization.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    toast.success(`Connexion à ${pendingAuthorization.name} ouverte dans un nouvel onglet.`);
+                    setPendingAuthorization(null);
+                  }}
+                >
+                  Continuer vers {pendingAuthorization.name}
+                  <ExternalLink className="size-4" />
+                </a>
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card className="flex items-start gap-3 border-primary/20 bg-primary/5 p-4">
         <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
         <p className="text-sm text-muted-foreground">

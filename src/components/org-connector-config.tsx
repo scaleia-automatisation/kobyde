@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   connectMyOrgConnector,
@@ -73,6 +74,29 @@ export function OrgConnectorConfig() {
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TestResult>>({});
   const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
+  const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
+
+  type ScopeOpt = { scope: string; label: string; required?: boolean };
+  const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {
+    if (scopeSel[c.key]) return scopeSel[c.key]!;
+    const catalog = c.scopeCatalog ?? [];
+    const granted = c.grantedScopes ?? [];
+    return Array.from(
+      new Set([
+        ...catalog.filter((s) => s.required).map((s) => s.scope),
+        ...catalog.filter((s) => granted.includes(s.scope)).map((s) => s.scope),
+      ]),
+    );
+  };
+
+  const toggleScope = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }, scope: string) => {
+    const current = scopesFor(c);
+    const next = current.includes(scope) ? current.filter((s) => s !== scope) : [...current, scope];
+    setScopeSel((prev) => ({ ...prev, [c.key]: next }));
+    if (c.key === "google") setGoogleAuthorizationUrl(null);
+  };
+
+  const googleScopesKey = (scopeSel["google"] ?? []).join(" ");
 
   // Prépare l'URL avant le clic. Le clic reste ainsi un geste utilisateur direct
   // sur un lien target="_top", seul mécanisme accepté par Google depuis l'aperçu intégré.
@@ -80,13 +104,16 @@ export function OrgConnectorConfig() {
     const google = items.find((item) => item.key === "google");
     if (!origin || !google?.complete || googleAuthorizationUrl) return;
     let active = true;
-    void connectFn({ data: { provider: "google", origin } }).then((result) => {
+    const scopes = scopeSel["google"] ?? scopesFor(google as never);
+    void connectFn({ data: { provider: "google", origin, scopes } }).then((result) => {
       if (active && result?.url) setGoogleAuthorizationUrl(result.url);
     });
     return () => {
       active = false;
     };
-  }, [items, origin, googleAuthorizationUrl, connectFn]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, origin, googleAuthorizationUrl, connectFn, googleScopesKey]);
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -139,7 +166,7 @@ export function OrgConnectorConfig() {
           delete next[c.key];
           return next;
         });
-        const res = await connectFn({ data: { provider: c.key, origin } });
+        const res = await connectFn({ data: { provider: c.key, origin, scopes: scopeSel[c.key] ?? [] } });
         if (res?.url) {
           toast.success(`Ouverture de la connexion à ${c.name}…`);
           window.location.assign(res.url);
@@ -195,7 +222,9 @@ export function OrgConnectorConfig() {
     const connectorName = connector?.name ?? key;
     setBusy(`connect-${key}`);
     try {
-      const res = await connectFn({ data: { provider: key, origin } });
+      const res = await connectFn({
+        data: { provider: key, origin, scopes: connector ? scopesFor(connector as never) : [] },
+      });
       if (res?.url) {
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
         window.location.assign(res.url);
@@ -399,6 +428,76 @@ export function OrgConnectorConfig() {
             {!result && c.lastError && (
               <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{c.lastError}</p>
             )}
+
+            {c.authType === "oauth" && (c.scopeCatalog?.length ?? 0) > 0 && (
+              <div className="space-y-2 rounded-lg border bg-background/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium">Permissions à autoriser</p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setScopeSel((prev) => ({ ...prev, [c.key]: c.scopeCatalog!.map((s) => s.scope) }));
+                        if (c.key === "google") setGoogleAuthorizationUrl(null);
+                      }}
+                    >
+                      Tout cocher
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setScopeSel((prev) => ({
+                          ...prev,
+                          [c.key]: c.scopeCatalog!.filter((s) => s.required).map((s) => s.scope),
+                        }));
+                        if (c.key === "google") setGoogleAuthorizationUrl(null);
+                      }}
+                    >
+                      Tout décocher
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Cochez ce que vos agents pourront faire sur {c.name}. Les cases cochées sont activées et autorisées
+                  dès la connexion à {c.name}.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {c.scopeCatalog!.map((s) => {
+                    const checked = scopesFor(c).includes(s.scope);
+                    const granted = (c.grantedScopes ?? []).includes(s.scope);
+                    return (
+                      <label
+                        key={s.scope}
+                        className="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm hover:bg-muted/40"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          disabled={s.required}
+                          onCheckedChange={() => toggleScope(c, s.scope)}
+                          className="mt-0.5"
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate">{s.label}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">
+                            {s.required ? "Obligatoire · " : ""}
+                            {granted ? "Déjà accordée" : "Non accordée"}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {c.connected && (
+                  <p className="text-xs text-muted-foreground">
+                    Après modification des cases, cliquez sur « Se connecter à {c.name} » pour appliquer les nouvelles
+                    permissions.
+                  </p>
+                )}
+              </div>
+            )}
+
 
             {isOpen && (
               <div className="space-y-4 rounded-lg border bg-muted/30 p-4">

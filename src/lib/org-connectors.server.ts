@@ -136,6 +136,24 @@ export async function listOrgConnectors(orgId: string, origin?: string) {
     if (connected) status = "connecte";
     if (expired) status = "expire";
 
+    const oauthDef = def.oauthKey ? CONNECTOR_MAP.get(def.oauthKey) : null;
+    const scopeCatalog = (oauthDef?.oauth?.scopeCatalog ?? []).map((s) => ({
+      scope: s.scope,
+      label: s.label,
+      required: Boolean(s.required),
+    }));
+    const rawGranted = conn?.scopes_granted as unknown;
+    let grantedScopes: string[] = [];
+    if (Array.isArray(rawGranted)) grantedScopes = rawGranted.map(String);
+    else if (typeof rawGranted === "string") {
+      try {
+        const parsed = JSON.parse(rawGranted);
+        grantedScopes = Array.isArray(parsed) ? parsed.map(String) : rawGranted.split(/[\s,]+/).filter(Boolean);
+      } catch {
+        grantedScopes = rawGranted.split(/[\s,]+/).filter(Boolean);
+      }
+    }
+
     return {
       key: def.key,
       name: def.name,
@@ -147,6 +165,8 @@ export async function listOrgConnectors(orgId: string, origin?: string) {
       values: Object.fromEntries(def.fields.filter((f) => !f.secret).map((f) => [f.key, config[f.key] ?? ""])),
       configuredSecrets: def.fields.filter((f) => f.secret && configured.includes(f.key)).map((f) => f.key),
       redirectUri: orgRedirectUri(def, origin),
+      scopeCatalog,
+      grantedScopes,
       status,
       complete,
       connected,
@@ -157,6 +177,7 @@ export async function listOrgConnectors(orgId: string, origin?: string) {
       lastTestOk: row?.last_test_ok ?? null,
       lastError: row?.last_error ?? null,
     };
+
   });
 }
 

@@ -30,6 +30,24 @@ import {
   testMyOrgConnector,
 } from "@/lib/org-connectors.functions";
 import { ORG_STATUS_LABELS } from "@/lib/org-connectors.catalog";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * L'aperçu Lovable (iframe) conserve la session via un canal sécurisé avec
+ * l'éditeur, mais l'onglet OAuth ouvert en pleine page lit localStorage.
+ * On y dépose une copie de la session avant le départ vers le fournisseur
+ * pour que l'utilisateur reste connecté à son retour sur /mes-connexions.
+ */
+async function persistSessionForOAuthReturn() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
+    const ref = new URL(import.meta.env.VITE_SUPABASE_URL as string).hostname.split(".")[0];
+    window.localStorage.setItem(`sb-${ref}-auth-token`, JSON.stringify(data.session));
+  } catch {
+    // La session restera gérée par le canal habituel.
+  }
+}
 
 const statusTone: Record<string, string> = {
   non_configure: "bg-muted text-muted-foreground",

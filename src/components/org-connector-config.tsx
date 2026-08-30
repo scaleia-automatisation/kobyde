@@ -55,6 +55,12 @@ export function OrgConnectorConfig() {
   const isEmbeddedPreview =
     origin.includes("lovableproject.com") || origin.includes("-preview--") || origin.includes("localhost");
 
+  const googleLink = googleAuthorizationUrl
+    ? isEmbeddedPreview
+      ? `/oauth/continue?destination=${encodeURIComponent(googleAuthorizationUrl)}`
+      : googleAuthorizationUrl
+    : null;
+
   const query = useQuery({
     queryKey: ["org-connectors", origin],
     queryFn: async () => {
@@ -321,7 +327,7 @@ export function OrgConnectorConfig() {
                   Tester la connexion
                 </Button>
                 {c.authType === "oauth" ? (
-                  c.key === "google" && googleAuthorizationUrl ? (
+                  c.key === "google" && googleLink ? (
                     <Button
                       asChild
                       size="sm"
@@ -329,7 +335,7 @@ export function OrgConnectorConfig() {
                       className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
                     >
                       <a
-                        href={googleAuthorizationUrl}
+                        href={googleLink}
                         target={isEmbeddedPreview ? "_blank" : "_self"}
                         rel={isEmbeddedPreview ? "noopener noreferrer" : undefined}
                       >

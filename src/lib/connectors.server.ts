@@ -532,8 +532,11 @@ async function getConnectionRow(userId: string, connectorKey: string) {
     .eq("user_id", userId)
     .eq("provider", connectorKey)
     .maybeSingle();
-  return data ?? null;
+  if (!data) return null;
+  const { decryptConnectionRow } = await import("./token-crypto.server");
+  return await decryptConnectionRow(data as any);
 }
+
 
 export async function buildAuthorizeUrl(input: {
   connectorKey: string;

@@ -462,7 +462,6 @@ export function OrgConnectorConfig() {
                 <div className="grid gap-2 sm:grid-cols-2">
                   {c.scopeCatalog!.map((s) => {
                     const checked = scopesFor(c).includes(s.scope);
-                    const granted = (c.grantedScopes ?? []).includes(s.scope);
                     return (
                       <label
                         key={s.scope}

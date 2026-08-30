@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
           new Response(null, {
             status: 302,
             headers: {
-              location: `${origin}/connexions?connexion=${status}&connecteur=${encodeURIComponent(
+              location: `${origin}/mes-connexions?connexion=${status}&connecteur=${encodeURIComponent(
                 params.connector,
               )}${message ? `&message=${encodeURIComponent(message)}` : ""}`,
             },
@@ -26,8 +26,11 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
 
         try {
           const { completeOAuth } = await import("@/lib/connectors.server");
-          await completeOAuth(params.connector, code, state, origin);
-          return back("ok");
+          const result = await completeOAuth(params.connector, code, state, origin);
+          const target = new URL(result.redirectTo);
+          target.searchParams.set("connexion", "ok");
+          target.searchParams.set("connecteur", params.connector);
+          return new Response(null, { status: 302, headers: { location: target.toString() } });
         } catch (e) {
           return back("error", e instanceof Error ? e.message : "Connexion impossible.");
         }

@@ -542,8 +542,11 @@ export async function buildAuthorizeUrl(input: {
   }
 
 
-  const base = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
-  const redirectUri = `${base}${callbackPath(input.connectorKey)}`;
+  // Le callback OAuth doit toujours utiliser le domaine canonique déclaré chez
+  // le fournisseur. Les domaines éphémères de prévisualisation sont conservés
+  // uniquement comme destination de retour après l'autorisation.
+  const returnBase = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
+  const redirectUri = `${productionBaseUrl()}${callbackPath(input.connectorKey)}`;
   const state = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
   const supabase = await db();
@@ -569,7 +572,7 @@ export async function buildAuthorizeUrl(input: {
     user_id: input.userId,
     org_id: input.orgId,
     connector_key: input.connectorKey,
-    redirect_to: `${base}${input.redirectTo ?? "/mes-connexions"}`,
+    redirect_to: `${returnBase}${input.redirectTo ?? "/mes-connexions"}`,
     scopes: selected.join(" "),
   });
 
@@ -583,9 +586,16 @@ export async function buildAuthorizeUrl(input: {
   if (input.connectorKey === "google") {
     params.set("access_type", "offline");
     params.set("include_granted_scopes", "true");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("user_id", input.userId)
+      .maybeSingle();
+    const accountEmail = typeof profile?.email === "string" ? profile.email.trim() : "";
+    if (accountEmail) params.set("login_hint", accountEmail);
     // Consentement redemandé uniquement lorsqu'une nouvelle autorisation est nécessaire
     // ou lorsqu'aucun refresh token n'est encore stocké.
-    if (isNewConsent || !existing?.refresh_token) params.set("prompt", "consent");
+    params.set("prompt", isNewConsent || !existing?.refresh_token ? "consent select_account" : "select_account");
   }
   if (input.connectorKey === "tiktok") {
     params.delete("client_id");

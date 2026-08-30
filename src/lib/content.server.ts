@@ -654,5 +654,8 @@ export async function findConnection(supabase: SupabaseClient<any>, userId: stri
     .eq("is_active", true)
     .eq("revoked", false)
     .maybeSingle();
-  return data ?? null;
+  if (!data) return null;
+  const { decryptToken } = await import("./token-crypto.server");
+  return { ...data, access_token: await decryptToken((data as any).access_token) };
 }
+

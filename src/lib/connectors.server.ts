@@ -2,6 +2,8 @@
 /** Connecteurs plateforme : configuration Super Admin, OAuth utilisateur, coûts et logs. Serveur uniquement. */
 
 import { CONNECTORS, CONNECTOR_MAP, maskSecret, type ConnectorDef } from "./connectors.catalog";
+import { encryptToken } from "./token-crypto.server";
+
 
 export async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -532,8 +534,11 @@ async function getConnectionRow(userId: string, connectorKey: string) {
     .eq("user_id", userId)
     .eq("provider", connectorKey)
     .maybeSingle();
-  return data ?? null;
+  if (!data) return null;
+  const { decryptConnectionRow } = await import("./token-crypto.server");
+  return await decryptConnectionRow(data as any);
 }
+
 
 export async function buildAuthorizeUrl(input: {
   connectorKey: string;
@@ -748,8 +753,9 @@ export async function completeOAuth(
       provider_account_id: identity.id ?? null,
       provider_email: identity.email ?? null,
       account_label: identity.label ?? identity.email ?? null,
-      access_token: token,
-      refresh_token: refresh ?? existing?.refresh_token ?? null,
+      access_token: await encryptToken(token),
+      refresh_token: await encryptToken(refresh ?? existing?.refresh_token ?? null),
+
       token_type: data.token_type ?? "Bearer",
       expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
       refresh_token_expires_at: refreshExpiresIn
@@ -824,8 +830,9 @@ export async function refreshUserToken(userId: string, connectorKey: string) {
     await supabase
       .from("oauth_connections")
       .update({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token ?? row.refresh_token,
+        access_token: await encryptToken(data.access_token),
+        refresh_token: await encryptToken(data.refresh_token ?? row.refresh_token),
+
         expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
         last_refresh_at: new Date().toISOString(),
         status: "active",

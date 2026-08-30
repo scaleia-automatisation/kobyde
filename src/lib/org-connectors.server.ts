@@ -176,6 +176,23 @@ function sanitizeCredential(fieldKey: string, raw: string) {
   return v;
 }
 
+/**
+ * Vérifie le format attendu des identifiants les plus souvent mal collés
+ * (App Secret Meta confondu avec un jeton d'accès, App ID non numérique…).
+ */
+function checkCredentialFormat(provider: string, fieldKey: string, value: string): string | null {
+  if (!value) return null;
+  if (provider === "meta" && fieldKey === "app_id" && !/^\d{10,20}$/.test(value)) {
+    return "App ID Meta invalide : il doit être uniquement composé de chiffres (visible en haut du tableau de bord de votre application Meta).";
+  }
+  if (provider === "meta" && fieldKey === "app_secret" && !/^[a-f0-9]{32}$/i.test(value)) {
+    return "App Secret Meta invalide : il fait exactement 32 caractères (lettres a-f et chiffres). Vous avez probablement collé un jeton d'accès. Copiez la valeur de « Clé secrète » dans Paramètres > Général de votre application Meta.";
+  }
+  return null;
+}
+
+
+
 export async function saveOrgConnector(input: {
 
   orgId: string;

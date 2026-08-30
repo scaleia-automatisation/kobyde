@@ -661,6 +661,7 @@ function Landing() {
           <Link to="/mentions-legales" className="hover:underline">Mentions légales</Link>
           <Link to="/confidentialite" className="hover:underline">Confidentialité</Link>
           <Link to="/cgv" className="hover:underline">CGV</Link>
+          <Link to="/cgu" className="hover:underline">Conditions d'utilisation</Link>
           <Link to="/data-deletion" className="hover:underline">Suppression des données</Link>
           <Link to="/data-deletion-request" className="hover:underline">Demande de suppression</Link>
         </nav>

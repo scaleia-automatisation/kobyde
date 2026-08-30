@@ -586,9 +586,16 @@ export async function buildAuthorizeUrl(input: {
   if (input.connectorKey === "google") {
     params.set("access_type", "offline");
     params.set("include_granted_scopes", "true");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("user_id", input.userId)
+      .maybeSingle();
+    const accountEmail = typeof profile?.email === "string" ? profile.email.trim() : "";
+    if (accountEmail) params.set("login_hint", accountEmail);
     // Consentement redemandé uniquement lorsqu'une nouvelle autorisation est nécessaire
     // ou lorsqu'aucun refresh token n'est encore stocké.
-    if (isNewConsent || !existing?.refresh_token) params.set("prompt", "consent");
+    params.set("prompt", isNewConsent || !existing?.refresh_token ? "consent select_account" : "select_account");
   }
   if (input.connectorKey === "tiktok") {
     params.delete("client_id");

@@ -50,6 +50,7 @@ import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
 import { Route as AuthenticatedTachesRouteImport } from './routes/_authenticated/taches'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as EntretienTokenRouteImport } from './routes/entretien.$token'
@@ -280,6 +281,11 @@ const AuthenticatedTachesRoute = AuthenticatedTachesRouteImport.update({
   path: '/taches',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -389,7 +395,7 @@ const ApiPublicStripeConnectWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/data-deletion': typeof DataDeletionRoute
@@ -428,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/taches': typeof AuthenticatedTachesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -451,7 +458,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/data-deletion': typeof DataDeletionRoute
@@ -490,6 +497,7 @@ export interface FileRoutesByTo {
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/taches': typeof AuthenticatedTachesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -515,7 +523,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/cgv': typeof CgvRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/data-deletion': typeof DataDeletionRoute
@@ -554,6 +562,7 @@ export interface FileRoutesById {
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/_authenticated/taches': typeof AuthenticatedTachesRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/entretien/$token': typeof EntretienTokenRoute
   '/espace/$token': typeof EspaceTokenRoute
@@ -618,6 +627,7 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/tableau-de-bord'
     | '/taches'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
@@ -680,6 +690,7 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/tableau-de-bord'
     | '/taches'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
@@ -743,6 +754,7 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin'
     | '/_authenticated/tableau-de-bord'
     | '/_authenticated/taches'
+    | '/auth/callback'
     | '/blog/$slug'
     | '/entretien/$token'
     | '/espace/$token'
@@ -768,7 +780,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   CgvRoute: typeof CgvRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   DataDeletionRoute: typeof DataDeletionRoute
@@ -1079,6 +1091,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTachesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/blog/': {
       id: '/blog/'
       path: '/blog'
@@ -1309,10 +1328,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   CgvRoute: CgvRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   DataDeletionRoute: DataDeletionRoute,

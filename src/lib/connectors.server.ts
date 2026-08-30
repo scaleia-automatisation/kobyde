@@ -828,8 +828,9 @@ export async function refreshUserToken(userId: string, connectorKey: string) {
     await supabase
       .from("oauth_connections")
       .update({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token ?? row.refresh_token,
+        access_token: await encryptToken(data.access_token),
+        refresh_token: await encryptToken(data.refresh_token ?? row.refresh_token),
+
         expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
         last_refresh_at: new Date().toISOString(),
         status: "active",

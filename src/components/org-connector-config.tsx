@@ -22,14 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   connectMyOrgConnector,
   deleteMyOrgConnector,
   listMyOrgConnectors,
@@ -92,7 +84,6 @@ export function OrgConnectorConfig() {
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TestResult>>({});
-  const [pendingAuthorization, setPendingAuthorization] = useState<PendingAuthorization | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -147,7 +138,8 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin } });
         if (res?.url) {
-          setPendingAuthorization({ url: res.url, name: c.name });
+          toast.success(`Ouverture de la connexion à ${c.name}…`);
+          gotoAuthorization(res.url);
           return;
         }
         toast.error(res?.error ?? "Autorisation impossible.");
@@ -202,7 +194,8 @@ export function OrgConnectorConfig() {
     try {
       const res = await connectFn({ data: { provider: key, origin } });
       if (res?.url) {
-        setPendingAuthorization({ url: res.url, name: connectorName });
+        toast.success(`Ouverture de la connexion à ${connectorName}…`);
+        gotoAuthorization(res.url);
         return;
       }
       toast.error(res?.error ?? "Autorisation impossible.");
@@ -300,9 +293,15 @@ export function OrgConnectorConfig() {
                   Tester la connexion
                 </Button>
                 {c.authType === "oauth" ? (
-                  <Button size="sm" disabled={!c.complete || busy === `connect-${c.key}`} onClick={() => void connect(c.key)}>
-                    <RefreshCw className="mr-1 size-4" />
-                    {c.connected ? "Reconnecter" : `Se connecter à ${c.name}`}
+                  <Button
+                    size="sm"
+                    variant={c.connected ? "secondary" : "default"}
+                    className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
+                    disabled={!c.complete || busy === `connect-${c.key}`}
+                    onClick={() => void connect(c.key)}
+                  >
+                    {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
+                    {c.connected ? "Connexion réussie" : `Se connecter à ${c.name}`}
                   </Button>
                 ) : (
                   <Button

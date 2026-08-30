@@ -240,8 +240,8 @@ export function OrgConnectorConfig() {
           <DialogHeader>
             <DialogTitle>Se connecter à {pendingAuthorization?.name}</DialogTitle>
             <DialogDescription>
-              Ouvrez la page sécurisée dans un nouvel onglet, puis choisissez le compte à autoriser. Cette ouverture
-              directe empêche le navigateur intégré de bloquer la page de connexion.
+              Continuez vers la page sécurisée, puis choisissez le compte à autoriser. Google s’ouvrira en pleine page
+              afin que le navigateur intégré ne bloque pas la connexion.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -252,10 +252,10 @@ export function OrgConnectorConfig() {
               <Button asChild>
                 <a
                   href={pendingAuthorization.url}
-                  target="_blank"
+                  target="_top"
                   rel="noopener noreferrer"
                   onClick={() => {
-                    toast.success(`Connexion à ${pendingAuthorization.name} ouverte dans un nouvel onglet.`);
+                    toast.success(`Ouverture de la connexion à ${pendingAuthorization.name}.`);
                     setPendingAuthorization(null);
                   }}
                 >

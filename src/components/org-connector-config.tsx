@@ -40,6 +40,11 @@ const statusTone: Record<string, string> = {
 };
 
 type TestResult = { ok: boolean; message: string };
+type AuthorizationWindow = {
+  channel: BroadcastChannel;
+  ready: Promise<boolean>;
+  close: () => void;
+};
 
 export function OrgConnectorConfig() {
   const listFn = useServerFn(listMyOrgConnectors);
@@ -111,30 +116,47 @@ export function OrgConnectorConfig() {
     }
   };
 
-  const openAuthorizationWindow = (name: string) => {
+  const openAuthorizationWindow = (name: string): AuthorizationWindow | null => {
     const width = 560;
     const height = 760;
     const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
     const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
+    const channelId = crypto.randomUUID();
+    const channel = new BroadcastChannel(`kobyde-oauth-${channelId}`);
+    let markReady: ((ready: boolean) => void) | undefined;
+    const ready = new Promise<boolean>((resolve) => {
+      markReady = resolve;
+    });
+    channel.onmessage = (event: MessageEvent<unknown>) => {
+      const message = event.data as { type?: unknown } | null;
+      if (message?.type === "ready") markReady?.(true);
+    };
     const popup = window.open(
-      "about:blank",
-      "kobyde-oauth",
-      `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
+      `${window.location.origin}/oauth/launch?channel=${encodeURIComponent(channelId)}`,
+      "_blank",
+      `popup=yes,noopener,noreferrer,width=${width},height=${height},left=${left},top=${top}`,
     );
-    if (popup) {
-      popup.document.title = `Connexion à ${name}`;
-      popup.document.body.textContent = `Ouverture de ${name}…`;
+    if (popup === null) {
+      window.setTimeout(() => markReady?.(false), 2500);
     }
-    return popup;
+    return {
+      channel,
+      ready,
+      close: () => {
+        channel.postMessage({ type: "close" });
+        window.setTimeout(() => channel.close(), 100);
+      },
+    };
   };
 
-  const navigateToAuthorization = (popup: Window | null, url: string, name: string) => {
-    if (!popup) {
+  const navigateToAuthorization = async (popup: AuthorizationWindow | null, url: string, name: string) => {
+    if (!popup || !(await popup.ready)) {
+      popup?.channel.close();
       toast.error(`La fenêtre de connexion à ${name} a été bloquée. Autorisez les fenêtres contextuelles puis réessayez.`);
       return false;
     }
-    popup.location.replace(url);
-    popup.focus();
+    popup.channel.postMessage({ type: "navigate", url });
+    window.setTimeout(() => popup.channel.close(), 1000);
     toast.success(`Choisissez votre compte ${name} dans la fenêtre qui vient de s'ouvrir.`);
     return true;
   };
@@ -153,7 +175,7 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin } });
         if (res?.url) {
-          navigateToAuthorization(authorizationWindow, res.url, c.name);
+          await navigateToAuthorization(authorizationWindow, res.url, c.name);
           return;
         }
         authorizationWindow?.close();
@@ -213,7 +235,7 @@ export function OrgConnectorConfig() {
     try {
       const res = await connectFn({ data: { provider: key, origin } });
       if (res?.url) {
-        navigateToAuthorization(authorizationWindow, res.url, connectorName);
+        await navigateToAuthorization(authorizationWindow, res.url, connectorName);
         return;
       }
       authorizationWindow?.close();

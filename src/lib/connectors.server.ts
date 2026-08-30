@@ -13,10 +13,26 @@ export async function db() {
 export function productionBaseUrl() {
   return (process.env["PUBLIC_APP_URL"] ?? "https://kobyde.com").replace(/\/$/, "");
 }
+
+export function oauthBaseUrl(origin?: string) {
+  const fallback = productionBaseUrl();
+  if (!origin) return fallback;
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname.toLowerCase();
+    if (url.protocol === "https:" && (hostname === "kobyde.com" || hostname === "www.kobyde.com")) {
+      return url.origin.replace(/\/$/, "");
+    }
+  } catch {
+    // Une origine invalide ne doit jamais être reflétée dans une redirection OAuth.
+  }
+  return fallback;
+}
 export function devBaseUrl() {
   return "http://localhost:8080";
 }
 export const callbackPath = (key: string) => `/api/public/connectors/${key}/callback`;
+export const oauthCallbackPath = (key: string) => (key === "google" ? "/auth/callback" : callbackPath(key));
 export const webhookPath = (key: string) => `/api/public/connectors/${key}/webhook`;
 
 export function connectorUrls(key: string) {
@@ -546,7 +562,7 @@ export async function buildAuthorizeUrl(input: {
   // le fournisseur. Les domaines éphémères de prévisualisation sont conservés
   // uniquement comme destination de retour après l'autorisation.
   const returnBase = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
-  const redirectUri = `${productionBaseUrl()}${callbackPath(input.connectorKey)}`;
+  const redirectUri = `${oauthBaseUrl(input.origin)}${oauthCallbackPath(input.connectorKey)}`;
   const state = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
   const supabase = await db();
@@ -648,7 +664,13 @@ async function fetchAccountIdentity(connectorKey: string, token: string, payload
   return { id: null, email: null, label: null };
 }
 
-export async function completeOAuth(connectorKey: string, code: string, state: string, origin: string) {
+export async function completeOAuth(
+  connectorKey: string,
+  code: string,
+  state: string,
+  origin: string,
+  callbackUri?: string,
+) {
   const def = CONNECTOR_MAP.get(connectorKey);
   if (!def?.oauth) throw new Error("Connecteur inconnu.");
   const supabase = await db();
@@ -661,7 +683,7 @@ export async function completeOAuth(connectorKey: string, code: string, state: s
   const conf = await getConnectorConfig(connectorKey);
   const { clientId, clientSecret } = await resolveOAuthApp(connectorKey, st.org_id, conf);
 
-  const redirectUri = `${origin.replace(/\/$/, "")}${callbackPath(connectorKey)}`;
+  const redirectUri = callbackUri ?? `${origin.replace(/\/$/, "")}${callbackPath(connectorKey)}`;
 
   const body = new URLSearchParams({
     grant_type: "authorization_code",

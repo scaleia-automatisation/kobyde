@@ -176,6 +176,23 @@ function sanitizeCredential(fieldKey: string, raw: string) {
   return v;
 }
 
+/**
+ * Vérifie le format attendu des identifiants les plus souvent mal collés
+ * (App Secret Meta confondu avec un jeton d'accès, App ID non numérique…).
+ */
+function checkCredentialFormat(provider: string, fieldKey: string, value: string): string | null {
+  if (!value) return null;
+  if (provider === "meta" && fieldKey === "app_id" && !/^\d{10,20}$/.test(value)) {
+    return "App ID Meta invalide : il doit être uniquement composé de chiffres (visible en haut du tableau de bord de votre application Meta).";
+  }
+  if (provider === "meta" && fieldKey === "app_secret" && !/^[a-f0-9]{32}$/i.test(value)) {
+    return "App Secret Meta invalide : il fait exactement 32 caractères (lettres a-f et chiffres). Vous avez probablement collé un jeton d'accès. Copiez la valeur de « Clé secrète » dans Paramètres > Général de votre application Meta.";
+  }
+  return null;
+}
+
+
+
 export async function saveOrgConnector(input: {
 
   orgId: string;
@@ -195,6 +212,8 @@ export async function saveOrgConnector(input: {
     const raw = input.values[field.key];
     if (raw === undefined) continue;
     const value = sanitizeCredential(field.key, raw);
+    const formatError = checkCredentialFormat(input.provider, field.key, value);
+    if (formatError) throw new Error(formatError);
     if (field.secret) {
       if (!value) continue; // champ laissé vide = secret existant conservé
       secrets[field.key] = value;
@@ -202,6 +221,7 @@ export async function saveOrgConnector(input: {
       config[field.key] = value;
     }
   }
+
 
 
   const configured = Object.keys(secrets).filter((k) => secrets[k]);
@@ -380,14 +400,29 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
 
 
     if (input.provider === "meta") {
+      const appId = config["app_id"] ?? "";
+      const appSecret = secrets["app_secret"] ?? "";
+      const fmt =
+        checkCredentialFormat("meta", "app_id", appId) ?? checkCredentialFormat("meta", "app_secret", appSecret);
+      if (fmt) return finish(false, fmt);
       const p = await probe(
         `https://graph.facebook.com/oauth/access_token?client_id=${encodeURIComponent(
-          config["app_id"] ?? "",
-        )}&client_secret=${encodeURIComponent(secrets["app_secret"] ?? "")}&grant_type=client_credentials`,
+          appId,
+        )}&client_secret=${encodeURIComponent(appSecret)}&grant_type=client_credentials`,
       );
-      if (!p.ok) return finish(false, `Meta a répondu ${p.status} : ${detailOf(p)}.`);
+      if (!p.ok) {
+        const code = p.json?.error?.code;
+        if (code === 101 || code === 1) {
+          return finish(
+            false,
+            "Meta refuse ce couple App ID / App Secret. Vérifiez qu'ils proviennent de la même application (Paramètres > Général) et que l'App Secret fait 32 caractères.",
+          );
+        }
+        return finish(false, `Meta a répondu ${p.status} : ${detailOf(p)}.`);
+      }
       return finish(true, "Appel API Meta réussi (200) — application authentifiée.");
     }
+
 
     if (input.provider === "linkedin") {
       const r = await verifyOAuthClient({

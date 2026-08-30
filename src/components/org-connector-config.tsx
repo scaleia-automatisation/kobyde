@@ -221,7 +221,9 @@ export function OrgConnectorConfig() {
     const connectorName = connector?.name ?? key;
     setBusy(`connect-${key}`);
     try {
-      const res = await connectFn({ data: { provider: key, origin } });
+      const res = await connectFn({
+        data: { provider: key, origin, scopes: connector ? scopesFor(connector as never) : [] },
+      });
       if (res?.url) {
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
         window.location.assign(res.url);

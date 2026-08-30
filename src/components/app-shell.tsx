@@ -55,6 +55,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import { AGENTS } from "@/lib/agents";
 import type { AgentMeta } from "@/lib/agents";
+import logoKobyde from "@/assets/logo-kobyde.png.asset.json";
 
 type NavItem =
   | {
@@ -411,9 +412,11 @@ export function AppShell({
             to="/tableau-de-bord"
             className="mb-4 flex items-center gap-2 rounded-lg px-2 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-sidebar-primary font-display text-base text-sidebar-primary-foreground">
-              K
-            </span>
+            <img
+              src={logoKobyde.url}
+              alt="Logo Kobyde"
+              className="size-8 shrink-0 rounded-lg"
+            />
             <span className="font-display text-[1.0625rem] text-sidebar-accent-foreground">
               Kobyde
             </span>

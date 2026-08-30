@@ -1,4 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useSession } from "@/lib/db";
 import {
   ArrowRight,
   BadgeCheck,
@@ -236,6 +238,24 @@ function TestimonialCard({
 function Landing() {
   const lead = AGENTS.find((a) => a.key === "directeur") ?? AGENTS[0]!;
   const rest = AGENTS.filter((a) => a.key !== lead.key);
+  const { session } = useSession();
+  const navigate = useNavigate();
+
+  // Retour d'une connexion (Google ou email) : on renvoie vers le tableau de bord.
+  useEffect(() => {
+    if (!session || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    const fromAuth =
+      params.has("code") ||
+      params.has("access_token") ||
+      hash.includes("access_token") ||
+      window.sessionStorage.getItem("kobyde:auth-redirect") === "1";
+    if (fromAuth) {
+      window.sessionStorage.removeItem("kobyde:auth-redirect");
+      navigate({ to: "/tableau-de-bord", replace: true });
+    }
+  }, [session, navigate]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -269,14 +289,22 @@ function Landing() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost">
-            <Link to="/auth">Se connecter</Link>
-          </Button>
-          <Button asChild size="cta" variant="cta">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Essayer
-            </Link>
-          </Button>
+          {session ? (
+            <Button asChild size="cta" variant="cta">
+              <Link to="/tableau-de-bord">Mon tableau de bord</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild variant="ghost">
+                <Link to="/auth">Se connecter</Link>
+              </Button>
+              <Button asChild size="cta" variant="cta">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Essayer
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </header>
 

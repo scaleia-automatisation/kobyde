@@ -80,8 +80,14 @@ export const deleteMyOrgConnector = createServerFn({ method: "POST" })
 /** Démarre l'autorisation OAuth avec les identifiants de l'entreprise. */
 export const connectMyOrgConnector = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { provider: string; origin?: string }) =>
-    z.object({ provider: z.string().min(1).max(64), origin: z.string().max(200).optional() }).parse(d),
+  .inputValidator((d: { provider: string; origin?: string; scopes?: string[] }) =>
+    z
+      .object({
+        provider: z.string().min(1).max(64),
+        origin: z.string().max(200).optional(),
+        scopes: z.array(z.string().max(200)).max(80).optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { orgId } = await orgContext(context.supabase, context.userId);
@@ -90,14 +96,19 @@ export const connectMyOrgConnector = createServerFn({ method: "POST" })
     if (!def?.oauthKey) return { url: null, error: "Cette plateforme ne nécessite pas d'autorisation OAuth." };
     const { buildAuthorizeUrl } = await import("./connectors.server");
     try {
+      // Les autorisations cochées par l'utilisateur sont demandées telles quelles.
+      // Sans sélection, on se limite à l'identité de base pour Google afin
+      // d'éviter le blocage de l'écran de connexion.
+      const scopes = (data.scopes ?? []).filter(Boolean);
       const res = await buildAuthorizeUrl({
         connectorKey: def.oauthKey,
         userId: context.userId,
         orgId,
-        // La connexion depuis « Comptes » associe d'abord l'identité du compte.
-        // Les permissions métier sensibles sont ajoutées séparément depuis
-        // « Autorisations » afin que Google ne bloque pas l'écran de connexion.
-        ...(def.oauthKey === "google" ? { scopes: ["openid", "email", "profile"] } : {}),
+        ...(scopes.length
+          ? { scopes }
+          : def.oauthKey === "google"
+            ? { scopes: ["openid", "email", "profile"] }
+            : {}),
         ...(data.origin ? { origin: data.origin } : {}),
       });
       return { url: res.url as string | null, error: null as string | null };
@@ -105,3 +116,4 @@ export const connectMyOrgConnector = createServerFn({ method: "POST" })
       return { url: null, error: e instanceof Error ? e.message : "Autorisation impossible." };
     }
   });
+

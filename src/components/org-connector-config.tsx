@@ -416,6 +416,17 @@ export function OrgConnectorConfig() {
                     </span>
                   )}
                 </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    disabled={!canManage || busy === `add-${c.key}`}
+                    onClick={() => void addToPlatform(c, values)}
+                  >
+                    {busy === `add-${c.key}` ? <Loader2 className="mr-1 size-4 animate-spin" /> : null}
+                    Ajouter à {c.name}
+                  </Button>
+                </div>
               </div>
             )}
           </Card>

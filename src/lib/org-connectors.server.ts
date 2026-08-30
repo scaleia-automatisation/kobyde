@@ -362,7 +362,21 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
       if (token) {
         const live = await testLiveToken(def.key, token);
         if (live && live.ok) {
-          const scopes = checkScopes(def.oauthKey, (conn?.scopes_granted ?? []) as string[]);
+          const raw = conn?.scopes_granted as unknown;
+          // Le champ peut être stocké en JSON texte ou en chaîne séparée par des espaces.
+          const grantedList: string[] = Array.isArray(raw)
+            ? raw.map(String)
+            : typeof raw === "string"
+              ? (() => {
+                  try {
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed.map(String) : raw.split(/\s+/).filter(Boolean);
+                  } catch {
+                    return raw.split(/\s+/).filter(Boolean);
+                  }
+                })()
+              : [];
+          const scopes = checkScopes(def.oauthKey, grantedList);
           if (scopes && scopes.missing.length) {
             return finish(
               false,

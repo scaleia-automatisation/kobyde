@@ -165,7 +165,7 @@ export function OrgConnectorConfig() {
           delete next[c.key];
           return next;
         });
-        const res = await connectFn({ data: { provider: c.key, origin } });
+        const res = await connectFn({ data: { provider: c.key, origin, scopes: scopeSel[c.key] ?? [] } });
         if (res?.url) {
           toast.success(`Ouverture de la connexion à ${c.name}…`);
           window.location.assign(res.url);

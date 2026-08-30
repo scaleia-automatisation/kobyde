@@ -87,11 +87,14 @@ export async function buildConnectUrl(orgId: string, userId: string, origin: str
   const state = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
   await db.from("org_stripe_oauth_states").insert({ state, org_id: orgId, user_id: userId });
 
+  // L'URI de redirection doit toujours être le domaine canonique déclaré
+  // dans le tableau de bord Stripe (https://kobyde.com), jamais une URL d'aperçu.
+  const { oauthBaseUrl } = await import("./connectors.server");
   const params = new URLSearchParams({
     response_type: "code",
     client_id: cfg.connectClientId,
     scope: "read_write",
-    redirect_uri: `${origin}/api/public/stripe/connect/callback`,
+    redirect_uri: `${oauthBaseUrl(origin)}/api/public/stripe/connect/callback`,
     state,
   });
   return `https://connect.stripe.com/oauth/authorize?${params.toString()}`;

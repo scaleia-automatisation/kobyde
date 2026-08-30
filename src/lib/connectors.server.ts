@@ -700,7 +700,9 @@ export async function completeOAuth(
   const conf = await getConnectorConfig(connectorKey);
   const { clientId, clientSecret } = await resolveOAuthApp(connectorKey, st.org_id, conf);
 
-  const redirectUri = callbackUri ?? `${origin.replace(/\/$/, "")}${callbackPath(connectorKey)}`;
+  // L'échange du code doit utiliser exactement la même redirect_uri que celle
+  // envoyée à l'autorisation : toujours le domaine canonique https://kobyde.com.
+  const redirectUri = callbackUri ?? `${oauthBaseUrl(origin)}${oauthCallbackPath(connectorKey)}`;
 
   const body = new URLSearchParams({
     grant_type: "authorization_code",

@@ -289,14 +289,22 @@ function Landing() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost">
-            <Link to="/auth">Se connecter</Link>
-          </Button>
-          <Button asChild size="cta" variant="cta">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Essayer
-            </Link>
-          </Button>
+          {session ? (
+            <Button asChild size="cta" variant="cta">
+              <Link to="/tableau-de-bord">Mon tableau de bord</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild variant="ghost">
+                <Link to="/auth">Se connecter</Link>
+              </Button>
+              <Button asChild size="cta" variant="cta">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Essayer
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </header>
 

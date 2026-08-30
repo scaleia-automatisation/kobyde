@@ -39,8 +39,9 @@ export const Route = createFileRoute("/auth/callback")({
         if (!code || !state) return back("error", "Réponse d'autorisation Google incomplète.");
 
         try {
-          const { completeOAuth } = await import("@/lib/connectors.server");
-          const callbackUri = `${url.origin}/auth/callback`;
+          const { completeOAuth, oauthBaseUrl } = await import("@/lib/connectors.server");
+          // Toujours échanger le code avec l'URI canonique https://kobyde.com/auth/callback.
+          const callbackUri = `${oauthBaseUrl(url.origin)}/auth/callback`;
           await completeOAuth("google", code, state, url.origin, callbackUri);
           // Retour systématique dans « Mes connexions », onglet Comptes.
           return back("ok");

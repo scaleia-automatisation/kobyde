@@ -260,6 +260,7 @@ export function OrgConnectorConfig() {
       if (res?.url) {
         setOauthUrls((prev) => ({ ...prev, [key]: res.url! }));
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
+        await persistSessionForOAuthReturn();
         window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
         return;
       }

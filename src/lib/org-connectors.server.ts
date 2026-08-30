@@ -212,8 +212,7 @@ export async function saveOrgConnector(input: {
     const raw = input.values[field.key];
     if (raw === undefined) continue;
     const value = sanitizeCredential(field.key, raw);
-    const formatError = checkCredentialFormat(input.provider, field.key, value);
-    if (formatError) throw new Error(formatError);
+    // Le format est seulement vérifié lors du test de connexion : on n'empêche jamais l'enregistrement.
     if (field.secret) {
       if (!value) continue; // champ laissé vide = secret existant conservé
       secrets[field.key] = value;

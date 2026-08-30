@@ -542,6 +542,8 @@ export async function buildAuthorizeUrl(input: {
   origin?: string;
   scopes?: string[];
   redirectTo?: string;
+  /** E-mail du compte avec lequel l'utilisateur s'est connecté à Kobyde. */
+  userEmail?: string | null;
 }) {
   const def = CONNECTOR_MAP.get(input.connectorKey);
   if (!def?.oauth) throw new Error("Ce connecteur ne gère pas la connexion de compte.");

@@ -213,6 +213,28 @@ export function OrgConnectorConfig() {
     }
   };
 
+  // Valide les scopes cochés : relance l'autorisation OAuth avec la sélection
+  // pour que les permissions soient réellement mises à jour chez la plateforme.
+  const validateScopes = async (c: { key: string; name: string }) => {
+    const connector = items.find((item) => item.key === c.key);
+    if (!connector) return;
+    setBusy(`scopes-${c.key}`);
+    try {
+      const scopes = scopesFor(connector as never);
+      const res = await connectFn({ data: { provider: c.key, origin, scopes } });
+      if (res?.url) {
+        toast.success(`Mise à jour des permissions ${c.name}…`);
+        window.location.assign(res.url);
+        return;
+      }
+      toast.error(res?.error ?? "Impossible de valider les permissions.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Impossible de valider les permissions.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const connect = async (key: string) => {
     const connector = items.find((item) => item.key === key);
     const connectorName = connector?.name ?? key;
@@ -483,12 +505,18 @@ export function OrgConnectorConfig() {
                     );
                   })}
                 </div>
-                {c.connected && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
-                    Après modification des cases, cliquez sur « Se connecter à {c.name} » pour appliquer les nouvelles
-                    permissions.
+                    Cliquez sur « Valider les permissions » pour appliquer les cases cochées chez {c.name}.
                   </p>
-                )}
+                  <Button
+                    size="sm"
+                    disabled={busy === `scopes-${c.key}`}
+                    onClick={() => void validateScopes({ key: c.key, name: c.name })}
+                  >
+                    {busy === `scopes-${c.key}` ? "Validation…" : "Valider les permissions"}
+                  </Button>
+                </div>
               </div>
             )}
 

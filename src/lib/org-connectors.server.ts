@@ -379,7 +379,10 @@ export async function testOrgConnector(input: { orgId: string; userId: string; p
         .eq("org_id", input.orgId)
         .eq("provider", def.oauthKey)
         .maybeSingle();
-      const token = conn && !conn.revoked && conn.is_active !== false ? conn.access_token : null;
+      const { decryptToken } = await import("./token-crypto.server");
+      const token =
+        conn && !conn.revoked && conn.is_active !== false ? await decryptToken(conn.access_token) : null;
+
       if (token) {
         const live = await testLiveToken(def.key, token);
         if (live && live.ok) {

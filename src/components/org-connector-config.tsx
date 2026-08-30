@@ -30,6 +30,24 @@ import {
   testMyOrgConnector,
 } from "@/lib/org-connectors.functions";
 import { ORG_STATUS_LABELS } from "@/lib/org-connectors.catalog";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * L'aperçu Lovable (iframe) conserve la session via un canal sécurisé avec
+ * l'éditeur, mais l'onglet OAuth ouvert en pleine page lit localStorage.
+ * On y dépose une copie de la session avant le départ vers le fournisseur
+ * pour que l'utilisateur reste connecté à son retour sur /mes-connexions.
+ */
+async function persistSessionForOAuthReturn() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return;
+    const ref = new URL(import.meta.env["VITE_SUPABASE_URL"] as string).hostname.split(".")[0];
+    window.localStorage.setItem(`sb-${ref}-auth-token`, JSON.stringify(data.session));
+  } catch {
+    // La session restera gérée par le canal habituel.
+  }
+}
 
 const statusTone: Record<string, string> = {
   non_configure: "bg-muted text-muted-foreground",
@@ -181,6 +199,7 @@ export function OrgConnectorConfig() {
           toast.success(`Ouverture de la connexion à ${c.name}…`);
           // Nouvel onglet via la route relais : l'aperçu est dans une iframe,
           // où le fournisseur refuserait de s'afficher (page cassée).
+          await persistSessionForOAuthReturn();
           window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
           await qc.invalidateQueries({ queryKey: ["org-connectors"] });
           return;
@@ -241,6 +260,7 @@ export function OrgConnectorConfig() {
       if (res?.url) {
         setOauthUrls((prev) => ({ ...prev, [key]: res.url! }));
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
+        await persistSessionForOAuthReturn();
         window.open(`/oauth/launch?url=${encodeURIComponent(res.url)}`, "_blank", "noopener,noreferrer");
         return;
       }
@@ -359,7 +379,12 @@ export function OrgConnectorConfig() {
                         onClick={launchLink(c.key) ? undefined : () => void connect(c.key)}
                       >
                         {launchLink(c.key) ? (
-                          <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={launchLink(c.key)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => void persistSessionForOAuthReturn()}
+                          >
                             <RefreshCw className="size-4" />
                           </a>
                         ) : busy === `connect-${c.key}` ? (
@@ -371,7 +396,12 @@ export function OrgConnectorConfig() {
                     </span>
                   ) : launchLink(c.key) ? (
                     <Button asChild size="sm">
-                      <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={launchLink(c.key)!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => void persistSessionForOAuthReturn()}
+                      >
                         <RefreshCw className="mr-1 size-4" />
                         Se connecter à {c.name}
                       </a>

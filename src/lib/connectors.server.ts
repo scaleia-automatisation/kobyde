@@ -2,6 +2,8 @@
 /** Connecteurs plateforme : configuration Super Admin, OAuth utilisateur, coûts et logs. Serveur uniquement. */
 
 import { CONNECTORS, CONNECTOR_MAP, maskSecret, type ConnectorDef } from "./connectors.catalog";
+import { encryptToken } from "./token-crypto.server";
+
 
 export async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -76,11 +76,10 @@ export function OrgConnectorConfig() {
   const [googleAuthorizationUrl, setGoogleAuthorizationUrl] = useState<string | null>(null);
   const [scopeSel, setScopeSel] = useState<Record<string, string[]>>({});
 
-  const googleLink = googleAuthorizationUrl
-    ? isEmbeddedPreview
-      ? `/oauth/continue?destination=${encodeURIComponent(googleAuthorizationUrl)}`
-      : googleAuthorizationUrl
-    : null;
+  // Google refuse d'être affiché dans une iframe ou dans une fenêtre auxiliaire
+  // héritant du bac à sable de l'aperçu. Le lien doit donc viser directement
+  // Google et remplacer la fenêtre de premier niveau lors du geste utilisateur.
+  const googleLink = googleAuthorizationUrl;
 
   type ScopeOpt = { scope: string; label: string; required?: boolean };
   const scopesFor = (c: { key: string; scopeCatalog?: ScopeOpt[]; grantedScopes?: string[] }) => {
@@ -158,7 +157,6 @@ export function OrgConnectorConfig() {
   };
 
   const addToPlatform = async (c: { key: string; name: string; authType: string }, values: Record<string, string>) => {
-    const oauthWindow = c.key === "google" && isEmbeddedPreview ? window.open("about:blank", "_blank") : null;
     setBusy(`add-${c.key}`);
     try {
       if (c.authType === "oauth") {
@@ -171,16 +169,16 @@ export function OrgConnectorConfig() {
         });
         const res = await connectFn({ data: { provider: c.key, origin, scopes: scopeSel[c.key] ?? [] } });
         if (res?.url) {
+          if (c.key === "google" && isEmbeddedPreview) {
+            setGoogleAuthorizationUrl(res.url);
+            toast.success("Identifiants enregistrés. Cliquez maintenant sur « Se connecter à Google ».");
+            await qc.invalidateQueries({ queryKey: ["org-connectors"] });
+            return;
+          }
           toast.success(`Ouverture de la connexion à ${c.name}…`);
-          const destination =
-            c.key === "google" && isEmbeddedPreview
-              ? `/oauth/continue?destination=${encodeURIComponent(res.url)}`
-              : res.url;
-          if (oauthWindow) oauthWindow.location.assign(destination);
-          else window.location.assign(destination);
+          window.location.assign(res.url);
           return;
         }
-        oauthWindow?.close();
         toast.error(res?.error ?? "Autorisation impossible.");
         await qc.invalidateQueries({ queryKey: ["org-connectors"] });
         return;
@@ -198,7 +196,6 @@ export function OrgConnectorConfig() {
       else toast.error(`${c.name} enregistré, mais le test a échoué.`);
       await qc.invalidateQueries({ queryKey: ["org-connectors"] });
     } catch (e) {
-      oauthWindow?.close();
       toast.error(e instanceof Error ? e.message : `Impossible d'ajouter ${c.name}.`);
     } finally {
       setBusy(null);
@@ -230,26 +227,23 @@ export function OrgConnectorConfig() {
   const connect = async (key: string) => {
     const connector = items.find((item) => item.key === key);
     const connectorName = connector?.name ?? key;
-    const oauthWindow = key === "google" && isEmbeddedPreview ? window.open("about:blank", "_blank") : null;
     setBusy(`connect-${key}`);
     try {
       const res = await connectFn({
         data: { provider: key, origin, scopes: connector ? scopesFor(connector as never) : [] },
       });
       if (res?.url) {
+        if (key === "google" && isEmbeddedPreview) {
+          setGoogleAuthorizationUrl(res.url);
+          toast.info("Google est prêt. Cliquez de nouveau sur « Se connecter à Google ».");
+          return;
+        }
         toast.success(`Ouverture de la connexion à ${connectorName}…`);
-        const destination =
-          key === "google" && isEmbeddedPreview
-            ? `/oauth/continue?destination=${encodeURIComponent(res.url)}`
-            : res.url;
-        if (oauthWindow) oauthWindow.location.assign(destination);
-        else window.location.assign(destination);
+        window.location.assign(res.url);
         return;
       }
-      oauthWindow?.close();
       toast.error(res?.error ?? "Autorisation impossible.");
     } catch (e) {
-      oauthWindow?.close();
       toast.error(e instanceof Error ? e.message : "Autorisation impossible.");
     } finally {
       setBusy(null);
@@ -352,12 +346,21 @@ export function OrgConnectorConfig() {
                     >
                       <a
                         href={googleLink}
-                        target={isEmbeddedPreview ? "_blank" : "_self"}
-                        rel={isEmbeddedPreview ? "noopener noreferrer" : undefined}
+                        target={isEmbeddedPreview ? "_top" : "_self"}
                       >
                         {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
                         {c.connected ? "Connexion réussie" : "Se connecter à Google"}
                       </a>
+                    </Button>
+                  ) : c.key === "google" && isEmbeddedPreview ? (
+                    <Button
+                      size="sm"
+                      variant={c.connected ? "secondary" : "default"}
+                      className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
+                      disabled
+                    >
+                      {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
+                      {c.connected ? "Connexion réussie" : "Se connecter à Google"}
                     </Button>
                   ) : (
                     <Button

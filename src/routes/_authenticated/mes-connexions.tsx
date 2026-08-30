@@ -26,13 +26,14 @@ import {
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP, scopeGroups } from "@/lib/connectors.catalog";
 
-type Search = { connexion?: string | undefined; message?: string | undefined };
+type Search = { connexion?: string | undefined; message?: string | undefined; onglet?: string | undefined };
 
 export const Route = createFileRoute("/_authenticated/mes-connexions")({
   component: MesConnexionsPage,
   validateSearch: (search: Record<string, unknown>): Search => ({
     connexion: typeof search["connexion"] === "string" ? (search["connexion"] as string) : undefined,
     message: typeof search["message"] === "string" ? (search["message"] as string) : undefined,
+    onglet: typeof search["onglet"] === "string" ? (search["onglet"] as string) : undefined,
   }),
   head: () => ({
     meta: [
@@ -167,7 +168,7 @@ function MesConnexionsPage() {
       title="Mes connexions"
       subtitle="Configurez les identifiants de votre entreprise, puis autorisez vos comptes"
     >
-      <Tabs defaultValue="configuration" className="w-full">
+      <Tabs defaultValue={search.onglet === "autorisations" ? "comptes" : "configuration"} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="configuration">Comptes</TabsTrigger>
           <TabsTrigger value="comptes">Autorisations</TabsTrigger>

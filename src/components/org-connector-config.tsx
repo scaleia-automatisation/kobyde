@@ -379,7 +379,12 @@ export function OrgConnectorConfig() {
                         onClick={launchLink(c.key) ? undefined : () => void connect(c.key)}
                       >
                         {launchLink(c.key) ? (
-                          <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={launchLink(c.key)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => void persistSessionForOAuthReturn()}
+                          >
                             <RefreshCw className="size-4" />
                           </a>
                         ) : busy === `connect-${c.key}` ? (
@@ -391,7 +396,12 @@ export function OrgConnectorConfig() {
                     </span>
                   ) : launchLink(c.key) ? (
                     <Button asChild size="sm">
-                      <a href={launchLink(c.key)!} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={launchLink(c.key)!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => void persistSessionForOAuthReturn()}
+                      >
                         <RefreshCw className="mr-1 size-4" />
                         Se connecter à {c.name}
                       </a>

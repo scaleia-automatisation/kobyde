@@ -613,7 +613,10 @@ export async function buildAuthorizeUrl(input: {
       if (knownEmail && typeof knownEmail === "string" && knownEmail.includes("@")) {
         params.set("login_hint", knownEmail);
       }
-      params.set("prompt", "none");
+      // Pas de paramètre « prompt » : Google réutilise la session existante et
+      // redirige aussitôt, sans redemander le choix du compte ni le consentement.
+      params.delete("prompt");
+
     }
   }
 

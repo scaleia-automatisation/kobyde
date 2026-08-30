@@ -42,7 +42,7 @@ async function persistSessionForOAuthReturn() {
   try {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return;
-    const ref = new URL(import.meta.env.VITE_SUPABASE_URL as string).hostname.split(".")[0];
+    const ref = new URL(import.meta.env["VITE_SUPABASE_URL"] as string).hostname.split(".")[0];
     window.localStorage.setItem(`sb-${ref}-auth-token`, JSON.stringify(data.session));
   } catch {
     // La session restera gérée par le canal habituel.

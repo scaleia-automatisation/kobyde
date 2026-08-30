@@ -353,16 +353,24 @@ export function OrgConnectorConfig() {
                         {c.connected ? "Connexion réussie" : "Se connecter à Google"}
                       </a>
                     </Button>
-                  ) : c.key === "google" && isEmbeddedPreview ? (
+                  ) : c.key === "google" ? (
                     <Button
                       size="sm"
                       variant={c.connected ? "secondary" : "default"}
                       className={c.connected ? "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25" : ""}
-                      disabled
+                      disabled={!c.complete || busy === `connect-${c.key}`}
+                      onClick={() => void connect(c.key)}
                     >
-                      {c.connected ? <CheckCircle2 className="mr-1 size-4" /> : <RefreshCw className="mr-1 size-4" />}
+                      {busy === `connect-${c.key}` ? (
+                        <Loader2 className="mr-1 size-4 animate-spin" />
+                      ) : c.connected ? (
+                        <CheckCircle2 className="mr-1 size-4" />
+                      ) : (
+                        <RefreshCw className="mr-1 size-4" />
+                      )}
                       {c.connected ? "Connexion réussie" : "Se connecter à Google"}
                     </Button>
+
                   ) : (
                     <Button
                       size="sm"

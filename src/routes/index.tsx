@@ -261,7 +261,7 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background">
       {/* Barre d'annonce */}
-      <div className="aurora-chip w-full px-5 py-2 text-center text-sm font-medium text-white">
+      <div className="w-full bg-gradient-to-r from-pink-500 via-violet-500 to-orange-500 px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[inset_0_-1px_0_rgba(0,0,0,0.08)]">
         Offre de lancement — 10 crédits IA offerts à l'inscription, sans carte bancaire.
       </div>
 

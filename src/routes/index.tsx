@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useSession } from "@/lib/db";
+import logoKobydeHero from "@/assets/logo-kobyde-hero.png.asset.json";
 import {
   ArrowRight,
   BadgeCheck,
@@ -266,9 +267,11 @@ function Landing() {
 
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2">
-          <span className="grid size-9 place-items-center rounded-xl bg-primary font-display text-lg text-primary-foreground">
-            K
-          </span>
+          <img
+            src={logoKobydeHero.url}
+            alt="Logo Kobyde"
+            className="size-9 rounded-xl object-cover"
+          />
           <span className="font-display text-xl">Kobyde</span>
         </div>
         <nav className="hidden items-center gap-3 md:flex">

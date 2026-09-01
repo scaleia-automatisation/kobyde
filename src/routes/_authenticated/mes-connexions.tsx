@@ -22,7 +22,7 @@ import {
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP, scopeGroups } from "@/lib/connectors.catalog";
 
-type Search = { connexion?: string | undefined; message?: string | undefined; onglet?: string | undefined };
+type Search = { connexion?: string | undefined; message?: string | undefined };
 
 const TITLE = "Mes connexions — Kobyde";
 const DESCRIPTION =
@@ -33,7 +33,6 @@ export const Route = createFileRoute("/_authenticated/mes-connexions")({
   validateSearch: (search: Record<string, unknown>): Search => ({
     connexion: typeof search["connexion"] === "string" ? (search["connexion"] as string) : undefined,
     message: typeof search["message"] === "string" ? (search["message"] as string) : undefined,
-    onglet: typeof search["onglet"] === "string" ? (search["onglet"] as string) : undefined,
   }),
   head: () => ({
     meta: [

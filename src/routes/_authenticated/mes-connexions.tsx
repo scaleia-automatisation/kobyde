@@ -128,7 +128,10 @@ function MesConnexionsPage() {
         data: { connectorKey: key, origin: window.location.origin },
       });
       if (res?.url) {
-        const relay = `${window.location.origin}/oauth/launch?url=${encodeURIComponent(res.url)}`;
+        // Toujours utiliser le domaine public vérifié pour le relais OAuth.
+        // Les URL d'aperçu éphémères peuvent être signalées par Safe Browsing,
+        // alors que le fournisseur doit s'ouvrir hors de l'iframe de l'éditeur.
+        const relay = `https://kobyde.com/oauth/launch?url=${encodeURIComponent(res.url)}`;
         if (tab) {
           tab.location.href = relay;
         } else {

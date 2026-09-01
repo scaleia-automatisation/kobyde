@@ -253,6 +253,10 @@ function ConnecteursAdminPage() {
                           {c.isEnabled ? "Activé" : "Désactivé"}
                         </Label>
                         <Switch id={`en-${c.key}`} checked={c.isEnabled} onCheckedChange={(v) => void toggle(c.key, v)} />
+                        <Button variant="outline" size="sm" disabled={busy === c.key} onClick={() => void test(c.key)}>
+                          <PlugZap className="mr-1 size-4" />
+                          {busy === c.key ? "Test en cours…" : "Tester la connexion"}
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => setOpen(expanded ? null : c.key)}>
                           {expanded ? "Fermer" : "Configurer"}
                         </Button>

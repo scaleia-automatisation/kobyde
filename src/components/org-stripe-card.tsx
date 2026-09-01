@@ -2,77 +2,61 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, CreditCard, RefreshCw } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  disconnectOrgStripeAccount,
-  myOrgStripe,
-  refreshOrgStripeAccountFn,
-  startOrgStripeConnect,
+  deleteOrgStripeKeysFn,
+  myOrgStripeKeys,
+  saveOrgStripeKeysFn,
 } from "@/lib/stripe-connect.functions";
 
-const STRIPE_SCOPES = [
-  "Créer des paiements et demandes de paiement",
-  "Consulter les paiements et transactions",
-  "Créer et gérer les clients Stripe",
-  "Émettre des remboursements",
-  "Suivre les virements et le solde",
-];
-
-/** Connexion Stripe de l'entreprise (paiements de SES clients). Aucune clé à copier. */
+/** Stripe Connect : l'entreprise saisit sa clé secrète et sa clé publiable. */
 export function OrgStripeCard() {
-  const statusFn = useServerFn(myOrgStripe);
-  const startFn = useServerFn(startOrgStripeConnect);
-  const stopFn = useServerFn(disconnectOrgStripeAccount);
-  const syncFn = useServerFn(refreshOrgStripeAccountFn);
+  const statusFn = useServerFn(myOrgStripeKeys);
+  const saveFn = useServerFn(saveOrgStripeKeysFn);
+  const removeFn = useServerFn(deleteOrgStripeKeysFn);
   const qc = useQueryClient();
+
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  const [secretKey, setSecretKey] = useState("");
+  const [publishableKey, setPublishableKey] = useState("");
 
-  const q = useQuery({ queryKey: ["org-stripe"], queryFn: () => statusFn({ data: undefined }) });
+  const q = useQuery({
+    queryKey: ["org-stripe-keys"],
+    queryFn: () => statusFn({ data: undefined }),
+  });
   const data = q.data;
-  const acc = data?.account;
 
-  const connect = async () => {
+  const save = async () => {
     setBusy(true);
     try {
-      const res = await startFn({ data: { origin: window.location.origin } });
-      if (res.url) {
-        window.location.href = res.url;
-        return;
-      }
-      toast.error(res.error ?? "Connexion Stripe indisponible.");
+      await saveFn({ data: { secretKey, publishableKey } });
+      setSecretKey("");
+      setPublishableKey("");
+      setOpen(false);
+      toast.success("Clés Stripe enregistrées et vérifiées.");
+      void qc.invalidateQueries({ queryKey: ["org-stripe-keys"] });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Connexion impossible.");
+      toast.error(e instanceof Error ? e.message : "Enregistrement impossible.");
     } finally {
       setBusy(false);
     }
   };
 
-  const disconnect = async () => {
-    if (!window.confirm("Déconnecter votre compte Stripe ? Vos agents ne pourront plus encaisser vos clients.")) return;
+  const remove = async () => {
+    if (!window.confirm("Supprimer vos clés Stripe ? Vos agents ne pourront plus encaisser vos clients.")) return;
     setBusy(true);
     try {
-      await stopFn({ data: undefined });
-      toast.success("Compte Stripe déconnecté.");
-      void qc.invalidateQueries({ queryKey: ["org-stripe"] });
+      await removeFn({ data: undefined });
+      toast.success("Clés Stripe supprimées.");
+      void qc.invalidateQueries({ queryKey: ["org-stripe-keys"] });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Déconnexion impossible.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const sync = async () => {
-    setBusy(true);
-    try {
-      await syncFn({ data: undefined });
-      void qc.invalidateQueries({ queryKey: ["org-stripe"] });
-      toast.success("Connexion Stripe actualisée.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Actualisation impossible.");
+      toast.error(e instanceof Error ? e.message : "Suppression impossible.");
     } finally {
       setBusy(false);
     }
@@ -80,80 +64,72 @@ export function OrgStripeCard() {
 
   return (
     <Card className="space-y-4 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <CreditCard className="size-4 text-muted-foreground" />
-            <h3 className="font-medium">Stripe Connect</h3>
-            {acc ? (
-              <Badge className="bg-emerald-500/15 text-emerald-600">● Stripe connecté</Badge>
-            ) : data?.available === false ? (
-              <Badge variant="outline">Bientôt disponible</Badge>
-            ) : (
-              <Badge variant="secondary">Disponible</Badge>
-            )}
-          </div>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Connectez votre compte Stripe pour permettre aux agents de créer des demandes de paiement, suivre les
-            paiements et gérer les échéances de vos propres clients. Vos clés secrètes restent chez Stripe : vous
-            n'avez rien à copier.
-          </p>
-        </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <CreditCard className="size-4 shrink-0 text-muted-foreground" />
+        <h3 className="font-medium">Stripe Connect</h3>
+        {data?.configured ? (
+          <Badge className="bg-emerald-500/15 text-emerald-600">● Configuré</Badge>
+        ) : (
+          <Badge variant="secondary">À configurer</Badge>
+        )}
       </div>
 
-      {acc && showDetails && (
+      <p className="max-w-3xl text-sm text-muted-foreground">
+        Renseignez la clé secrète et la clé publiable de votre compte Stripe pour permettre à vos agents d'encaisser
+        vos clients, créer des demandes de paiement et suivre les transactions. Vos clés sont chiffrées et jamais
+        visibles depuis le navigateur.
+      </p>
+
+      {data?.configured && (
         <div className="rounded-lg border bg-muted/40 p-3 text-sm">
           <p>
-            Compte : <span className="font-medium">{acc.businessName ?? acc.accountId}</span>
+            Compte : <span className="font-medium">{data.businessName ?? data.accountId ?? "—"}</span>
           </p>
           <p className="text-muted-foreground">
-            {acc.country ?? "—"} · {acc.currency} · {acc.livemode ? "Mode réel" : "Mode test"} ·{" "}
-            {acc.chargesEnabled ? "Encaissements actifs" : "Encaissements en attente de validation Stripe"} ·{" "}
-            {acc.payoutsEnabled ? "Virements actifs" : "Virements en attente"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Connecté le {new Date(acc.connectedAt).toLocaleDateString("fr-FR")}
+            {data.livemode ? "Mode réel" : "Mode test"} · Clé publiable : {data.publishableKey ?? "—"}
           </p>
         </div>
       )}
 
-      <div className="space-y-3 rounded-lg border p-4">
-        <p className="text-sm font-medium">{acc ? "Permissions accordées" : "Autorisations demandées"}</p>
-        <ul className="space-y-1 text-sm">
-          {STRIPE_SCOPES.map((s) => (
-            <li key={s} className={`flex items-center gap-2 ${acc ? "text-emerald-700" : "text-muted-foreground"}`}>
-              <CheckCircle2 className="size-3.5" /> {s}
-            </li>
-          ))}
-        </ul>
-        <p className="text-xs text-muted-foreground">
-          Le consentement final est demandé par Stripe elle-même (accès complet « read_write » à votre compte).
-        </p>
-      </div>
+      {open && (
+        <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Clé secrète (sk_live_… ou sk_test_…)</Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              placeholder="sk_live_..."
+              value={secretKey}
+              onChange={(e) => setSecretKey(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Clé publiable (pk_live_… ou pk_test_…)</Label>
+            <Input
+              autoComplete="off"
+              placeholder="pk_live_..."
+              value={publishableKey}
+              onChange={(e) => setPublishableKey(e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Button disabled={busy || !secretKey || !publishableKey} onClick={() => void save()}>
+              {busy ? "Vérification…" : "Enregistrer les clés"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
-        {acc ? (
-          <>
-            <Button variant="outline" size="sm" onClick={() => setShowDetails((v) => !v)}>
-              {showDetails ? "Masquer la connexion" : "Voir la connexion"}
-            </Button>
-            <Button variant="outline" size="sm" disabled={busy} onClick={() => void sync()}>
-              <RefreshCw className="mr-1 size-4" /> Actualiser
-            </Button>
-            <Button variant="outline" size="sm" disabled={busy} onClick={() => void connect()}>
-              <RefreshCw className="mr-1 size-4" /> Reconnecter
-            </Button>
-            <Button variant="ghost" size="sm" className="text-destructive" disabled={busy} onClick={() => void disconnect()}>
-              Déconnecter
-            </Button>
-          </>
-        ) : (
-          <Button disabled={busy} onClick={() => void connect()}>
-            {busy ? "Redirection…" : "Se connecter à Stripe Connect"}
+        <Button variant={data?.configured ? "outline" : "default"} onClick={() => setOpen((v) => !v)}>
+          {open ? "Annuler" : data?.configured ? "Modifier les clés" : "Configurer"}
+        </Button>
+        {data?.configured && (
+          <Button variant="ghost" className="text-destructive" disabled={busy} onClick={() => void remove()}>
+            Supprimer
           </Button>
         )}
       </div>
-
     </Card>
   );
 }

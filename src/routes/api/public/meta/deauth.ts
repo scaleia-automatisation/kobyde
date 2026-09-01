@@ -11,7 +11,10 @@ function base64UrlDecode(input: string): Buffer {
   return Buffer.from(normalized + pad, "base64");
 }
 
-function parseSignedRequest(signedRequest: string, secret: string): { user_id: string; issued_at?: number } | null {
+function parseSignedRequest(
+  signedRequest: string,
+  secret: string,
+): { user_id: string; issued_at?: number } | null {
   const [encodedSig, encodedPayload] = signedRequest.split(".");
   if (!encodedSig || !encodedPayload) return null;
 
@@ -29,7 +32,10 @@ function parseSignedRequest(signedRequest: string, secret: string): { user_id: s
     };
     if (payload.algorithm?.toUpperCase() !== "HMAC-SHA256") return null;
     if (!payload.user_id) return null;
-    return { user_id: payload.user_id, ...(payload.issued_at !== undefined && { issued_at: payload.issued_at }) };
+    return {
+      user_id: payload.user_id,
+      ...(payload.issued_at !== undefined && { issued_at: payload.issued_at }),
+    };
   } catch {
     return null;
   }
@@ -39,9 +45,18 @@ export const Route = createFileRoute("/api/public/meta/deauth")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env["META_APP_SECRET"];
+        // La clé secrète Meta est gérée par le Super Admin dans « Connecteurs »
+        // (table platform_connectors, chiffrée côté serveur) : on la relit depuis
+        // là pour éviter toute divergence avec une éventuelle variable d'environnement
+        // obsolète. META_APP_SECRET reste un repli pour compatibilité si jamais elle
+        // est encore définie ainsi sur l'hébergeur.
+        const { getConnectorConfig } = await import("@/lib/connectors.server");
+        const conf = await getConnectorConfig("meta");
+        const secret = conf?.secrets?.["app_secret"] || process.env["META_APP_SECRET"];
         if (!secret) {
-          console.error("[meta/deauth] META_APP_SECRET missing");
+          console.error(
+            "[meta/deauth] app_secret Meta introuvable (ni platform_connectors, ni META_APP_SECRET)",
+          );
           return new Response("Configuration incomplete", { status: 503 });
         }
 
@@ -58,11 +73,17 @@ export const Route = createFileRoute("/api/public/meta/deauth")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // Mark any matching Meta connection as revoked
+        // Mark any matching Meta or WhatsApp connection as revoked (both share
+        // the same Meta app / app_secret, so a single deauth callback covers them).
         const { error } = await supabaseAdmin
           .from("oauth_connections")
-          .update({ revoked: true, updated_at: new Date().toISOString() })
-          .eq("provider", "meta")
+          .update({
+            revoked: true,
+            is_active: false,
+            status: "revoked",
+            updated_at: new Date().toISOString(),
+          })
+          .in("provider", ["meta", "whatsapp"])
           .eq("provider_user_id", payload.user_id);
 
         if (error) {

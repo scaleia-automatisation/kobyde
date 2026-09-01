@@ -3,6 +3,7 @@
 
 import { CONNECTORS, CONNECTOR_MAP, maskSecret, type ConnectorDef } from "./connectors.catalog";
 import { encryptToken } from "./token-crypto.server";
+import { finalizeWhatsappConnection, exchangeLongLivedToken, unsubscribeAppFromWaba } from "./whatsapp.server";
 
 
 export async function db() {
@@ -644,13 +645,19 @@ export async function buildAuthorizeUrl(input: {
     params.set("owner", "user");
   }
   if (input.connectorKey === "whatsapp") {
-    // Embedded Signup officiel Meta lorsque la configuration est fournie.
+    // Sans Configuration ID, Meta affiche un simple écran de permissions
+    // générique au lieu du parcours guidé Embedded Signup (création/choix du
+    // WABA et du numéro) : aucun WABA n'en ressort côté serveur. On bloque
+    // donc explicitement plutôt que de laisser l'utilisateur échouer après coup.
     const configId = conf?.config["config_id"];
-    if (configId) {
-      params.set("config_id", configId);
-      params.set("override_default_response_type", "true");
-      params.set("extras", JSON.stringify({ feature: "whatsapp_embedded_signup", version: 3 }));
+    if (!configId) {
+      throw new Error(
+        "Embedded Signup WhatsApp non configuré : renseignez le « Configuration ID » dans Connecteurs > WhatsApp Business (Meta App Dashboard > WhatsApp > Configuration > Embedded Signup).",
+      );
     }
+    params.set("config_id", configId);
+    params.set("override_default_response_type", "true");
+    params.set("extras", JSON.stringify({ feature: "whatsapp_embedded_signup", version: 3 }));
   }
   return { url: `${def.oauth.authorizeUrl}?${params.toString()}` };
 }
@@ -765,6 +772,39 @@ export async function completeOAuth(
 
   const identity = await fetchAccountIdentity(connectorKey, token, payload);
 
+  // WhatsApp Business (Embedded Signup) : Meta ne renvoie ni refresh_token ni
+  // WABA/numéro dans l'échange de code. Il faut : 1) échanger le jeton court
+  // terme contre un jeton longue durée (~60 jours), 2) retrouver le WABA
+  // autorisé via /debug_token, 3) lister ses numéros, 4) abonner l'app aux
+  // webhooks de ce WABA, 5) enregistrer le numéro pour l'API Cloud.
+  let finalToken = token;
+  let finalExpiresIn = expiresIn;
+  let waMetadata: Record<string, unknown> = { connector: connectorKey };
+  if (connectorKey === "whatsapp") {
+    const appId = String(conf?.config?.["app_id"] ?? clientId);
+    const appSecret = String(conf?.secrets?.["app_secret"] ?? clientSecret);
+    if (appId && appSecret) {
+      const result = await finalizeWhatsappConnection({ appId, appSecret, shortLivedToken: token });
+      finalToken = result.accessToken;
+      finalExpiresIn = result.expiresIn;
+      waMetadata = {
+        connector: connectorKey,
+        waba_id: result.wabaId,
+        waba_name: result.wabaName,
+        phone_number_id: result.phoneNumberId,
+        phone_numbers: result.phoneNumbers,
+        warnings: result.warnings,
+        long_lived: true,
+        token_renewed_at: new Date().toISOString(),
+      };
+      if (result.warnings.length) {
+        console.warn(`[whatsapp] connexion ${st.user_id} : ${result.warnings.join(" | ")}`);
+      }
+    } else {
+      waMetadata = { connector: connectorKey, warnings: ["App ID / App Secret Meta introuvables côté serveur."] };
+    }
+  }
+
   await supabase.from("oauth_connections").upsert(
     {
       user_id: st.user_id,
@@ -775,11 +815,11 @@ export async function completeOAuth(
       provider_account_id: identity.id ?? null,
       provider_email: identity.email ?? null,
       account_label: identity.label ?? identity.email ?? null,
-      access_token: await encryptToken(token),
+      access_token: await encryptToken(finalToken),
       refresh_token: await encryptToken(refresh ?? existing?.refresh_token ?? null),
 
       token_type: data.token_type ?? "Bearer",
-      expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
+      expires_at: finalExpiresIn ? new Date(Date.now() + finalExpiresIn * 1000).toISOString() : null,
       refresh_token_expires_at: refreshExpiresIn
         ? new Date(Date.now() + refreshExpiresIn * 1000).toISOString()
         : null,
@@ -792,7 +832,7 @@ export async function completeOAuth(
       is_active: true,
       connected_at: existing?.connected_at ?? new Date().toISOString(),
       last_refresh_at: new Date().toISOString(),
-      metadata: { connector: connectorKey },
+      metadata: waMetadata,
     },
     { onConflict: "user_id,provider" },
   );
@@ -811,11 +851,53 @@ export async function completeOAuth(
 
 /* ------------------------------------------------- Renouvellement des jetons */
 
+/**
+ * Meta (meta / whatsapp) n'a pas de refresh_token : le jeton longue durée
+ * (~60 jours) se renouvelle en le ré-échangeant contre lui-même via
+ * fb_exchange_token, tant qu'il n'est pas encore expiré. C'est la méthode
+ * de renouvellement recommandée par Meta pour les jetons utilisateur.
+ */
+async function refreshMetaToken(userId: string, connectorKey: "meta" | "whatsapp") {
+  const row = await getConnectionRow(userId, connectorKey);
+  const supabase = await db();
+  if (!row?.access_token) return { ok: false as const, reason: "no_refresh_token" as const };
+
+  const conf = await getConnectorConfig(connectorKey);
+  const appId = String(conf?.config?.["app_id"] ?? "");
+  const appSecret = String(conf?.secrets?.["app_secret"] ?? "");
+  if (!appId || !appSecret) return { ok: false as const, reason: "refresh_failed" as const };
+
+  const renewed = await exchangeLongLivedToken(appId, appSecret, row.access_token);
+  if (!renewed) {
+    await supabase
+      .from("oauth_connections")
+      .update({ status: "reconnect_required" })
+      .eq("user_id", userId)
+      .eq("provider", connectorKey);
+    return { ok: false as const, reason: "refresh_failed" as const };
+  }
+  await supabase
+    .from("oauth_connections")
+    .update({
+      access_token: await encryptToken(renewed.accessToken),
+      expires_at: new Date(Date.now() + renewed.expiresIn * 1000).toISOString(),
+      last_refresh_at: new Date().toISOString(),
+      status: "active",
+      metadata: { ...(row.metadata as any), long_lived: true, token_renewed_at: new Date().toISOString() },
+    })
+    .eq("user_id", userId)
+    .eq("provider", connectorKey);
+  return { ok: true as const, accessToken: renewed.accessToken };
+}
+
 /** Renouvelle l'access token via le refresh token lorsque le fournisseur le permet. */
 export async function refreshUserToken(userId: string, connectorKey: string) {
+  if (connectorKey === "meta" || connectorKey === "whatsapp") {
+    return refreshMetaToken(userId, connectorKey);
+  }
   const def = CONNECTOR_MAP.get(connectorKey);
   const row = await getConnectionRow(userId, connectorKey);
-  if (!def?.oauth || !row?.refresh_token) return { ok: false, reason: "no_refresh_token" as const };
+  if (!def?.oauth || !row?.refresh_token) return { ok: false as const, reason: "no_refresh_token" as const };
 
   const conf = await getConnectorConfig(connectorKey);
   const { clientId, clientSecret } = await resolveOAuthApp(connectorKey, row.org_id, conf);
@@ -1168,9 +1250,11 @@ export async function disconnectUserConnection(userId: string, connectorKey: str
           method: "POST",
           headers: { "content-type": "application/x-www-form-urlencoded" },
         });
-      } else if (connectorKey === "meta") {
+      } else if (connectorKey === "meta" || connectorKey === "whatsapp") {
+        const wabaId = (row.metadata as any)?.waba_id as string | undefined;
+        if (wabaId) await unsubscribeAppFromWaba(wabaId, row.access_token);
         await fetch(
-          `https://graph.facebook.com/v20.0/me/permissions?access_token=${encodeURIComponent(row.access_token)}`,
+          `https://graph.facebook.com/v21.0/me/permissions?access_token=${encodeURIComponent(row.access_token)}`,
           { method: "DELETE" },
         );
       } else if (connectorKey === "slack") {

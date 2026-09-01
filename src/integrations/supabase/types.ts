@@ -998,6 +998,55 @@ export type Database = {
         }
         Relationships: []
       }
+      // TODO(whatsapp-integration): généré à la main en attendant l'application
+      // de la migration 20260901164132_whatsapp_cloud_api_integration.sql sur le
+      // projet Supabase réel — régénérer avec `supabase gen types typescript`
+      // (ou la synchronisation Lovable Cloud habituelle) une fois la migration
+      // appliquée, puis supprimer ce commentaire.
+      connector_webhook_events: {
+        Row: {
+          error: string | null
+          event_id: string
+          id: string
+          org_id: string | null
+          payload: Json
+          processed: boolean
+          provider: string
+          received_at: string
+          waba_id: string | null
+        }
+        Insert: {
+          error?: string | null
+          event_id: string
+          id?: string
+          org_id?: string | null
+          payload?: Json
+          processed?: boolean
+          provider: string
+          received_at?: string
+          waba_id?: string | null
+        }
+        Update: {
+          error?: string | null
+          event_id?: string
+          id?: string
+          org_id?: string | null
+          payload?: Json
+          processed?: boolean
+          provider?: string
+          received_at?: string
+          waba_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connector_webhook_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_creations: {
         Row: {
           assets: Json
@@ -4149,6 +4198,64 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "watch_topics_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      // TODO(whatsapp-integration): idem connector_webhook_events ci-dessus —
+      // régénérer une fois la migration appliquée sur le projet Supabase réel.
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          direction: string
+          id: string
+          message_type: string | null
+          org_id: string
+          phone_number_id: string
+          raw: Json
+          status: string
+          wa_message_id: string | null
+          waba_id: string
+        }
+        Insert: {
+          body?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          message_type?: string | null
+          org_id: string
+          phone_number_id: string
+          raw?: Json
+          status?: string
+          wa_message_id?: string | null
+          waba_id: string
+        }
+        Update: {
+          body?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          message_type?: string | null
+          org_id?: string
+          phone_number_id?: string
+          raw?: Json
+          status?: string
+          wa_message_id?: string | null
+          waba_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"

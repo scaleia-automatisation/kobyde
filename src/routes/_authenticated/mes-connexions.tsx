@@ -104,30 +104,25 @@ function MesConnexionsPage() {
   );
 
   /**
-   * Les pages d'autorisation (TikTok, LinkedIn, Meta…) refusent d'être
-   * affichées dans une iframe : on quitte toujours le cadre de prévisualisation.
+   * Les pages d'autorisation (Google, TikTok, LinkedIn, Meta…) refusent d'être
+   * affichées dans une iframe (X-Frame-Options → ERR_BLOCKED_BY_RESPONSE).
+   * On ouvre donc l'onglet IMMÉDIATEMENT dans le gestionnaire de clic
+   * (sinon le navigateur bloque le popup ouvert après l'appel serveur), puis
+   * on le dirige vers la route relais qui redirige hors iframe.
    */
-  const goToAuthorize = (url: string) => {
-    const relay = `${window.location.origin}/oauth/launch?url=${encodeURIComponent(url)}`;
-    try {
-      if (window.top && window.top !== window.self) {
-        // Hors de l'aperçu : on ouvre un vrai onglet, la navigation du cadre
-        // parent étant souvent bloquée par le navigateur.
-        const win = window.open(relay, "_blank", "noopener,noreferrer");
-        if (win) return;
-        window.top.location.href = url;
-        return;
-      }
-    } catch {
-      const win = window.open(relay, "_blank", "noopener,noreferrer");
-      if (win) return;
-    }
-    window.location.href = url;
-  };
-
-
   const connect = async (key: string) => {
     setBusy(key);
+
+    const inIframe = (() => {
+      try {
+        return window.top !== window.self;
+      } catch {
+        return true;
+      }
+    })();
+    // Onglet ouvert de façon synchrone : jamais bloqué par le navigateur.
+    const tab = inIframe ? window.open("about:blank", "_blank") : null;
+
     try {
       const def = CONNECTOR_MAP.get(key);
       const scopes = Array.from(
@@ -140,11 +135,19 @@ function MesConnexionsPage() {
         data: { connectorKey: key, origin: window.location.origin, scopes },
       });
       if (res?.url) {
-        goToAuthorize(res.url);
+        const relay = `${window.location.origin}/oauth/launch?url=${encodeURIComponent(res.url)}`;
+        if (tab) {
+          tab.location.href = relay;
+        } else {
+          // Hors iframe (site publié) : navigation directe dans l'onglet courant.
+          window.location.href = res.url;
+        }
         return;
       }
+      tab?.close();
       toast.error(res?.error ?? "Ce service n'est pas encore disponible. Contactez votre administrateur.");
     } catch (e) {
+      tab?.close();
       toast.error(e instanceof Error ? e.message : "Connexion impossible.");
     } finally {
       setBusy(null);

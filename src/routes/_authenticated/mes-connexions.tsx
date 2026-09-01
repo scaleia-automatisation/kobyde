@@ -108,17 +108,23 @@ function MesConnexionsPage() {
    * affichées dans une iframe : on quitte toujours le cadre de prévisualisation.
    */
   const goToAuthorize = (url: string) => {
+    const relay = `${window.location.origin}/oauth/launch?url=${encodeURIComponent(url)}`;
     try {
       if (window.top && window.top !== window.self) {
+        // Hors de l'aperçu : on ouvre un vrai onglet, la navigation du cadre
+        // parent étant souvent bloquée par le navigateur.
+        const win = window.open(relay, "_blank", "noopener,noreferrer");
+        if (win) return;
         window.top.location.href = url;
         return;
       }
     } catch {
-      const win = window.open(url, "_blank", "noopener,noreferrer");
+      const win = window.open(relay, "_blank", "noopener,noreferrer");
       if (win) return;
     }
     window.location.href = url;
   };
+
 
   const connect = async (key: string) => {
     setBusy(key);

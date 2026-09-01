@@ -601,11 +601,15 @@ export async function buildAuthorizeUrl(input: {
   const existing = await getConnectionRow(input.userId, input.connectorKey);
   const alreadyGranted = existing && !existing.revoked ? splitScopes(existing.scopes_granted ?? existing.scopes) : [];
 
-  // Toutes les autorisations du catalogue sont demandées par défaut.
+  // Par défaut : les autorisations de base (+ celles déjà accordées). Pour
+  // Google on évite de demander tout le catalogue sensible d'un coup, ce qui
+  // fait échouer l'écran de consentement des applications non vérifiées.
   const fullCatalog = catalog.length ? catalog.map((s) => s.scope) : def.oauth.defaultScopes;
-  const selected = Array.from(new Set([...required, ...(chosen.length ? chosen : [...alreadyGranted, ...fullCatalog])]));
+  const fallbackCatalog = input.connectorKey === "google" ? def.oauth.defaultScopes : fullCatalog;
+  const selected = Array.from(
+    new Set([...required, ...(chosen.length ? chosen : [...alreadyGranted, ...fallbackCatalog])]),
+  );
 
-  const isNewConsent = selected.some((s) => !alreadyGranted.includes(s));
 
   await supabase.from("oauth_states").insert({
     state,

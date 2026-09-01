@@ -227,9 +227,10 @@ export async function createOrgCheckoutSession(input: {
   customerEmail?: string | null;
 }) {
   const acc = await getOrgStripeAccount(input.orgId);
-  if (!acc) return null;
+  const ownKey = acc ? null : await getOrgStripeSecretKey(input.orgId);
+  if (!acc && !ownKey) return null;
 
-  const currency = (input.currency ?? acc.default_currency ?? "eur").toLowerCase();
+  const currency = (input.currency ?? acc?.default_currency ?? "eur").toLowerCase();
   const body = new URLSearchParams({
     mode: "payment",
     "line_items[0][quantity]": "1",

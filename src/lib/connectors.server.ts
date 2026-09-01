@@ -601,11 +601,15 @@ export async function buildAuthorizeUrl(input: {
   const existing = await getConnectionRow(input.userId, input.connectorKey);
   const alreadyGranted = existing && !existing.revoked ? splitScopes(existing.scopes_granted ?? existing.scopes) : [];
 
-  // Toutes les autorisations du catalogue sont demandées par défaut.
+  // Par défaut : les autorisations de base (+ celles déjà accordées). Pour
+  // Google on évite de demander tout le catalogue sensible d'un coup, ce qui
+  // fait échouer l'écran de consentement des applications non vérifiées.
   const fullCatalog = catalog.length ? catalog.map((s) => s.scope) : def.oauth.defaultScopes;
-  const selected = Array.from(new Set([...required, ...(chosen.length ? chosen : [...alreadyGranted, ...fullCatalog])]));
+  const fallbackCatalog = input.connectorKey === "google" ? def.oauth.defaultScopes : fullCatalog;
+  const selected = Array.from(
+    new Set([...required, ...(chosen.length ? chosen : [...alreadyGranted, ...fallbackCatalog])]),
+  );
 
-  const isNewConsent = selected.some((s) => !alreadyGranted.includes(s));
 
   await supabase.from("oauth_states").insert({
     state,
@@ -626,25 +630,9 @@ export async function buildAuthorizeUrl(input: {
   if (input.connectorKey === "google") {
     params.set("access_type", "offline");
     params.set("include_granted_scopes", "true");
-    // On cible directement le compte avec lequel l'utilisateur s'est connecté
-    // à Kobyde : aucun sélecteur de compte n'est nécessaire.
-    const candidate =
-      (existing as any)?.provider_email ??
-      (existing as any)?.account_label ??
-      input.userEmail ??
-      null;
-    const knownEmail =
-      typeof candidate === "string" && candidate.includes("@") ? candidate : null;
-    if (knownEmail) params.set("login_hint", knownEmail);
-    if (isNewConsent || !existing?.refresh_token) {
-      // Première autorisation ou nouvelles permissions : écran de consentement
-      // seul, sans sélecteur de comptes puisque l'e-mail est déjà connu.
-      params.set("prompt", knownEmail ? "consent" : "consent select_account");
-    } else {
-      // Compte déjà autorisé : Google réutilise la session et redirige aussitôt.
-      params.delete("prompt");
-    }
-
+    // Toujours afficher le sélecteur de compte puis l'écran de consentement :
+    // l'utilisateur choisit librement le compte Google à autoriser.
+    params.set("prompt", "select_account consent");
   }
 
   if (input.connectorKey === "tiktok") {

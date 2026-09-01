@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Link2, PlugZap, RefreshCw, ShieldCheck } from "lucide-react";
+import { Check, Copy, Link2, PlugZap, RefreshCw, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { OrgStripeCard } from "@/components/org-stripe-card";
 import { Card } from "@/components/ui/card";
@@ -65,6 +65,23 @@ function MesConnexionsPage() {
   const items = useMemo(() => list.data ?? [], [list.data]);
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const getRedirectUri = (key: string) => {
+    const prod = "https://kobyde.com";
+    return key === "google" ? `${prod}/auth/callback` : `${prod}/api/public/connectors/${key}/callback`;
+  };
+
+  const copy = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      toast.success("URI copiée dans le presse-papiers");
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      toast.error("Impossible de copier l'URI");
+    }
+  };
 
   useEffect(() => {
     if (search.connexion === "ok") {
@@ -198,6 +215,23 @@ function MesConnexionsPage() {
                   {results[c.key]!.message}
                 </p>
               )}
+            </div>
+
+            <div className="rounded-md border border-dashed border-border bg-muted/40 p-3">
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">URI de redirection à renseigner sur {c.name}</p>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 truncate text-xs text-foreground">{getRedirectUri(c.key)}</code>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  onClick={() => void copy(getRedirectUri(c.key), c.key)}
+                  aria-label="Copier l'URI de redirection"
+                >
+                  {copied === c.key ? <Check className="size-4 text-emerald-500" /> : <Copy className="size-4" />}
+                </Button>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">

@@ -508,21 +508,17 @@ function appCredentials(conf: { config: Record<string, string>; secrets: Record<
 }
 
 /**
- * Identifiants OAuth à utiliser : ceux de l'entreprise (« Mes connexions » → Configuration)
- * en priorité, sinon ceux de la plateforme configurés par l'administrateur.
+ * Identifiants OAuth utilisés : uniquement l'application développeur de Kobyde
+ * configurée par le Super Admin. L'utilisateur ne saisit jamais de secret.
  */
 async function resolveOAuthApp(
-  connectorKey: string,
-  orgId: string | null | undefined,
+  _connectorKey: string,
+  _orgId: string | null | undefined,
   conf: { config: Record<string, string>; secrets: Record<string, string> } | null,
 ) {
-  if (orgId) {
-    const { getOrgOAuthApp } = await import("./org-connectors.server");
-    const own = await getOrgOAuthApp(orgId, connectorKey);
-    if (own) return { ...own, source: "org" as const };
-  }
   return { ...appCredentials(conf), source: "platform" as const };
 }
+
 
 
 /** Connexion utilisateur (ligne brute) — serveur uniquement. */
@@ -555,14 +551,15 @@ export async function buildAuthorizeUrl(input: {
   const conf = await getConnectorConfig(input.connectorKey);
   const app = await resolveOAuthApp(input.connectorKey, input.orgId, conf);
   const clientId = app.clientId;
-  if (app.source === "platform" && !conf?.isEnabled) {
+  if (!conf?.isEnabled) {
     throw new Error(
-      "Ce connecteur n'est pas encore activé : renseignez vos identifiants dans l'onglet « Configuration ».",
+      "Ce service n'est pas encore activé par Kobyde. Contactez l'administrateur de la plateforme.",
     );
   }
   if (!clientId) {
-    throw new Error("Configuration incomplète : renseignez vos identifiants dans l'onglet « Configuration ».");
+    throw new Error("Ce service n'est pas encore disponible : l'application Kobyde n'est pas configurée.");
   }
+
 
 
   // Le callback OAuth doit toujours utiliser le domaine canonique déclaré chez
@@ -638,6 +635,15 @@ export async function buildAuthorizeUrl(input: {
     params.delete("scope");
     params.set("owner", "user");
   }
+  if (input.connectorKey === "whatsapp") {
+    // Embedded Signup officiel Meta lorsque la configuration est fournie.
+    const configId = conf?.config["config_id"];
+    if (configId) {
+      params.set("config_id", configId);
+      params.set("override_default_response_type", "true");
+      params.set("extras", JSON.stringify({ feature: "whatsapp_embedded_signup", version: 3 }));
+    }
+  }
   return { url: `${def.oauth.authorizeUrl}?${params.toString()}` };
 }
 
@@ -653,6 +659,12 @@ async function fetchAccountIdentity(connectorKey: string, token: string, payload
     if (connectorKey === "linkedin") {
       const r = await probe("https://api.linkedin.com/v2/userinfo", { headers: { Authorization: `Bearer ${token}` } });
       return { id: r.json?.sub ?? null, email: r.json?.email ?? null, label: r.json?.name ?? null };
+    }
+    if (connectorKey === "whatsapp") {
+      const r = await probe(
+        `https://graph.facebook.com/v20.0/me?fields=id,name&access_token=${encodeURIComponent(token)}`,
+      );
+      return { id: r.json?.id ?? null, email: null, label: r.json?.name ?? "WhatsApp Business" };
     }
     if (connectorKey === "meta") {
       const r = await probe(`https://graph.facebook.com/v20.0/me?fields=id,name,email&access_token=${encodeURIComponent(token)}`);

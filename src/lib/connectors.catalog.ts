@@ -187,6 +187,7 @@ export const CONNECTORS: ConnectorDef[] = [
       { key: "business_profile", label: "Google Business Profile" },
       { key: "search_console", label: "Search Console" },
       { key: "analytics", label: "Google Analytics" },
+      { key: "youtube", label: "YouTube" },
     ],
     oauth: {
       authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -210,6 +211,9 @@ export const CONNECTORS: ConnectorDef[] = [
         { group: "Google Business", scope: "https://www.googleapis.com/auth/business.manage", label: "Lire ma fiche établissement et gérer les réponses aux avis" },
         { group: "Search Console", scope: "https://www.googleapis.com/auth/webmasters.readonly", label: "Lire les données Search Console" },
         { group: "Analytics", scope: "https://www.googleapis.com/auth/analytics.readonly", label: "Lire les données Analytics" },
+        { group: "YouTube", scope: "https://www.googleapis.com/auth/youtube.readonly", label: "YouTube — lire ma chaîne et mes vidéos" },
+        { group: "YouTube", scope: "https://www.googleapis.com/auth/youtube.upload", label: "YouTube — publier des vidéos" },
+        { group: "YouTube", scope: "https://www.googleapis.com/auth/yt-analytics.readonly", label: "YouTube — statistiques de la chaîne" },
       ],
     },
   },
@@ -387,18 +391,36 @@ export const CONNECTORS: ConnectorDef[] = [
   },
   {
     key: "whatsapp",
-    name: "WhatsApp Business API",
+    name: "WhatsApp Business",
     category: "sms",
-    description: "Messages WhatsApp professionnels.",
-    authType: "api_key",
+    description:
+      "Compte WhatsApp Business de votre entreprise (Embedded Signup Meta) : numéro, WABA, envoi de messages et webhooks.",
+    authType: "oauth",
+    userConnect: true,
     webhook: true,
-    fields: [f("access_token", "Access Token"), f("phone_number_id", "Phone Number ID", false)],
+    fields: [f("app_id", "App ID Meta", false), f("app_secret", "App Secret Meta")],
     optionalFields: [
-      { key: "business_account_id", label: "Business Account ID", secret: false },
+      { key: "config_id", label: "Configuration ID Embedded Signup", secret: false },
       { key: "webhook_verify_token", label: "Webhook Verify Token", secret: true },
       { key: "webhook_secret", label: "Webhook Secret", secret: true },
     ],
+    services: [
+      { key: "messaging", label: "Envoi et réception de messages" },
+      { key: "management", label: "Gestion du compte WhatsApp Business" },
+    ],
+    oauth: {
+      authorizeUrl: "https://www.facebook.com/v20.0/dialog/oauth",
+      tokenUrl: "https://graph.facebook.com/v20.0/oauth/access_token",
+      scopeSeparator: ",",
+      defaultScopes: ["whatsapp_business_management", "whatsapp_business_messaging"],
+      scopeCatalog: [
+        { group: "WhatsApp", scope: "whatsapp_business_management", label: "Gérer mon compte WhatsApp Business", required: true },
+        { group: "WhatsApp", scope: "whatsapp_business_messaging", label: "Envoyer et recevoir des messages", required: true },
+        { group: "WhatsApp", scope: "business_management", label: "Accéder à mon Business Manager" },
+      ],
+    },
   },
+
   {
     key: "fcm",
     name: "Firebase Cloud Messaging",

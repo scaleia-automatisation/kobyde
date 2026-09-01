@@ -2520,6 +2520,42 @@ export type Database = {
           },
         ]
       }
+      org_stripe_keys: {
+        Row: {
+          account_id: string | null
+          business_name: string | null
+          configured_by: string | null
+          created_at: string
+          livemode: boolean
+          org_id: string
+          publishable_key: string | null
+          secret_key_encrypted: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          business_name?: string | null
+          configured_by?: string | null
+          created_at?: string
+          livemode?: boolean
+          org_id: string
+          publishable_key?: string | null
+          secret_key_encrypted: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          business_name?: string | null
+          configured_by?: string | null
+          created_at?: string
+          livemode?: boolean
+          org_id?: string
+          publishable_key?: string | null
+          secret_key_encrypted?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       org_stripe_oauth_states: {
         Row: {
           created_at: string

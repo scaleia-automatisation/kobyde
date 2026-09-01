@@ -91,3 +91,48 @@ export const orgStripePayments = createServerFn({ method: "POST" })
       return [];
     }
   });
+
+/** Clés Stripe saisies par l'entreprise (la clé secrète n'est jamais renvoyée). */
+export const myOrgStripeKeys = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const orgId = await currentOrgId(context as never);
+    const { getOrgStripeKeys } = await import("./stripe-connect.server");
+    const row = await getOrgStripeKeys(orgId);
+    return row
+      ? {
+          configured: true,
+          publishableKey: (row.publishable_key as string | null) ?? null,
+          accountId: (row.account_id as string | null) ?? null,
+          businessName: (row.business_name as string | null) ?? null,
+          livemode: Boolean(row.livemode),
+          updatedAt: row.updated_at as string,
+        }
+      : { configured: false as const, publishableKey: null, accountId: null, businessName: null, livemode: false, updatedAt: null };
+  });
+
+export const saveOrgStripeKeysFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({ secretKey: z.string().min(10).max(300), publishableKey: z.string().min(10).max(300) })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const orgId = await currentOrgId(context as never);
+    const { saveOrgStripeKeys } = await import("./stripe-connect.server");
+    return saveOrgStripeKeys({
+      orgId,
+      userId: (context as never as { userId: string }).userId,
+      secretKey: data.secretKey,
+      publishableKey: data.publishableKey,
+    });
+  });
+
+export const deleteOrgStripeKeysFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const orgId = await currentOrgId(context as never);
+    const { deleteOrgStripeKeys } = await import("./stripe-connect.server");
+    return deleteOrgStripeKeys(orgId);
+  });

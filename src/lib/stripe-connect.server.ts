@@ -300,3 +300,72 @@ export async function verifyStripeSignature(payload: string, header: string | nu
     .join("");
   return signatures.includes(expected);
 }
+
+/* ------------------------------------------------------------------ */
+/* Clés Stripe saisies par l'entreprise (mode « Configurer »)          */
+/* ------------------------------------------------------------------ */
+
+export async function getOrgStripeKeys(orgId: string) {
+  const db = await admin();
+  const { data } = await db.from("org_stripe_keys").select("*").eq("org_id", orgId).maybeSingle();
+  return data ?? null;
+}
+
+/** Clé secrète déchiffrée de l'entreprise (ou null si non configurée). */
+export async function getOrgStripeSecretKey(orgId: string): Promise<string | null> {
+  const row = await getOrgStripeKeys(orgId);
+  if (!row) return null;
+  const { decryptToken } = await import("./token-crypto.server");
+  return await decryptToken(row.secret_key_encrypted as string);
+}
+
+/** Enregistre et vérifie les clés Stripe d'une entreprise. */
+export async function saveOrgStripeKeys(input: {
+  orgId: string;
+  userId: string;
+  secretKey: string;
+  publishableKey: string;
+}) {
+  const secretKey = input.secretKey.trim();
+  const publishableKey = input.publishableKey.trim();
+  if (!/^(sk|rk)_(test|live)_/.test(secretKey)) {
+    throw new Error("Clé secrète invalide : elle doit commencer par sk_test_, sk_live_ ou rk_.");
+  }
+  if (!/^pk_(test|live)_/.test(publishableKey)) {
+    throw new Error("Clé publiable invalide : elle doit commencer par pk_test_ ou pk_live_.");
+  }
+
+  const account = await stripeFetch("/v1/account", { secretKey });
+
+  const { encryptToken } = await import("./token-crypto.server");
+  const db = await admin();
+  await db.from("org_stripe_keys").upsert(
+    {
+      org_id: input.orgId,
+      secret_key_encrypted: await encryptToken(secretKey),
+      publishable_key: publishableKey,
+      account_id: account?.id ?? null,
+      business_name:
+        account?.business_profile?.name ?? account?.settings?.dashboard?.display_name ?? null,
+      livemode: secretKey.includes("_live_"),
+      configured_by: input.userId,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "org_id" },
+  );
+
+  return {
+    accountId: (account?.id as string) ?? null,
+    businessName:
+      (account?.business_profile?.name as string | null) ??
+      (account?.settings?.dashboard?.display_name as string | null) ??
+      null,
+    livemode: secretKey.includes("_live_"),
+  };
+}
+
+export async function deleteOrgStripeKeys(orgId: string) {
+  const db = await admin();
+  await db.from("org_stripe_keys").delete().eq("org_id", orgId);
+  return { ok: true };
+}

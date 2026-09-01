@@ -136,3 +136,12 @@ export const deleteOrgStripeKeysFn = createServerFn({ method: "POST" })
     const { deleteOrgStripeKeys } = await import("./stripe-connect.server");
     return deleteOrgStripeKeys(orgId);
   });
+
+/** Teste un appel API Stripe avec les clés de l'entreprise. */
+export const testOrgStripeKeysFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const orgId = await currentOrgId(context as never);
+    const { testOrgStripeKeys } = await import("./stripe-connect.server");
+    return testOrgStripeKeys(orgId);
+  });

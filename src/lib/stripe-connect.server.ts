@@ -375,3 +375,18 @@ export async function deleteOrgStripeKeys(orgId: string) {
   await db.from("org_stripe_keys").delete().eq("org_id", orgId);
   return { ok: true };
 }
+
+/** Vérifie que les clés Stripe de l'entreprise permettent un appel API réel. */
+export async function testOrgStripeKeys(orgId: string): Promise<{ ok: boolean; message: string }> {
+  const secretKey = await getOrgStripeSecretKey(orgId);
+  if (!secretKey) return { ok: false, message: "Aucune clé Stripe enregistrée : cliquez sur « Configurer »." };
+  try {
+    const account = await stripeFetch("/v1/account", { secretKey });
+    const name =
+      account?.business_profile?.name ?? account?.settings?.dashboard?.display_name ?? account?.id ?? "compte Stripe";
+    const mode = secretKey.includes("_live_") ? "mode réel" : "mode test";
+    return { ok: true, message: `Appel API Stripe réussi — ${name} (${mode}).` };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Appel API Stripe impossible." };
+  }
+}

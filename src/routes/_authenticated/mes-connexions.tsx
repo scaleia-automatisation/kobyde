@@ -217,6 +217,23 @@ function MesConnexionsPage() {
               )}
             </div>
 
+            <div className="rounded-md border border-dashed border-border bg-muted/40 p-3">
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">URI de redirection à renseigner sur {c.name}</p>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 truncate text-xs text-foreground">{getRedirectUri(c.key)}</code>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  onClick={() => void copy(getRedirectUri(c.key), c.key)}
+                  aria-label="Copier l'URI de redirection"
+                >
+                  {copied === c.key ? <Check className="size-4 text-emerald-500" /> : <Copy className="size-4" />}
+                </Button>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-2">
               {!c.connected ? (
                 <Button disabled={!c.available || busy === c.key} onClick={() => void connect(c.key)}>

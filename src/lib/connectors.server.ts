@@ -508,21 +508,17 @@ function appCredentials(conf: { config: Record<string, string>; secrets: Record<
 }
 
 /**
- * Identifiants OAuth à utiliser : ceux de l'entreprise (« Mes connexions » → Configuration)
- * en priorité, sinon ceux de la plateforme configurés par l'administrateur.
+ * Identifiants OAuth utilisés : uniquement l'application développeur de Kobyde
+ * configurée par le Super Admin. L'utilisateur ne saisit jamais de secret.
  */
 async function resolveOAuthApp(
-  connectorKey: string,
-  orgId: string | null | undefined,
+  _connectorKey: string,
+  _orgId: string | null | undefined,
   conf: { config: Record<string, string>; secrets: Record<string, string> } | null,
 ) {
-  if (orgId) {
-    const { getOrgOAuthApp } = await import("./org-connectors.server");
-    const own = await getOrgOAuthApp(orgId, connectorKey);
-    if (own) return { ...own, source: "org" as const };
-  }
   return { ...appCredentials(conf), source: "platform" as const };
 }
+
 
 
 /** Connexion utilisateur (ligne brute) — serveur uniquement. */

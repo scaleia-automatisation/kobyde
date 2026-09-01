@@ -443,6 +443,19 @@ export async function testConnector(key: string) {
       if (!p.json?.ok) return finish(false, `Slack a répondu ${p.status} : ${p.json?.error ?? "échec"}.`);
       return finish(true, `Appel API Slack réussi (200) — espace ${p.json?.team ?? ""}.`);
     }
+    if (key === "tiktok") {
+      const { clientId, clientSecret } = appCredentials(conf);
+      if (!clientId || !clientSecret) {
+        return finish(false, "Configuration OAuth incomplète : renseignez le Client Key et le Client Secret TikTok.");
+      }
+      if (!/^[A-Za-z0-9_-]{8,128}$/.test(clientId)) {
+        return finish(false, "Client Key TikTok invalide : copiez le « Client key » de l’application TikTok Developer, sans espace.");
+      }
+      return finish(
+        true,
+        "Identifiants TikTok présents. Vérifiez aussi dans TikTok Developer que Login Kit est activé, que l’application est approuvée/active et que l’URI https://kobyde.com/api/public/connectors/tiktok/callback est enregistrée exactement.",
+      );
+    }
     if (key === "grok") {
       const miss = await need("api_key", "la clé API xAI");
       if (miss) return miss;

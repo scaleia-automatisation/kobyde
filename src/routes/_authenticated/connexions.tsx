@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowDownAZ, ArrowUpAZ, Copy, Link2, Search, ShieldCheck } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Copy, Link2, PlugZap, Search, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -253,6 +253,10 @@ function ConnecteursAdminPage() {
                           {c.isEnabled ? "Activé" : "Désactivé"}
                         </Label>
                         <Switch id={`en-${c.key}`} checked={c.isEnabled} onCheckedChange={(v) => void toggle(c.key, v)} />
+                        <Button variant="outline" size="sm" disabled={busy === c.key} onClick={() => void test(c.key)}>
+                          <PlugZap className="mr-1 size-4" />
+                          {busy === c.key ? "Test en cours…" : "Tester la connexion"}
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => setOpen(expanded ? null : c.key)}>
                           {expanded ? "Fermer" : "Configurer"}
                         </Button>
@@ -319,7 +323,7 @@ function ConnecteursAdminPage() {
                             Enregistrer
                           </Button>
                           <Button variant="outline" disabled={busy === c.key} onClick={() => void test(c.key)}>
-                            Tester
+                            <PlugZap className="mr-1 size-4" /> Tester la connexion
                           </Button>
                         </div>
                       </div>

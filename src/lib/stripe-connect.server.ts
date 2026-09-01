@@ -227,9 +227,10 @@ export async function createOrgCheckoutSession(input: {
   customerEmail?: string | null;
 }) {
   const acc = await getOrgStripeAccount(input.orgId);
-  if (!acc) return null;
+  const ownKey = acc ? null : await getOrgStripeSecretKey(input.orgId);
+  if (!acc && !ownKey) return null;
 
-  const currency = (input.currency ?? acc.default_currency ?? "eur").toLowerCase();
+  const currency = (input.currency ?? acc?.default_currency ?? "eur").toLowerCase();
   const body = new URLSearchParams({
     mode: "payment",
     "line_items[0][quantity]": "1",
@@ -239,8 +240,8 @@ export async function createOrgCheckoutSession(input: {
     success_url: input.successUrl,
     cancel_url: input.cancelUrl,
     "metadata[organization_id]": input.orgId,
-    "metadata[connected_account_id]": acc.stripe_account_id,
   });
+  if (acc) body.set("metadata[connected_account_id]", acc.stripe_account_id);
   if (input.clientReferenceId) body.set("client_reference_id", input.clientReferenceId);
   if (input.customerEmail) body.set("customer_email", input.customerEmail);
   for (const [k, v] of Object.entries(input.metadata ?? {})) {
@@ -249,17 +250,22 @@ export async function createOrgCheckoutSession(input: {
 
   const session = await stripeFetch("/v1/checkout/sessions", {
     body,
-    stripeAccount: acc.stripe_account_id,
+    ...(acc ? { stripeAccount: acc.stripe_account_id } : { secretKey: ownKey! }),
   });
-  return { url: session.url as string, id: session.id as string, accountId: acc.stripe_account_id };
+  return {
+    url: session.url as string,
+    id: session.id as string,
+    accountId: acc ? (acc.stripe_account_id as string) : null,
+  };
 }
 
 /** Transactions récentes du compte Stripe de l'entreprise (agent comptabilité). */
 export async function listOrgPayments(orgId: string, limit = 20) {
   const acc = await getOrgStripeAccount(orgId);
-  if (!acc) return [];
+  const ownKey = acc ? null : await getOrgStripeSecretKey(orgId);
+  if (!acc && !ownKey) return [];
   const res = await stripeFetch(`/v1/payment_intents?limit=${Math.min(limit, 100)}`, {
-    stripeAccount: acc.stripe_account_id,
+    ...(acc ? { stripeAccount: acc.stripe_account_id } : { secretKey: ownKey! }),
   });
   return (res.data ?? []).map((p: any) => ({
     id: p.id,
@@ -299,4 +305,73 @@ export async function verifyStripeSignature(payload: string, header: string | nu
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
   return signatures.includes(expected);
+}
+
+/* ------------------------------------------------------------------ */
+/* Clés Stripe saisies par l'entreprise (mode « Configurer »)          */
+/* ------------------------------------------------------------------ */
+
+export async function getOrgStripeKeys(orgId: string) {
+  const db = await admin();
+  const { data } = await db.from("org_stripe_keys").select("*").eq("org_id", orgId).maybeSingle();
+  return data ?? null;
+}
+
+/** Clé secrète déchiffrée de l'entreprise (ou null si non configurée). */
+export async function getOrgStripeSecretKey(orgId: string): Promise<string | null> {
+  const row = await getOrgStripeKeys(orgId);
+  if (!row) return null;
+  const { decryptToken } = await import("./token-crypto.server");
+  return await decryptToken(row.secret_key_encrypted as string);
+}
+
+/** Enregistre et vérifie les clés Stripe d'une entreprise. */
+export async function saveOrgStripeKeys(input: {
+  orgId: string;
+  userId: string;
+  secretKey: string;
+  publishableKey: string;
+}) {
+  const secretKey = input.secretKey.trim();
+  const publishableKey = input.publishableKey.trim();
+  if (!/^(sk|rk)_(test|live)_/.test(secretKey)) {
+    throw new Error("Clé secrète invalide : elle doit commencer par sk_test_, sk_live_ ou rk_.");
+  }
+  if (!/^pk_(test|live)_/.test(publishableKey)) {
+    throw new Error("Clé publiable invalide : elle doit commencer par pk_test_ ou pk_live_.");
+  }
+
+  const account = await stripeFetch("/v1/account", { secretKey });
+
+  const { encryptToken } = await import("./token-crypto.server");
+  const db = await admin();
+  await db.from("org_stripe_keys").upsert(
+    {
+      org_id: input.orgId,
+      secret_key_encrypted: await encryptToken(secretKey),
+      publishable_key: publishableKey,
+      account_id: account?.id ?? null,
+      business_name:
+        account?.business_profile?.name ?? account?.settings?.dashboard?.display_name ?? null,
+      livemode: secretKey.includes("_live_"),
+      configured_by: input.userId,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "org_id" },
+  );
+
+  return {
+    accountId: (account?.id as string) ?? null,
+    businessName:
+      (account?.business_profile?.name as string | null) ??
+      (account?.settings?.dashboard?.display_name as string | null) ??
+      null,
+    livemode: secretKey.includes("_live_"),
+  };
+}
+
+export async function deleteOrgStripeKeys(orgId: string) {
+  const db = await admin();
+  await db.from("org_stripe_keys").delete().eq("org_id", orgId);
+  return { ok: true };
 }

@@ -103,6 +103,23 @@ function MesConnexionsPage() {
     [items],
   );
 
+  /**
+   * Les pages d'autorisation (TikTok, LinkedIn, Meta…) refusent d'être
+   * affichées dans une iframe : on quitte toujours le cadre de prévisualisation.
+   */
+  const goToAuthorize = (url: string) => {
+    try {
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = url;
+        return;
+      }
+    } catch {
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      if (win) return;
+    }
+    window.location.href = url;
+  };
+
   const connect = async (key: string) => {
     setBusy(key);
     try {
@@ -117,7 +134,7 @@ function MesConnexionsPage() {
         data: { connectorKey: key, origin: window.location.origin, scopes },
       });
       if (res?.url) {
-        window.location.href = res.url;
+        goToAuthorize(res.url);
         return;
       }
       toast.error(res?.error ?? "Ce service n'est pas encore disponible. Contactez votre administrateur.");

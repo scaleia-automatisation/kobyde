@@ -635,6 +635,15 @@ export async function buildAuthorizeUrl(input: {
     params.delete("scope");
     params.set("owner", "user");
   }
+  if (input.connectorKey === "whatsapp") {
+    // Embedded Signup officiel Meta lorsque la configuration est fournie.
+    const configId = conf?.config["config_id"];
+    if (configId) {
+      params.set("config_id", configId);
+      params.set("override_default_response_type", "true");
+      params.set("extras", JSON.stringify({ feature: "whatsapp_embedded_signup", version: 3 }));
+    }
+  }
   return { url: `${def.oauth.authorizeUrl}?${params.toString()}` };
 }
 

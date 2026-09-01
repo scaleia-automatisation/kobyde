@@ -124,15 +124,8 @@ function MesConnexionsPage() {
     const tab = inIframe ? window.open("about:blank", "_blank") : null;
 
     try {
-      const def = CONNECTOR_MAP.get(key);
-      const scopes = Array.from(
-        new Set([
-          ...(def?.oauth?.defaultScopes ?? []),
-          ...(def?.oauth?.scopeCatalog ?? []).map((s) => s.scope),
-        ]),
-      );
       const res = await startFn({
-        data: { connectorKey: key, origin: window.location.origin, scopes },
+        data: { connectorKey: key, origin: window.location.origin },
       });
       if (res?.url) {
         const relay = `${window.location.origin}/oauth/launch?url=${encodeURIComponent(res.url)}`;

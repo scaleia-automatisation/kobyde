@@ -551,14 +551,15 @@ export async function buildAuthorizeUrl(input: {
   const conf = await getConnectorConfig(input.connectorKey);
   const app = await resolveOAuthApp(input.connectorKey, input.orgId, conf);
   const clientId = app.clientId;
-  if (app.source === "platform" && !conf?.isEnabled) {
+  if (!conf?.isEnabled) {
     throw new Error(
-      "Ce connecteur n'est pas encore activé : renseignez vos identifiants dans l'onglet « Configuration ».",
+      "Ce service n'est pas encore activé par Kobyde. Contactez l'administrateur de la plateforme.",
     );
   }
   if (!clientId) {
-    throw new Error("Configuration incomplète : renseignez vos identifiants dans l'onglet « Configuration ».");
+    throw new Error("Ce service n'est pas encore disponible : l'application Kobyde n'est pas configurée.");
   }
+
 
 
   // Le callback OAuth doit toujours utiliser le domaine canonique déclaré chez

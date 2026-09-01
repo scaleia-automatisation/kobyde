@@ -27,8 +27,8 @@ export const Route = createFileRoute("/auth/callback")({
             headers: {
               location:
                 status === "ok"
-                  ? "/mes-connexions?onglet=comptes&connexion=ok&connecteur=google"
-                  : `/mes-connexions?onglet=comptes&connexion=error&connecteur=google${
+                  ? "/mes-connexions?connexion=ok&connecteur=google"
+                  : `/mes-connexions?connexion=error&connecteur=google${
                       message ? `&message=${encodeURIComponent(message)}` : ""
                     }`,
             },
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/auth/callback")({
           // Toujours échanger le code avec l'URI canonique https://kobyde.com/auth/callback.
           const callbackUri = `${oauthBaseUrl(url.origin)}/auth/callback`;
           await completeOAuth("google", code, state, url.origin, callbackUri);
-          // Retour systématique dans « Mes connexions », onglet Comptes.
+          // Retour systématique dans « Mes connexions ».
           return back("ok");
         } catch (caught) {
           return back("error", caught instanceof Error ? caught.message : "Connexion Google impossible.");

@@ -240,8 +240,8 @@ export async function createOrgCheckoutSession(input: {
     success_url: input.successUrl,
     cancel_url: input.cancelUrl,
     "metadata[organization_id]": input.orgId,
-    "metadata[connected_account_id]": acc.stripe_account_id,
   });
+  if (acc) body.set("metadata[connected_account_id]", acc.stripe_account_id);
   if (input.clientReferenceId) body.set("client_reference_id", input.clientReferenceId);
   if (input.customerEmail) body.set("customer_email", input.customerEmail);
   for (const [k, v] of Object.entries(input.metadata ?? {})) {
@@ -250,17 +250,22 @@ export async function createOrgCheckoutSession(input: {
 
   const session = await stripeFetch("/v1/checkout/sessions", {
     body,
-    stripeAccount: acc.stripe_account_id,
+    ...(acc ? { stripeAccount: acc.stripe_account_id } : { secretKey: ownKey! }),
   });
-  return { url: session.url as string, id: session.id as string, accountId: acc.stripe_account_id };
+  return {
+    url: session.url as string,
+    id: session.id as string,
+    accountId: acc ? (acc.stripe_account_id as string) : null,
+  };
 }
 
 /** Transactions récentes du compte Stripe de l'entreprise (agent comptabilité). */
 export async function listOrgPayments(orgId: string, limit = 20) {
   const acc = await getOrgStripeAccount(orgId);
-  if (!acc) return [];
+  const ownKey = acc ? null : await getOrgStripeSecretKey(orgId);
+  if (!acc && !ownKey) return [];
   const res = await stripeFetch(`/v1/payment_intents?limit=${Math.min(limit, 100)}`, {
-    stripeAccount: acc.stripe_account_id,
+    ...(acc ? { stripeAccount: acc.stripe_account_id } : { secretKey: ownKey! }),
   });
   return (res.data ?? []).map((p: any) => ({
     id: p.id,

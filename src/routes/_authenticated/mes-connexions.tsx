@@ -65,6 +65,23 @@ function MesConnexionsPage() {
   const items = useMemo(() => list.data ?? [], [list.data]);
   const [busy, setBusy] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const getRedirectUri = (key: string) => {
+    const prod = "https://kobyde.com";
+    return key === "google" ? `${prod}/auth/callback` : `${prod}/api/public/connectors/${key}/callback`;
+  };
+
+  const copy = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      toast.success("URI copiée dans le presse-papiers");
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      toast.error("Impossible de copier l'URI");
+    }
+  };
 
   useEffect(() => {
     if (search.connexion === "ok") {

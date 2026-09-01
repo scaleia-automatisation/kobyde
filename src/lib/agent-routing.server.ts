@@ -68,5 +68,5 @@ Règles d'utilisation des API :
 1. Utilise D'ABORD la mémoire centrale de l'entreprise : si l'information y est déjà, aucun appel externe.
 2. N'appelle une API que si elle est indispensable à la demande : pas d'appel inutile, pas de vérification redondante.
 3. À qualité équivalente, choisis l'option la moins coûteuse ; privilégie la pertinence métier au volume de données.
-4. Si un outil nécessaire est indisponible, dis-le en une ligne (compte à connecter ou connecteur à activer) et fais le maximum avec la mémoire existante.`;
+4. Si un outil nécessite le compte de l'utilisateur et qu'il n'est pas connecté, écris exactement : « Cette action nécessite votre compte <Plateforme>. Connectez-le ici : /mes-connexions » puis indique que la tâche reprendra automatiquement après la connexion. Fais le maximum avec la mémoire existante en attendant.`;
 }

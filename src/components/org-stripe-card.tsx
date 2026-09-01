@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CreditCard } from "lucide-react";
+import { CreditCard, PlugZap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
   deleteOrgStripeKeysFn,
   myOrgStripeKeys,
   saveOrgStripeKeysFn,
+  testOrgStripeKeysFn,
 } from "@/lib/stripe-connect.functions";
 
 /** Stripe Connect : l'entreprise saisit sa clé secrète et sa clé publiable. */
@@ -19,12 +20,14 @@ export function OrgStripeCard() {
   const statusFn = useServerFn(myOrgStripeKeys);
   const saveFn = useServerFn(saveOrgStripeKeysFn);
   const removeFn = useServerFn(deleteOrgStripeKeysFn);
+  const testFn = useServerFn(testOrgStripeKeysFn);
   const qc = useQueryClient();
 
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [secretKey, setSecretKey] = useState("");
   const [publishableKey, setPublishableKey] = useState("");
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   const q = useQuery({
     queryKey: ["org-stripe-keys"],
@@ -43,6 +46,22 @@ export function OrgStripeCard() {
       void qc.invalidateQueries({ queryKey: ["org-stripe-keys"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Enregistrement impossible.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const test = async () => {
+    setBusy(true);
+    try {
+      const res = await testFn({ data: undefined });
+      setResult(res);
+      if (res.ok) toast.success(res.message);
+      else toast.error(res.message);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Test impossible.";
+      setResult({ ok: false, message });
+      toast.error(message);
     } finally {
       setBusy(false);
     }
@@ -91,6 +110,13 @@ export function OrgStripeCard() {
         </div>
       )}
 
+      {result && (
+        <p className={`text-sm ${result.ok ? "text-emerald-600" : "text-destructive"}`}>
+          {result.ok ? "✓ " : "✕ "}
+          {result.message}
+        </p>
+      )}
+
       {open && (
         <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
           <div className="space-y-1">
@@ -124,6 +150,12 @@ export function OrgStripeCard() {
         <Button variant={data?.configured ? "outline" : "default"} onClick={() => setOpen((v) => !v)}>
           {open ? "Annuler" : data?.configured ? "Modifier les clés" : "Configurer"}
         </Button>
+        {data?.configured && (
+          <Button variant="outline" disabled={busy} onClick={() => void test()}>
+            <PlugZap className="mr-1 size-4" />
+            {busy ? "Test en cours…" : "Tester la connexion"}
+          </Button>
+        )}
         {data?.configured && (
           <Button variant="ghost" className="text-destructive" disabled={busy} onClick={() => void remove()}>
             Supprimer

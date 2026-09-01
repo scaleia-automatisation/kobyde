@@ -660,6 +660,12 @@ async function fetchAccountIdentity(connectorKey: string, token: string, payload
       const r = await probe("https://api.linkedin.com/v2/userinfo", { headers: { Authorization: `Bearer ${token}` } });
       return { id: r.json?.sub ?? null, email: r.json?.email ?? null, label: r.json?.name ?? null };
     }
+    if (connectorKey === "whatsapp") {
+      const r = await probe(
+        `https://graph.facebook.com/v20.0/me?fields=id,name&access_token=${encodeURIComponent(token)}`,
+      );
+      return { id: r.json?.id ?? null, email: null, label: r.json?.name ?? "WhatsApp Business" };
+    }
     if (connectorKey === "meta") {
       const r = await probe(`https://graph.facebook.com/v20.0/me?fields=id,name,email&access_token=${encodeURIComponent(token)}`);
       return { id: r.json?.id ?? null, email: r.json?.email ?? null, label: r.json?.name ?? null };

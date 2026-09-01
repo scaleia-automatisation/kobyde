@@ -55,15 +55,13 @@ async function userHasAccount(userId: string, connectorKey: string) {
 export async function resolveConnector(capability: Capability, ctx: { userId?: string | null; orgId?: string | null }) {
   const routes = CAPABILITY_ROUTES[capability] ?? [];
   const checked: { connector: string; reason: string }[] = [];
-  const { getOrgCredentials } = await import("./org-connectors.server");
   for (const route of routes) {
     const conf = await getConnectorConfig(route.connector);
-    // L'entreprise peut fournir ses propres identifiants (onglet « Mes connexions » → Configuration).
-    const own = ctx.orgId ? await getOrgCredentials(ctx.orgId, route.connector) : null;
-    if (!conf?.isEnabled && !own) {
+    if (!conf?.isEnabled) {
       checked.push({ connector: route.connector, reason: "non activé par l'administrateur" });
       continue;
     }
+
 
     if (route.needsUserAccount) {
       if (!ctx.userId || !(await userHasAccount(ctx.userId, route.connector))) {

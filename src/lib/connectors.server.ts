@@ -562,11 +562,18 @@ export async function buildAuthorizeUrl(input: {
 
 
 
-  // Le callback OAuth doit toujours utiliser le domaine canonique déclaré chez
-  // le fournisseur. Les domaines éphémères de prévisualisation sont conservés
-  // uniquement comme destination de retour après l'autorisation.
-  const returnBase = (input.origin ?? productionBaseUrl()).replace(/\/$/, "");
-  const redirectUri = `${oauthBaseUrl(input.origin)}${oauthCallbackPath(input.connectorKey)}`;
+  // Le callback OAuth et la page de retour utilisent toujours le domaine
+  // canonique : les domaines éphémères de prévisualisation ne sont pas
+  // accessibles hors de l'éditeur et affichent une page vide au retour.
+  const isLocal = (() => {
+    try {
+      return input.origin ? new URL(input.origin).hostname === "localhost" : false;
+    } catch {
+      return false;
+    }
+  })();
+  const returnBase = isLocal ? devBaseUrl() : oauthBaseUrl(input.origin);
+  const redirectUri = `${isLocal ? devBaseUrl() : oauthBaseUrl(input.origin)}${oauthCallbackPath(input.connectorKey)}`;
   const state = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
   const supabase = await db();

@@ -276,7 +276,7 @@ export const CONNECTORS: ConnectorDef[] = [
     description: "Publication et statistiques des comptes TikTok connectés.",
     authType: "oauth",
     userConnect: true,
-    fields: [f("client_key", "Client Key", false), f("client_secret", "Client Secret")],
+    fields: [f("client_key", "Client Key TikTok Developer (pas l’App ID Business)", false), f("client_secret", "Client Secret TikTok Developer")],
     oauth: {
       authorizeUrl: "https://www.tiktok.com/v2/auth/authorize/",
       tokenUrl: "https://open.tiktokapis.com/v2/oauth/token/",

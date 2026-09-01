@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Link2, RefreshCw, ShieldCheck } from "lucide-react";
+import { Link2, PlugZap, RefreshCw, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { OrgStripeCard } from "@/components/org-stripe-card";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
   disconnectConnection,
   myConnections,
   startConnection,
+  testMyConnection,
   toggleMyConnection,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP } from "@/lib/connectors.catalog";
@@ -50,6 +51,7 @@ function MesConnexionsPage() {
   const startFn = useServerFn(startConnection);
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
+  const testFn = useServerFn(testMyConnection);
   const qc = useQueryClient();
 
   const list = useQuery({
@@ -62,6 +64,7 @@ function MesConnexionsPage() {
   });
   const items = useMemo(() => list.data ?? [], [list.data]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [results, setResults] = useState<Record<string, { ok: boolean; message: string }>>({});
 
   useEffect(() => {
     if (search.connexion === "ok") {
@@ -103,6 +106,22 @@ function MesConnexionsPage() {
       toast.error(res?.error ?? "Ce service n'est pas encore disponible. Contactez votre administrateur.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Connexion impossible.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const test = async (key: string) => {
+    setBusy(key);
+    try {
+      const res = await testFn({ data: { connectorKey: key } });
+      setResults((p) => ({ ...p, [key]: res }));
+      if (res.ok) toast.success(res.message);
+      else toast.error(res.message);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Test impossible.";
+      setResults((p) => ({ ...p, [key]: { ok: false, message } }));
+      toast.error(message);
     } finally {
       setBusy(null);
     }
@@ -173,6 +192,12 @@ function MesConnexionsPage() {
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">{c.description}</p>
               {c.account && <p className="text-xs text-muted-foreground">Compte : {c.account}</p>}
+              {results[c.key] && (
+                <p className={`text-sm ${results[c.key]!.ok ? "text-emerald-600" : "text-destructive"}`}>
+                  {results[c.key]!.ok ? "✓ " : "✕ "}
+                  {results[c.key]!.message}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -182,6 +207,10 @@ function MesConnexionsPage() {
                 </Button>
               ) : (
                 <>
+                  <Button variant="outline" disabled={busy === c.key} onClick={() => void test(c.key)}>
+                    <PlugZap className="mr-1 size-4" />
+                    {busy === c.key ? "Test en cours…" : "Tester la connexion"}
+                  </Button>
                   <Button variant="outline" disabled={busy === c.key} onClick={() => void connect(c.key)}>
                     <RefreshCw className="mr-1 size-4" /> Reconnecter
                   </Button>

@@ -316,3 +316,12 @@ export const adminConnectorStats = createServerFn({ method: "POST" })
     const { connectorStats } = await import("./connectors.server");
     return connectorStats();
   });
+
+/** Teste un appel API réel avec les identifiants OAuth de l'utilisateur. */
+export const testMyConnection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { connectorKey: string }) => z.object({ connectorKey: z.string().min(1).max(64) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { testUserConnection } = await import("./connectors.server");
+    return testUserConnection(context.userId, data.connectorKey);
+  });

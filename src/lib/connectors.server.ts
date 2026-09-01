@@ -1191,3 +1191,88 @@ export async function disconnectUserConnection(userId: string, connectorKey: str
   await logConnectorCall({ userId, provider: connectorKey, action: "oauth.disconnect", status: "ok" });
   return { ok: true };
 }
+
+/* ------------------------------------------------- Test d'appel API utilisateur */
+
+/** Endpoint « identité » de chaque plateforme, utilisé pour vérifier un vrai appel API. */
+function userProbe(connectorKey: string): { url: string; headers?: Record<string, string> } | null {
+  switch (connectorKey) {
+    case "google":
+    case "google_calendar":
+    case "gmail":
+    case "youtube":
+      return { url: "https://www.googleapis.com/oauth2/v3/userinfo" };
+    case "meta":
+    case "facebook":
+    case "instagram":
+    case "whatsapp":
+      return { url: "https://graph.facebook.com/v21.0/me?fields=id,name" };
+    case "linkedin":
+      return { url: "https://api.linkedin.com/v2/userinfo" };
+    case "tiktok":
+      return { url: "https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name" };
+    case "notion":
+      return { url: "https://api.notion.com/v1/users/me", headers: { "Notion-Version": "2022-06-28" } };
+    case "slack":
+      return { url: "https://slack.com/api/auth.test" };
+    case "microsoft":
+    case "outlook":
+      return { url: "https://graph.microsoft.com/v1.0/me" };
+    default:
+      return null;
+  }
+}
+
+/** Effectue un appel API réel avec les jetons OAuth de l'utilisateur. */
+export async function testUserConnection(
+  userId: string,
+  connectorKey: string,
+): Promise<{ ok: boolean; message: string }> {
+  const access = await getUserAccessToken(userId, connectorKey);
+  if (!access.ok) {
+    if (access.reason === "not_connected") return { ok: false, message: "Compte non connecté : cliquez sur « Se connecter »." };
+    if (access.reason === "reconnect_required") return { ok: false, message: "Autorisation expirée : reconnectez votre compte." };
+    return { ok: false, message: "Autorisations insuffisantes : reconnectez votre compte." };
+  }
+
+  const probe = userProbe(connectorKey);
+  if (!probe) {
+    return { ok: true, message: `Compte connecté${access.accountLabel ? ` (${access.accountLabel})` : ""} — jeton valide.` };
+  }
+
+  const started = Date.now();
+  try {
+    const res = await fetch(probe.url, {
+      headers: { Authorization: `Bearer ${access.accessToken}`, ...(probe.headers ?? {}) },
+    });
+    const text = await res.text();
+    let payload: any = null;
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+    // Slack renvoie 200 avec ok:false.
+    if (res.ok && payload && payload.ok === false) {
+      await logConnectorCall({ userId, provider: connectorKey, action: "test", status: "error", durationMs: Date.now() - started, error: String(payload.error ?? "") });
+      return { ok: false, message: `Appel API refusé : ${payload.error ?? "erreur inconnue"}.` };
+    }
+    if (!res.ok) {
+      await logConnectorCall({ userId, provider: connectorKey, action: "test", status: "error", durationMs: Date.now() - started, error: text.slice(0, 300) });
+      return { ok: false, message: `Appel API échoué (${res.status}) : ${text.slice(0, 180)}` };
+    }
+    const label =
+      payload?.email ??
+      payload?.name ??
+      payload?.display_name ??
+      payload?.user?.name ??
+      payload?.bot?.owner?.user?.name ??
+      payload?.data?.user?.display_name ??
+      access.accountLabel ??
+      "compte vérifié";
+    await logConnectorCall({ userId, provider: connectorKey, action: "test", status: "ok", durationMs: Date.now() - started });
+    return { ok: true, message: `Appel API réussi — ${label}.` };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Appel API impossible." };
+  }
+}

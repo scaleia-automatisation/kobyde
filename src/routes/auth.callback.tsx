@@ -27,8 +27,8 @@ export const Route = createFileRoute("/auth/callback")({
             headers: {
               location:
                 status === "ok"
-                  ? "/mes-connexions?onglet=comptes&connexion=ok&connecteur=google"
-                  : `/mes-connexions?onglet=comptes&connexion=error&connecteur=google${
+                  ? "/mes-connexions?connexion=ok&connecteur=google"
+                  : `/mes-connexions?connexion=error&connecteur=google${
                       message ? `&message=${encodeURIComponent(message)}` : ""
                     }`,
             },

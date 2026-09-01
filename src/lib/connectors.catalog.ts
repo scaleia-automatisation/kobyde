@@ -187,6 +187,7 @@ export const CONNECTORS: ConnectorDef[] = [
       { key: "business_profile", label: "Google Business Profile" },
       { key: "search_console", label: "Search Console" },
       { key: "analytics", label: "Google Analytics" },
+      { key: "youtube", label: "YouTube" },
     ],
     oauth: {
       authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -210,6 +211,9 @@ export const CONNECTORS: ConnectorDef[] = [
         { group: "Google Business", scope: "https://www.googleapis.com/auth/business.manage", label: "Lire ma fiche établissement et gérer les réponses aux avis" },
         { group: "Search Console", scope: "https://www.googleapis.com/auth/webmasters.readonly", label: "Lire les données Search Console" },
         { group: "Analytics", scope: "https://www.googleapis.com/auth/analytics.readonly", label: "Lire les données Analytics" },
+        { group: "YouTube", scope: "https://www.googleapis.com/auth/youtube.readonly", label: "YouTube — lire ma chaîne et mes vidéos" },
+        { group: "YouTube", scope: "https://www.googleapis.com/auth/youtube.upload", label: "YouTube — publier des vidéos" },
+        { group: "YouTube", scope: "https://www.googleapis.com/auth/yt-analytics.readonly", label: "YouTube — statistiques de la chaîne" },
       ],
     },
   },

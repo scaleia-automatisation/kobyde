@@ -13,13 +13,57 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 import {
+  completeWhatsappSignup,
   disconnectConnection,
   myConnections,
   startConnection,
   testMyConnection,
   toggleMyConnection,
+  whatsappEmbeddedConfig,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP } from "@/lib/connectors.catalog";
+
+/* SDK Facebook (Embedded Signup WhatsApp Business) */
+declare global {
+  interface Window {
+    FB?: {
+      init: (opts: { appId: string; cookie?: boolean; xfbml?: boolean; version: string }) => void;
+      login: (
+        cb: (response: { authResponse?: { code?: string } | null }) => void,
+        opts: Record<string, unknown>,
+      ) => void;
+    };
+    fbAsyncInit?: () => void;
+  }
+}
+
+let fbSdkPromise: Promise<void> | null = null;
+
+/** Charge le SDK Facebook une seule fois et l'initialise avec l'App ID Meta. */
+const loadFacebookSdk = (appId: string): Promise<void> => {
+  if (fbSdkPromise) return fbSdkPromise;
+  fbSdkPromise = new Promise<void>((resolve, reject) => {
+    if (window.FB) {
+      window.FB.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
+      resolve();
+      return;
+    }
+    window.fbAsyncInit = () => {
+      window.FB?.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
+      resolve();
+    };
+    const s = document.createElement("script");
+    s.src = "https://connect.facebook.net/fr_FR/sdk.js";
+    s.async = true;
+    s.defer = true;
+    s.onerror = () => {
+      fbSdkPromise = null;
+      reject(new Error("Le SDK Facebook n'a pas pu être chargé (bloqueur de contenu ?)."));
+    };
+    document.head.appendChild(s);
+  });
+  return fbSdkPromise;
+};
 
 type Search = { connexion?: string | undefined; message?: string | undefined };
 
@@ -52,6 +96,8 @@ function MesConnexionsPage() {
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
   const testFn = useServerFn(testMyConnection);
+  const waConfigFn = useServerFn(whatsappEmbeddedConfig);
+  const waCompleteFn = useServerFn(completeWhatsappSignup);
   const qc = useQueryClient();
 
   const list = useQuery({
@@ -111,6 +157,41 @@ function MesConnexionsPage() {
    * on le dirige vers la route relais qui redirige hors iframe.
    */
   const connect = async (key: string) => {
+    // WhatsApp Business : Embedded Signup Meta via le SDK Facebook (FB.login),
+    // sans redirection vers une URL d'autorisation construite côté backend.
+    if (key === "whatsapp") {
+      setBusy(key);
+      try {
+        const cfg = await waConfigFn({ data: undefined });
+        if (!cfg?.enabled || !cfg.appId || !cfg.configId) {
+          throw new Error("Configuration WhatsApp incomplète : App ID et Configuration ID doivent être renseignés par l'administrateur (Connecteurs → WhatsApp Business).");
+        }
+        await loadFacebookSdk(cfg.appId);
+        const code = await new Promise<string>((resolve, reject) => {
+          window.FB?.login(
+            (response) => {
+              if (response?.authResponse?.code) resolve(response.authResponse.code);
+              else reject(new Error("Connexion annulée ou non autorisée."));
+            },
+            {
+              config_id: cfg.configId,
+              response_type: "code",
+              override_default_response_type: true,
+              extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+            },
+          );
+        });
+        const res = await waCompleteFn({ data: { code } });
+        toast.success(res?.account ? `WhatsApp Business connecté (${res.account}).` : "WhatsApp Business connecté.");
+        void qc.invalidateQueries({ queryKey: ["my-connections"] });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
+      } finally {
+        setBusy(null);
+      }
+      return;
+    }
+
     setBusy(key);
 
     const inIframe = (() => {

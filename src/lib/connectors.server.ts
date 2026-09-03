@@ -1284,3 +1284,95 @@ export async function testUserConnection(
     return { ok: false, message: e instanceof Error ? e.message : "Appel API impossible." };
   }
 }
+
+/**
+ * Embedded Signup WhatsApp Business : le SDK Facebook (FB.login avec config_id)
+ * renvoie un `code` côté navigateur. On l'échange ici contre un token d'accès
+ * (sans redirect_uri — spécifique à l'Embedded Signup), puis on enregistre la
+ * connexion chiffrée comme pour le flux OAuth classique.
+ */
+export async function completeWhatsAppEmbeddedSignup(userId: string, orgId: string | null, code: string) {
+  const conf = await getConnectorConfig("whatsapp");
+  if (!conf?.isEnabled) throw new Error("Le connecteur WhatsApp Business n'est pas activé par l'administrateur.");
+  const { clientId, clientSecret } = await resolveOAuthApp("whatsapp", orgId, conf);
+
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    code,
+  });
+  const res = await fetch("https://graph.facebook.com/v20.0/oauth/access_token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+    body,
+  });
+  const data: any = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) {
+    throw new Error(data?.error?.message ?? data?.error_description ?? `Échange de jeton refusé (${res.status}).`);
+  }
+  const token = data.access_token as string;
+  const expiresIn = Number(data.expires_in ?? 0);
+
+  // Récupère les WABA autorisés via debug_token (granular_scopes → target_ids).
+  let wabaIds: string[] = [];
+  try {
+    const dbg = await fetch(
+      `https://graph.facebook.com/v20.0/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(`${clientId}|${clientSecret}`)}`,
+    );
+    const dj: any = await dbg.json();
+    wabaIds = Array.from(
+      new Set(
+        (dj?.data?.granular_scopes ?? [])
+          .filter((g: any) => g?.scope === "whatsapp_business_management" || g?.scope === "whatsapp_business_messaging")
+          .flatMap((g: any) => (Array.isArray(g?.target_ids) ? g.target_ids.map(String) : [])),
+      ),
+    );
+  } catch {
+    /* non bloquant */
+  }
+
+  const identity = await fetchAccountIdentity("whatsapp", token, data);
+  const supabase = await db();
+  const existing = await getConnectionRow(userId, "whatsapp");
+  const scopes = "whatsapp_business_management,whatsapp_business_messaging";
+
+  await supabase.from("oauth_connections").upsert(
+    {
+      user_id: userId,
+      org_id: orgId,
+      provider: "whatsapp",
+      connector_key: "whatsapp",
+      provider_user_id: String(identity.id ?? userId),
+      provider_account_id: identity.id ?? null,
+      provider_email: identity.email ?? null,
+      account_label: identity.label ?? identity.email ?? "WhatsApp Business",
+      access_token: await encryptToken(token),
+      refresh_token: null,
+      token_type: data.token_type ?? "Bearer",
+      expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
+      refresh_token_expires_at: null,
+      scopes,
+      scopes_requested: scopes,
+      scopes_granted: scopes,
+      status: "active",
+      revoked: false,
+      revoked_at: null,
+      is_active: true,
+      connected_at: existing?.connected_at ?? new Date().toISOString(),
+      last_refresh_at: new Date().toISOString(),
+      metadata: { connector: "whatsapp", flow: "embedded_signup", waba_ids: wabaIds },
+    },
+    { onConflict: "user_id,provider" },
+  );
+
+  await logConnectorCall({
+    orgId,
+    userId,
+    provider: "whatsapp",
+    action: "oauth.connect",
+    status: "ok",
+    accountId: identity.id ?? null,
+  });
+
+  return { ok: true, account: identity.label ?? identity.email ?? null, wabaIds };
+}

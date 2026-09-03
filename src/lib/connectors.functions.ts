@@ -325,3 +325,32 @@ export const testMyConnection = createServerFn({ method: "POST" })
     const { testUserConnection } = await import("./connectors.server");
     return testUserConnection(context.userId, data.connectorKey);
   });
+
+/* ------------------------------------------- WhatsApp Embedded Signup */
+
+/** Expose l'App ID Meta et le Configuration ID (non secrets) pour initialiser le SDK Facebook. */
+export const whatsappEmbeddedConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { getConnectorConfig } = await import("./connectors.server");
+    const conf = await getConnectorConfig("whatsapp");
+    const read = (key: string) =>
+      (conf?.secrets as Record<string, string> | null)?.[key] ??
+      (conf?.config as Record<string, string> | null)?.[key] ??
+      null;
+    return { appId: read("app_id"), configId: read("config_id"), enabled: Boolean(conf?.isEnabled) };
+  });
+
+/** Échange le `code` renvoyé par FB.login (Embedded Signup) contre un token et enregistre la connexion. */
+export const completeWhatsappSignup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { code: string }) => z.object({ code: z.string().min(1).max(4096) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await (context.supabase as any)
+      .from("profiles")
+      .select("current_org_id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    const { completeWhatsAppEmbeddedSignup } = await import("./connectors.server");
+    return completeWhatsAppEmbeddedSignup(context.userId, profile?.current_org_id ?? null, data.code);
+  });

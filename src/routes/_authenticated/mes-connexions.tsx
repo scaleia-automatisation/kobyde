@@ -152,30 +152,20 @@ function MesConnexionsPage() {
   );
 
   /**
-   * WhatsApp Business : Meta impose l'Embedded Signup via le SDK Facebook
-   * (FB.login avec config_id). Une redirection OAuth classique renvoie
-   * « Sorry, something went wrong ». Après l'échange du code côté serveur,
-   * on force le retour sur la page et le connecteur s'affiche « Connecté ».
+   * WhatsApp Business : on n'utilise plus FB.login (le SDK tente d'abord FedCM,
+   * qui échoue avec « Error retrieving a token », puis ouvre un popup de repli
+   * après coup — Chrome le bloque car l'activation utilisateur du clic est
+   * perdue). On ouvre donc NOUS-MÊMES la fenêtre de façon synchrone dès le clic,
+   * puis on la dirige vers l'URL d'Embedded Signup (config_id) une fois prête.
    */
-  const connectWhatsapp = async () => {
-    // Meta n'autorise l'Embedded Signup que depuis le domaine déclaré dans
-    // l'application. L'aperçu Lovable est dans une iframe et produit
-    // `status: unknown`, interprété à tort comme une annulation.
-    if (window.location.hostname !== "kobyde.com") {
-      const canonicalUrl = "https://kobyde.com/mes-connexions?whatsapp=ready";
-      const canonicalTab = window.open(canonicalUrl, "_blank", "noopener,noreferrer");
-      if (!canonicalTab) window.location.href = canonicalUrl;
-      toast.info("WhatsApp Business s'ouvre sur kobyde.com pour terminer la connexion.");
-      return;
-    }
-
+  const connectWhatsapp = async (popup: Window | null) => {
     setBusy("whatsapp");
     let connected = false;
     let stopped = false;
 
     // Surveillance serveur : la fenêtre Meta peut se terminer sur
-    // facebook.com/home.php sans jamais rappeler le SDK. Dans ce cas on
-    // détecte la connexion côté serveur et on redirige quand même.
+    // facebook.com sans jamais revenir. On détecte alors la connexion
+    // côté serveur et on rafraîchit la page.
     const watchdog = (async () => {
       for (let i = 0; i < 60 && !stopped; i += 1) {
         await new Promise((r) => setTimeout(r, 3000));
@@ -192,77 +182,46 @@ function MesConnexionsPage() {
     })();
 
     try {
-      const conf = await waConfigFn({ data: undefined });
-      if (!conf?.appId || !conf?.configId) {
-        toast.error("WhatsApp Business n'est pas encore configuré par votre administrateur.");
+      const res = await startFn({ data: { connectorKey: "whatsapp", origin: "https://kobyde.com" } });
+      if (!res?.url) {
+        popup?.close();
+        stopped = true;
+        toast.error(res?.error ?? "WhatsApp Business n'est pas encore configuré par votre administrateur.");
+        setBusy(null);
         return;
       }
-      const FB = await loadFacebookSdk(conf.appId);
-      const sdkLogin = new Promise<{ code: string | null; accessToken: string | null; status: string | null }>(
-        (resolve) => {
-          FB.login(
-            (response: any) =>
-              resolve({
-                code: response?.authResponse?.code ?? null,
-                accessToken: response?.authResponse?.accessToken ?? null,
-                status: response?.status ?? null,
-              }),
-            {
-              config_id: conf.configId,
-              response_type: "code",
-              override_default_response_type: true,
-              extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
-            },
-          );
-        },
-      );
 
-      const outcome = await Promise.race([
-        sdkLogin.then((a) => ({ kind: "sdk" as const, a })),
-        watchdog.then((ok) => (ok ? { kind: "watchdog" as const } : new Promise<never>(() => {}))),
-      ]);
+      if (popup && !popup.closed) {
+        popup.location.href = res.url;
+      } else {
+        // Popup bloqué malgré l'ouverture synchrone : navigation directe.
+        stopped = true;
+        window.location.href = res.url;
+        return;
+      }
 
-      if (outcome.kind === "watchdog") {
+      const ok = await watchdog;
+      if (ok) {
         connected = true;
+        try {
+          popup.close();
+        } catch {
+          /* la fenêtre peut déjà être fermée */
+        }
         toast.success("WhatsApp Business connecté.");
         window.location.assign("https://kobyde.com/mes-connexions?connexion=ok");
         return;
       }
-
-      const authorization = outcome.a;
-      if (!authorization.code && !authorization.accessToken) {
-        // Le SDK peut renvoyer « unknown » alors que l'autorisation a réussi :
-        // on laisse une dernière chance à la vérification serveur.
-        const late = await Promise.race([
-          watchdog,
-          new Promise<boolean>((r) => setTimeout(() => r(false), 8000)),
-        ]);
-        if (late) {
-          connected = true;
-          toast.success("WhatsApp Business connecté.");
-          window.location.assign("https://kobyde.com/mes-connexions?connexion=ok");
-          return;
-        }
-        toast.error("Connexion WhatsApp interrompue avant la fin de l'autorisation Meta. Réessayez.");
-        return;
-      }
-      await completeWaFn({
-        data: {
-          ...(authorization.code ? { code: authorization.code } : {}),
-          ...(authorization.accessToken ? { accessToken: authorization.accessToken } : {}),
-        },
-      });
-      connected = true;
-      toast.success("WhatsApp Business connecté.");
-      window.location.assign("https://kobyde.com/mes-connexions?connexion=ok");
-      return;
+      toast.error("Connexion WhatsApp non terminée. Réessayez et validez l'autorisation Meta jusqu'au bout.");
     } catch (e) {
+      popup?.close();
       toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
     } finally {
       stopped = true;
       if (!connected) setBusy(null);
     }
   };
+
 
 
   /**

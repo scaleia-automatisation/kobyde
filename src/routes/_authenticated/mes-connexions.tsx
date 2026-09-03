@@ -157,6 +157,41 @@ function MesConnexionsPage() {
    * on le dirige vers la route relais qui redirige hors iframe.
    */
   const connect = async (key: string) => {
+    // WhatsApp Business : Embedded Signup Meta via le SDK Facebook (FB.login),
+    // sans redirection vers une URL d'autorisation construite côté backend.
+    if (key === "whatsapp") {
+      setBusy(key);
+      try {
+        const cfg = await waConfigFn({ data: undefined });
+        if (!cfg?.enabled || !cfg.appId || !cfg.configId) {
+          throw new Error("Configuration WhatsApp incomplète : App ID et Configuration ID doivent être renseignés par l'administrateur (Connecteurs → WhatsApp Business).");
+        }
+        await loadFacebookSdk(cfg.appId);
+        const code = await new Promise<string>((resolve, reject) => {
+          window.FB?.login(
+            (response) => {
+              if (response?.authResponse?.code) resolve(response.authResponse.code);
+              else reject(new Error("Connexion annulée ou non autorisée."));
+            },
+            {
+              config_id: cfg.configId,
+              response_type: "code",
+              override_default_response_type: true,
+              extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+            },
+          );
+        });
+        const res = await waCompleteFn({ data: { code } });
+        toast.success(res?.account ? `WhatsApp Business connecté (${res.account}).` : "WhatsApp Business connecté.");
+        void qc.invalidateQueries({ queryKey: ["my-connections"] });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
+      } finally {
+        setBusy(null);
+      }
+      return;
+    }
+
     setBusy(key);
 
     const inIframe = (() => {

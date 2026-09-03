@@ -32,9 +32,17 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
           const { completeOAuth } = await import("@/lib/connectors.server");
           const result = await completeOAuth(params.connector, code, state, origin);
           const target = new URL(result.redirectTo);
+          // Force le domaine canonique sur la page de retour.
+          if (url.hostname !== "localhost") {
+            target.protocol = "https:";
+            target.host = "kobyde.com";
+          }
           target.searchParams.set("connexion", "ok");
           target.searchParams.set("connecteur", params.connector);
-          return new Response(null, { status: 302, headers: { location: target.toString() } });
+          return new Response(null, {
+            status: 302,
+            headers: { location: target.toString(), "cache-control": "no-store" },
+          });
         } catch (e) {
           return back("error", e instanceof Error ? e.message : "Connexion impossible.");
         }

@@ -360,5 +360,8 @@ export const completeWhatsappSignup = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     const { completeWhatsAppEmbeddedSignup } = await import("./connectors.server");
-    return completeWhatsAppEmbeddedSignup(context.userId, profile?.current_org_id ?? null, data);
+    const authorization: { code?: string; accessToken?: string } = {};
+    if (data.code) authorization.code = data.code;
+    if (data.accessToken) authorization.accessToken = data.accessToken;
+    return completeWhatsAppEmbeddedSignup(context.userId, profile?.current_org_id ?? null, authorization);
   });

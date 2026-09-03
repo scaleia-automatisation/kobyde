@@ -38,6 +38,9 @@ declare global {
 }
 
 let fbSdkPromise: Promise<void> | null = null;
+/** Config WhatsApp Embedded Signup préchargée (App ID + Configuration ID). */
+let waConfigCache: { appId: string; configId: string } | null = null;
+let waConfigPromise: Promise<{ appId: string; configId: string } | null> | null = null;
 
 /** Charge le SDK Facebook une seule fois et l'initialise avec l'App ID Meta. */
 const loadFacebookSdk = (appId: string): Promise<void> => {
@@ -137,6 +140,21 @@ function MesConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message, qc]);
 
+  // Précharge la config WhatsApp (App ID + config_id) et le SDK Facebook dès
+  // l'affichage de la page, pour que FB.login parte immédiatement au clic.
+  useEffect(() => {
+    if (!items.some((c) => c.key === "whatsapp")) return;
+    if (!waConfigPromise) {
+      waConfigPromise = waConfigFn({ data: undefined })
+        .then((cfg) => {
+          waConfigCache = cfg?.appId && cfg?.configId ? { appId: cfg.appId, configId: cfg.configId } : null;
+          if (waConfigCache) void loadFacebookSdk(waConfigCache.appId).catch(() => undefined);
+          return waConfigCache;
+        })
+        .catch(() => null);
+    }
+  }, [items, waConfigFn]);
+
   // Uniquement les plateformes OAuth que l'utilisateur autorise avec son propre compte.
   const oauthItems = useMemo(
     () =>
@@ -162,16 +180,34 @@ function MesConnexionsPage() {
     if (key === "whatsapp") {
       setBusy(key);
       try {
-        const cfg = await waConfigFn({ data: undefined });
-        if (!cfg?.enabled || !cfg.appId || !cfg.configId) {
+        // Utiliser la config préchargée si possible : FB.login doit être appelé
+        // le plus vite possible après le clic, sinon le navigateur considère
+        // la fenêtre comme non sollicitée et Meta la ferme (réponse sans code).
+        let cfg = waConfigCache;
+        if (!cfg) {
+          const fetched = await waConfigFn({ data: undefined });
+          cfg = fetched?.appId && fetched?.configId ? { appId: fetched.appId, configId: fetched.configId } : null;
+        }
+        if (!cfg) {
           throw new Error("Configuration WhatsApp incomplète : App ID et Configuration ID doivent être renseignés par l'administrateur (Connecteurs → WhatsApp Business).");
         }
         await loadFacebookSdk(cfg.appId);
         const code = await new Promise<string>((resolve, reject) => {
           window.FB?.login(
             (response) => {
-              if (response?.authResponse?.code) resolve(response.authResponse.code);
-              else reject(new Error("Connexion annulée ou non autorisée."));
+              const r = response as { authResponse?: { code?: string } | null; status?: string } | null;
+              if (r?.authResponse?.code) {
+                resolve(r.authResponse.code);
+              } else {
+                console.error("[WhatsApp] FB.login sans code :", r);
+                reject(
+                  new Error(
+                    r?.status === "unknown"
+                      ? "La fenêtre Meta a été fermée ou bloquée avant la fin de la connexion. Réessayez en autorisant les popups pour kobyde.com."
+                      : "Connexion annulée ou non autorisée par Meta. Vérifiez que l'application Meta est active et que la configuration Embedded Signup (config_id) est valide.",
+                  ),
+                );
+              }
             },
             {
               config_id: cfg.configId,

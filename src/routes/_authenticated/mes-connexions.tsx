@@ -13,36 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 import {
-  completeWhatsappSignup,
   disconnectConnection,
   myConnections,
   startConnection,
   testMyConnection,
   toggleMyConnection,
-  whatsappEmbeddedConfig,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP } from "@/lib/connectors.catalog";
-
-/** Charge (une seule fois) le SDK Facebook nécessaire à l'Embedded Signup WhatsApp. */
-function loadFacebookSdk(appId: string): Promise<any> {
-  const w = window as any;
-  if (w.FB) return Promise.resolve(w.FB);
-  return new Promise((resolve, reject) => {
-    w.fbAsyncInit = () => {
-      w.FB.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
-      resolve(w.FB);
-    };
-    const existing = document.getElementById("facebook-jssdk");
-    if (existing) return;
-    const script = document.createElement("script");
-    script.id = "facebook-jssdk";
-    script.async = true;
-    script.defer = true;
-    script.src = "https://connect.facebook.net/fr_FR/sdk.js";
-    script.onerror = () => reject(new Error("Impossible de charger le SDK Meta."));
-    document.body.appendChild(script);
-  });
-}
 
 type Search = { connexion?: string | undefined; message?: string | undefined; whatsapp?: string | undefined };
 
@@ -76,8 +53,6 @@ function MesConnexionsPage() {
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
   const testFn = useServerFn(testMyConnection);
-  const waConfigFn = useServerFn(whatsappEmbeddedConfig);
-  const completeWaFn = useServerFn(completeWhatsappSignup);
   const qc = useQueryClient();
 
   const list = useQuery({

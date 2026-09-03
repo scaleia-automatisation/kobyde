@@ -163,15 +163,9 @@ function MesConnexionsPage() {
     // `status: unknown`, interprété à tort comme une annulation.
     if (window.location.hostname !== "kobyde.com") {
       const canonicalUrl = "https://kobyde.com/mes-connexions?whatsapp=ready";
-      try {
-        if (window.top && window.top !== window.self) {
-          window.top.location.href = canonicalUrl;
-        } else {
-          window.location.href = canonicalUrl;
-        }
-      } catch {
-        window.open(canonicalUrl, "_blank", "noopener,noreferrer");
-      }
+      const canonicalTab = window.open(canonicalUrl, "_blank", "noopener,noreferrer");
+      if (!canonicalTab) window.location.href = canonicalUrl;
+      toast.info("WhatsApp Business s'ouvre sur kobyde.com pour terminer la connexion.");
       return;
     }
 

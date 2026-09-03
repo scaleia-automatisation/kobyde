@@ -127,6 +127,48 @@ function MesConnexionsPage() {
   );
 
   /**
+   * WhatsApp Business : Meta impose l'Embedded Signup via le SDK Facebook
+   * (FB.login avec config_id). Une redirection OAuth classique renvoie
+   * « Sorry, something went wrong ». Après l'échange du code côté serveur,
+   * on force le retour sur la page et le connecteur s'affiche « Connecté ».
+   */
+  const connectWhatsapp = async () => {
+    setBusy("whatsapp");
+    try {
+      const conf = await waConfigFn({ data: undefined });
+      if (!conf?.appId || !conf?.configId) {
+        toast.error("WhatsApp Business n'est pas encore configuré par votre administrateur.");
+        return;
+      }
+      const FB = await loadFacebookSdk(conf.appId);
+      const code = await new Promise<string | null>((resolve) => {
+        FB.login(
+          (response: any) => resolve(response?.authResponse?.code ?? null),
+          {
+            config_id: conf.configId,
+            response_type: "code",
+            override_default_response_type: true,
+            extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+          },
+        );
+      });
+      if (!code) {
+        toast.error("Connexion annulée : l'autorisation Meta n'a pas été accordée.");
+        return;
+      }
+      await completeWaFn({ data: { code } });
+      toast.success("WhatsApp Business connecté.");
+      await qc.invalidateQueries({ queryKey: ["my-connections"] });
+      // Redirection directe pour repartir sur un état propre.
+      window.location.href = "/mes-connexions?connexion=ok";
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /**
    * Les pages d'autorisation (Google, TikTok, LinkedIn, Meta…) refusent d'être
    * affichées dans une iframe (X-Frame-Options → ERR_BLOCKED_BY_RESPONSE).
    * On ouvre donc l'onglet IMMÉDIATEMENT dans le gestionnaire de clic

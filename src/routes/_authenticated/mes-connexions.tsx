@@ -96,6 +96,8 @@ function MesConnexionsPage() {
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
   const testFn = useServerFn(testMyConnection);
+  const waConfigFn = useServerFn(whatsappEmbeddedConfig);
+  const waCompleteFn = useServerFn(completeWhatsappSignup);
   const qc = useQueryClient();
 
   const list = useQuery({

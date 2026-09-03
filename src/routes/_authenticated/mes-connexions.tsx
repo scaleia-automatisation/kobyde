@@ -171,6 +171,26 @@ function MesConnexionsPage() {
 
     setBusy("whatsapp");
     let connected = false;
+    let stopped = false;
+
+    // Surveillance serveur : la fenêtre Meta peut se terminer sur
+    // facebook.com/home.php sans jamais rappeler le SDK. Dans ce cas on
+    // détecte la connexion côté serveur et on redirige quand même.
+    const watchdog = (async () => {
+      for (let i = 0; i < 60 && !stopped; i += 1) {
+        await new Promise((r) => setTimeout(r, 3000));
+        if (stopped) return false;
+        try {
+          const fresh = await listFn({ data: undefined });
+          const wa = (fresh ?? []).find((c: { key: string; connected?: boolean }) => c.key === "whatsapp");
+          if (wa?.connected) return true;
+        } catch {
+          /* ignoré : on réessaie au tour suivant */
+        }
+      }
+      return false;
+    })();
+
     try {
       const conf = await waConfigFn({ data: undefined });
       if (!conf?.appId || !conf?.configId) {
@@ -178,30 +198,52 @@ function MesConnexionsPage() {
         return;
       }
       const FB = await loadFacebookSdk(conf.appId);
-      const authorization = await new Promise<{ code: string | null; accessToken: string | null; status: string | null }>(
+      const sdkLogin = new Promise<{ code: string | null; accessToken: string | null; status: string | null }>(
         (resolve) => {
-        FB.login(
-          (response: any) =>
-            resolve({
-              code: response?.authResponse?.code ?? null,
-              accessToken: response?.authResponse?.accessToken ?? null,
-              status: response?.status ?? null,
-            }),
-          {
-            config_id: conf.configId,
-            response_type: "code",
-            override_default_response_type: true,
-            extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
-          },
-        );
+          FB.login(
+            (response: any) =>
+              resolve({
+                code: response?.authResponse?.code ?? null,
+                accessToken: response?.authResponse?.accessToken ?? null,
+                status: response?.status ?? null,
+              }),
+            {
+              config_id: conf.configId,
+              response_type: "code",
+              override_default_response_type: true,
+              extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+            },
+          );
         },
       );
+
+      const outcome = await Promise.race([
+        sdkLogin.then((a) => ({ kind: "sdk" as const, a })),
+        watchdog.then((ok) => (ok ? { kind: "watchdog" as const } : new Promise<never>(() => {}))),
+      ]);
+
+      if (outcome.kind === "watchdog") {
+        connected = true;
+        toast.success("WhatsApp Business connecté.");
+        window.location.assign("https://kobyde.com/mes-connexions?connexion=ok");
+        return;
+      }
+
+      const authorization = outcome.a;
       if (!authorization.code && !authorization.accessToken) {
-        toast.error(
-          authorization.status === "unknown"
-            ? "Meta n'a pas pu vérifier la session. Rechargez cette page sur kobyde.com puis réessayez."
-            : "Connexion WhatsApp interrompue avant la fin de l'autorisation Meta.",
-        );
+        // Le SDK peut renvoyer « unknown » alors que l'autorisation a réussi :
+        // on laisse une dernière chance à la vérification serveur.
+        const late = await Promise.race([
+          watchdog,
+          new Promise<boolean>((r) => setTimeout(() => r(false), 8000)),
+        ]);
+        if (late) {
+          connected = true;
+          toast.success("WhatsApp Business connecté.");
+          window.location.assign("https://kobyde.com/mes-connexions?connexion=ok");
+          return;
+        }
+        toast.error("Connexion WhatsApp interrompue avant la fin de l'autorisation Meta. Réessayez.");
         return;
       }
       await completeWaFn({
@@ -212,17 +254,16 @@ function MesConnexionsPage() {
       });
       connected = true;
       toast.success("WhatsApp Business connecté.");
-      // Ne pas attendre le rafraîchissement React Query : il pouvait retenir la
-      // page après la fermeture de la fenêtre Meta. Le retour est désormais
-      // immédiat et recharge l'état connecté depuis le serveur.
       window.location.assign("https://kobyde.com/mes-connexions?connexion=ok");
       return;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
     } finally {
+      stopped = true;
       if (!connected) setBusy(null);
     }
   };
+
 
   /**
    * Les pages d'autorisation (Google, TikTok, LinkedIn, Meta…) refusent d'être

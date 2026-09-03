@@ -426,6 +426,36 @@ export async function testConnector(key: string) {
         `Meta refuse ce couple App ID / App Secret${code ? ` (code ${code})` : ""} : ${detail}. Vérifiez que les deux valeurs proviennent exactement de la même application Meta et que celle-ci est active.`,
       );
     }
+    if (key === "whatsapp") {
+      const appId = String(conf.config["app_id"] ?? s["app_id"] ?? "").trim();
+      const appSecret = String(s["app_secret"] ?? "").trim();
+      if (!/^\d{10,20}$/.test(appId)) {
+        return finish(false, "App ID Meta invalide : saisissez uniquement l’identifiant numérique de l’application.");
+      }
+      if (!/^[a-f0-9]{32}$/i.test(appSecret)) {
+        return finish(
+          false,
+          "App Secret Meta invalide : recopiez la clé secrète de 32 caractères depuis Paramètres de l’application > Général.",
+        );
+      }
+      const tokenProbe = await probe("https://graph.facebook.com/v20.0/oauth/access_token", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+        body: new URLSearchParams({ client_id: appId, client_secret: appSecret, grant_type: "client_credentials" }),
+      });
+      if (tokenProbe.ok) {
+        return finish(
+          true,
+          "Appel API Meta (WhatsApp Business) réussi (200) — application authentifiée. Les utilisateurs peuvent connecter leur WhatsApp Business depuis « Mes connexions ».",
+        );
+      }
+      const detail = tokenProbe.json?.error?.message ?? "identifiants refusés";
+      const code = tokenProbe.json?.error?.code;
+      return finish(
+        false,
+        `Meta refuse ce couple App ID / App Secret${code ? ` (code ${code})` : ""} : ${detail}. Vérifiez que les deux valeurs proviennent de la même application Meta que celle configurée pour l’Embedded Signup WhatsApp.`,
+      );
+    }
     if (key === "notion") {
       const { clientId, clientSecret } = appCredentials(conf);
       if (!clientId || !clientSecret) {

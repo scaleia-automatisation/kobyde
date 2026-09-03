@@ -341,10 +341,18 @@ export const whatsappEmbeddedConfig = createServerFn({ method: "POST" })
     return { appId: read("app_id"), configId: read("config_id"), enabled: Boolean(conf?.isEnabled) };
   });
 
-/** Échange le `code` renvoyé par FB.login (Embedded Signup) contre un token et enregistre la connexion. */
+/** Enregistre l'autorisation renvoyée par FB.login (code ou jeton Embedded Signup). */
 export const completeWhatsappSignup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { code: string }) => z.object({ code: z.string().min(1).max(4096) }).parse(d))
+  .inputValidator((d: { code?: string; accessToken?: string }) =>
+    z
+      .object({
+        code: z.string().min(1).max(4096).optional(),
+        accessToken: z.string().min(1).max(8192).optional(),
+      })
+      .refine((value) => Boolean(value.code || value.accessToken), "Autorisation Meta manquante.")
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { data: profile } = await (context.supabase as any)
       .from("profiles")
@@ -352,5 +360,8 @@ export const completeWhatsappSignup = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     const { completeWhatsAppEmbeddedSignup } = await import("./connectors.server");
-    return completeWhatsAppEmbeddedSignup(context.userId, profile?.current_org_id ?? null, data.code);
+    const authorization: { code?: string; accessToken?: string } = {};
+    if (data.code) authorization.code = data.code;
+    if (data.accessToken) authorization.accessToken = data.accessToken;
+    return completeWhatsAppEmbeddedSignup(context.userId, profile?.current_org_id ?? null, authorization);
   });

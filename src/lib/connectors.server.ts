@@ -1321,24 +1321,44 @@ export async function testUserConnection(
  * (sans redirect_uri — spécifique à l'Embedded Signup), puis on enregistre la
  * connexion chiffrée comme pour le flux OAuth classique.
  */
-export async function completeWhatsAppEmbeddedSignup(userId: string, orgId: string | null, code: string) {
+export async function completeWhatsAppEmbeddedSignup(
+  userId: string,
+  orgId: string | null,
+  authorization: { code?: string; accessToken?: string },
+) {
   const conf = await getConnectorConfig("whatsapp");
   if (!conf?.isEnabled) throw new Error("Le connecteur WhatsApp Business n'est pas activé par l'administrateur.");
   const { clientId, clientSecret } = await resolveOAuthApp("whatsapp", orgId, conf);
 
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    code,
-  });
-  const res = await fetch("https://graph.facebook.com/v20.0/oauth/access_token", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
-    body,
-  });
-  const data: any = await res.json().catch(() => ({}));
-  if (!res.ok || !data.access_token) {
-    throw new Error(data?.error?.message ?? data?.error_description ?? `Échange de jeton refusé (${res.status}).`);
+  let data: any;
+  if (authorization.code) {
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: authorization.code,
+    });
+    const res = await fetch("https://graph.facebook.com/v20.0/oauth/access_token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+      body,
+    });
+    data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.access_token) {
+      throw new Error(data?.error?.message ?? data?.error_description ?? `Échange de jeton refusé (${res.status}).`);
+    }
+  } else {
+    const accessToken = authorization.accessToken ?? "";
+    const verification = await probe(
+      `https://graph.facebook.com/v20.0/debug_token?input_token=${encodeURIComponent(accessToken)}&access_token=${encodeURIComponent(`${clientId}|${clientSecret}`)}`,
+    );
+    if (!verification.ok || verification.json?.data?.is_valid !== true) {
+      throw new Error("Le jeton renvoyé par Meta est invalide ou n'appartient pas à l'application Kobyde.");
+    }
+    data = {
+      access_token: accessToken,
+      token_type: "Bearer",
+      expires_in: Math.max(0, Number(verification.json?.data?.expires_at ?? 0) - Math.floor(Date.now() / 1000)),
+    };
   }
   const token = data.access_token as string;
   const expiresIn = Number(data.expires_in ?? 0);

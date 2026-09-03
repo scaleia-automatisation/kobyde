@@ -140,6 +140,21 @@ function MesConnexionsPage() {
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
   }, [search.connexion, search.message, qc]);
 
+  // Précharge la config WhatsApp (App ID + config_id) et le SDK Facebook dès
+  // l'affichage de la page, pour que FB.login parte immédiatement au clic.
+  useEffect(() => {
+    if (!items.some((c) => c.key === "whatsapp")) return;
+    if (!waConfigPromise) {
+      waConfigPromise = waConfigFn({ data: undefined })
+        .then((cfg) => {
+          waConfigCache = cfg?.appId && cfg?.configId ? { appId: cfg.appId, configId: cfg.configId } : null;
+          if (waConfigCache) void loadFacebookSdk(waConfigCache.appId).catch(() => undefined);
+          return waConfigCache;
+        })
+        .catch(() => null);
+    }
+  }, [items, waConfigFn]);
+
   // Uniquement les plateformes OAuth que l'utilisateur autorise avec son propre compte.
   const oauthItems = useMemo(
     () =>

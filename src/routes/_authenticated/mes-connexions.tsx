@@ -13,60 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 import {
-  completeWhatsappSignup,
   disconnectConnection,
   myConnections,
   startConnection,
   testMyConnection,
   toggleMyConnection,
-  whatsappEmbeddedConfig,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP } from "@/lib/connectors.catalog";
-
-/* SDK Facebook (Embedded Signup WhatsApp Business) */
-declare global {
-  interface Window {
-    FB?: {
-      init: (opts: { appId: string; cookie?: boolean; xfbml?: boolean; version: string }) => void;
-      login: (
-        cb: (response: { authResponse?: { code?: string } | null }) => void,
-        opts: Record<string, unknown>,
-      ) => void;
-    };
-    fbAsyncInit?: () => void;
-  }
-}
-
-let fbSdkPromise: Promise<void> | null = null;
-/** Config WhatsApp Embedded Signup préchargée (App ID + Configuration ID). */
-let waConfigCache: { appId: string; configId: string } | null = null;
-let waConfigPromise: Promise<{ appId: string; configId: string } | null> | null = null;
-
-/** Charge le SDK Facebook une seule fois et l'initialise avec l'App ID Meta. */
-const loadFacebookSdk = (appId: string): Promise<void> => {
-  if (fbSdkPromise) return fbSdkPromise;
-  fbSdkPromise = new Promise<void>((resolve, reject) => {
-    if (window.FB) {
-      window.FB.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
-      resolve();
-      return;
-    }
-    window.fbAsyncInit = () => {
-      window.FB?.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
-      resolve();
-    };
-    const s = document.createElement("script");
-    s.src = "https://connect.facebook.net/fr_FR/sdk.js";
-    s.async = true;
-    s.defer = true;
-    s.onerror = () => {
-      fbSdkPromise = null;
-      reject(new Error("Le SDK Facebook n'a pas pu être chargé (bloqueur de contenu ?)."));
-    };
-    document.head.appendChild(s);
-  });
-  return fbSdkPromise;
-};
 
 type Search = { connexion?: string | undefined; message?: string | undefined; whatsapp?: string | undefined };
 
@@ -100,8 +53,6 @@ function MesConnexionsPage() {
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
   const testFn = useServerFn(testMyConnection);
-  const waConfigFn = useServerFn(whatsappEmbeddedConfig);
-  const waCompleteFn = useServerFn(completeWhatsappSignup);
   const qc = useQueryClient();
 
   const list = useQuery({
@@ -161,25 +112,7 @@ function MesConnexionsPage() {
       void qc.invalidateQueries({ queryKey: ["my-connections"] });
     }
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
-    if (search.whatsapp === "ready") {
-      toast.info("Cliquez à nouveau sur « Se connecter à WhatsApp Business » pour ouvrir la fenêtre Meta.");
-    }
   }, [search.connexion, search.message, search.whatsapp, qc]);
-
-  // Précharge la config WhatsApp (App ID + config_id) et le SDK Facebook dès
-  // l'affichage de la page, pour que FB.login parte immédiatement au clic.
-  useEffect(() => {
-    if (!items.some((c) => c.key === "whatsapp")) return;
-    if (!waConfigPromise) {
-      waConfigPromise = waConfigFn({ data: undefined })
-        .then((cfg) => {
-          waConfigCache = cfg?.appId && cfg?.configId ? { appId: cfg.appId, configId: cfg.configId } : null;
-          if (waConfigCache) void loadFacebookSdk(waConfigCache.appId).catch(() => undefined);
-          return waConfigCache;
-        })
-        .catch(() => null);
-    }
-  }, [items, waConfigFn]);
 
   // Uniquement les plateformes OAuth que l'utilisateur autorise avec son propre compte.
   const oauthItems = useMemo(

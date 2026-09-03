@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getPaymentRequest, startStripeCheckout } from "@/lib/portal.functions";
+import { confirmStripeCheckout, getPaymentRequest, startStripeCheckout } from "@/lib/portal.functions";
 import { usePortalTracking } from "@/lib/use-portal-tracking";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

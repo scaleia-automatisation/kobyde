@@ -170,6 +170,7 @@ function MesConnexionsPage() {
     }
 
     setBusy("whatsapp");
+    let connected = false;
     try {
       const conf = await waConfigFn({ data: undefined });
       if (!conf?.appId || !conf?.configId) {
@@ -209,14 +210,17 @@ function MesConnexionsPage() {
           ...(authorization.accessToken ? { accessToken: authorization.accessToken } : {}),
         },
       });
+      connected = true;
       toast.success("WhatsApp Business connecté.");
-      await qc.invalidateQueries({ queryKey: ["my-connections"] });
-      // Redirection directe pour repartir sur un état propre.
-      window.location.replace("https://kobyde.com/mes-connexions?connexion=ok");
+      // Ne pas attendre le rafraîchissement React Query : il pouvait retenir la
+      // page après la fermeture de la fenêtre Meta. Le retour est désormais
+      // immédiat et recharge l'état connecté depuis le serveur.
+      window.location.assign("https://kobyde.com/mes-connexions?connexion=ok");
+      return;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
     } finally {
-      setBusy(null);
+      if (!connected) setBusy(null);
     }
   };
 
@@ -354,9 +358,9 @@ function MesConnexionsPage() {
               <p className="text-sm text-muted-foreground">{c.description}</p>
               {c.account && <p className="text-xs text-muted-foreground">Compte : {c.account}</p>}
               {results[c.key] && (
-                <p className={`text-sm ${results[c.key]!.ok ? "text-emerald-600" : "text-destructive"}`}>
-                  {results[c.key]!.ok ? "✓ " : "✕ "}
-                  {results[c.key]!.message}
+                <p className={`text-sm ${results[c.key]?.ok ? "text-emerald-600" : "text-destructive"}`}>
+                  {results[c.key]?.ok ? "✓ " : "✕ "}
+                  {results[c.key]?.message}
                 </p>
               )}
             </div>

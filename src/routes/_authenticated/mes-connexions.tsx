@@ -13,13 +13,57 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 import {
+  completeWhatsappSignup,
   disconnectConnection,
   myConnections,
   startConnection,
   testMyConnection,
   toggleMyConnection,
+  whatsappEmbeddedConfig,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP } from "@/lib/connectors.catalog";
+
+/* SDK Facebook (Embedded Signup WhatsApp Business) */
+declare global {
+  interface Window {
+    FB?: {
+      init: (opts: { appId: string; cookie?: boolean; xfbml?: boolean; version: string }) => void;
+      login: (
+        cb: (response: { authResponse?: { code?: string } | null }) => void,
+        opts: Record<string, unknown>,
+      ) => void;
+    };
+    fbAsyncInit?: () => void;
+  }
+}
+
+let fbSdkPromise: Promise<void> | null = null;
+
+/** Charge le SDK Facebook une seule fois et l'initialise avec l'App ID Meta. */
+const loadFacebookSdk = (appId: string): Promise<void> => {
+  if (fbSdkPromise) return fbSdkPromise;
+  fbSdkPromise = new Promise<void>((resolve, reject) => {
+    if (window.FB) {
+      window.FB.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
+      resolve();
+      return;
+    }
+    window.fbAsyncInit = () => {
+      window.FB?.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
+      resolve();
+    };
+    const s = document.createElement("script");
+    s.src = "https://connect.facebook.net/fr_FR/sdk.js";
+    s.async = true;
+    s.defer = true;
+    s.onerror = () => {
+      fbSdkPromise = null;
+      reject(new Error("Le SDK Facebook n'a pas pu être chargé (bloqueur de contenu ?)."));
+    };
+    document.head.appendChild(s);
+  });
+  return fbSdkPromise;
+};
 
 type Search = { connexion?: string | undefined; message?: string | undefined };
 

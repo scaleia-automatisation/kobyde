@@ -38,6 +38,9 @@ declare global {
 }
 
 let fbSdkPromise: Promise<void> | null = null;
+/** Config WhatsApp Embedded Signup préchargée (App ID + Configuration ID). */
+let waConfigCache: { appId: string; configId: string } | null = null;
+let waConfigPromise: Promise<{ appId: string; configId: string } | null> | null = null;
 
 /** Charge le SDK Facebook une seule fois et l'initialise avec l'App ID Meta. */
 const loadFacebookSdk = (appId: string): Promise<void> => {

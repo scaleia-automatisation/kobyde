@@ -165,16 +165,34 @@ function MesConnexionsPage() {
     if (key === "whatsapp") {
       setBusy(key);
       try {
-        const cfg = await waConfigFn({ data: undefined });
-        if (!cfg?.enabled || !cfg.appId || !cfg.configId) {
+        // Utiliser la config préchargée si possible : FB.login doit être appelé
+        // le plus vite possible après le clic, sinon le navigateur considère
+        // la fenêtre comme non sollicitée et Meta la ferme (réponse sans code).
+        let cfg = waConfigCache;
+        if (!cfg) {
+          const fetched = await waConfigFn({ data: undefined });
+          cfg = fetched?.appId && fetched?.configId ? { appId: fetched.appId, configId: fetched.configId } : null;
+        }
+        if (!cfg) {
           throw new Error("Configuration WhatsApp incomplète : App ID et Configuration ID doivent être renseignés par l'administrateur (Connecteurs → WhatsApp Business).");
         }
         await loadFacebookSdk(cfg.appId);
         const code = await new Promise<string>((resolve, reject) => {
           window.FB?.login(
             (response) => {
-              if (response?.authResponse?.code) resolve(response.authResponse.code);
-              else reject(new Error("Connexion annulée ou non autorisée."));
+              const r = response as { authResponse?: { code?: string } | null; status?: string } | null;
+              if (r?.authResponse?.code) {
+                resolve(r.authResponse.code);
+              } else {
+                console.error("[WhatsApp] FB.login sans code :", r);
+                reject(
+                  new Error(
+                    r?.status === "unknown"
+                      ? "La fenêtre Meta a été fermée ou bloquée avant la fin de la connexion. Réessayez en autorisant les popups pour kobyde.com."
+                      : "Connexion annulée ou non autorisée par Meta. Vérifiez que l'application Meta est active et que la configuration Embedded Signup (config_id) est valide.",
+                  ),
+                );
+              }
             },
             {
               config_id: cfg.configId,

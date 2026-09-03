@@ -13,13 +13,36 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 import {
+  completeWhatsappSignup,
   disconnectConnection,
   myConnections,
   startConnection,
   testMyConnection,
   toggleMyConnection,
+  whatsappEmbeddedConfig,
 } from "@/lib/connectors.functions";
 import { CONNECTOR_MAP } from "@/lib/connectors.catalog";
+
+/** Charge (une seule fois) le SDK Facebook nécessaire à l'Embedded Signup WhatsApp. */
+function loadFacebookSdk(appId: string): Promise<any> {
+  const w = window as any;
+  if (w.FB) return Promise.resolve(w.FB);
+  return new Promise((resolve, reject) => {
+    w.fbAsyncInit = () => {
+      w.FB.init({ appId, cookie: true, xfbml: true, version: "v20.0" });
+      resolve(w.FB);
+    };
+    const existing = document.getElementById("facebook-jssdk");
+    if (existing) return;
+    const script = document.createElement("script");
+    script.id = "facebook-jssdk";
+    script.async = true;
+    script.defer = true;
+    script.src = "https://connect.facebook.net/fr_FR/sdk.js";
+    script.onerror = () => reject(new Error("Impossible de charger le SDK Meta."));
+    document.body.appendChild(script);
+  });
+}
 
 type Search = { connexion?: string | undefined; message?: string | undefined; whatsapp?: string | undefined };
 
@@ -53,6 +76,8 @@ function MesConnexionsPage() {
   const stopFn = useServerFn(disconnectConnection);
   const toggleFn = useServerFn(toggleMyConnection);
   const testFn = useServerFn(testMyConnection);
+  const waConfigFn = useServerFn(whatsappEmbeddedConfig);
+  const completeWaFn = useServerFn(completeWhatsappSignup);
   const qc = useQueryClient();
 
   const list = useQuery({
@@ -127,6 +152,48 @@ function MesConnexionsPage() {
   );
 
   /**
+   * WhatsApp Business : Meta impose l'Embedded Signup via le SDK Facebook
+   * (FB.login avec config_id). Une redirection OAuth classique renvoie
+   * « Sorry, something went wrong ». Après l'échange du code côté serveur,
+   * on force le retour sur la page et le connecteur s'affiche « Connecté ».
+   */
+  const connectWhatsapp = async () => {
+    setBusy("whatsapp");
+    try {
+      const conf = await waConfigFn({ data: undefined });
+      if (!conf?.appId || !conf?.configId) {
+        toast.error("WhatsApp Business n'est pas encore configuré par votre administrateur.");
+        return;
+      }
+      const FB = await loadFacebookSdk(conf.appId);
+      const code = await new Promise<string | null>((resolve) => {
+        FB.login(
+          (response: any) => resolve(response?.authResponse?.code ?? null),
+          {
+            config_id: conf.configId,
+            response_type: "code",
+            override_default_response_type: true,
+            extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+          },
+        );
+      });
+      if (!code) {
+        toast.error("Connexion annulée : l'autorisation Meta n'a pas été accordée.");
+        return;
+      }
+      await completeWaFn({ data: { code } });
+      toast.success("WhatsApp Business connecté.");
+      await qc.invalidateQueries({ queryKey: ["my-connections"] });
+      // Redirection directe pour repartir sur un état propre.
+      window.location.href = "/mes-connexions?connexion=ok";
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /**
    * Les pages d'autorisation (Google, TikTok, LinkedIn, Meta…) refusent d'être
    * affichées dans une iframe (X-Frame-Options → ERR_BLOCKED_BY_RESPONSE).
    * On ouvre donc l'onglet IMMÉDIATEMENT dans le gestionnaire de clic
@@ -134,7 +201,10 @@ function MesConnexionsPage() {
    * on le dirige vers la route relais qui redirige hors iframe.
    */
   const connect = async (key: string) => {
-
+    if (key === "whatsapp") {
+      await connectWhatsapp();
+      return;
+    }
 
     setBusy(key);
 

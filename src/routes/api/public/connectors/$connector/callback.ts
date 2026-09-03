@@ -6,7 +6,10 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
     handlers: {
       GET: async ({ request, params }) => {
         const url = new URL(request.url);
-        const origin = url.origin;
+        // Toujours revenir sur le domaine canonique : l'utilisateur doit
+        // atterrir sur https://kobyde.com/mes-connexions, jamais sur une
+        // origine d'aperçu ou un domaine secondaire (www, preview…).
+        const origin = url.hostname === "localhost" ? url.origin : "https://kobyde.com";
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
         const error = url.searchParams.get("error_description") ?? url.searchParams.get("error");
@@ -18,6 +21,7 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
               location: `${origin}/mes-connexions?connexion=${status}&connecteur=${encodeURIComponent(
                 params.connector,
               )}${message ? `&message=${encodeURIComponent(message)}` : ""}`,
+              "cache-control": "no-store",
             },
           });
 

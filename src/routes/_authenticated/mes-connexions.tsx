@@ -201,73 +201,7 @@ function MesConnexionsPage() {
    * on le dirige vers la route relais qui redirige hors iframe.
    */
   const connect = async (key: string) => {
-    // WhatsApp Business : Embedded Signup Meta via le SDK Facebook (FB.login),
-    // sans redirection vers une URL d'autorisation construite côté backend.
-    if (key === "whatsapp") {
-      // Meta Embedded Signup doit être lancé depuis le domaine public déclaré
-      // dans l'application Meta. L'aperçu Lovable est affiché dans une iframe
-      // sur un autre domaine : FB.login y renvoie `status: unknown` même quand
-      // la configuration est correcte. On transfère donc d'abord l'utilisateur
-      // vers kobyde.com, dans un nouvel onglet ouvert par le clic lui-même.
-      if (window.location.hostname !== "kobyde.com" && window.location.hostname !== "www.kobyde.com") {
-        const publicPage = window.open("https://kobyde.com/mes-connexions?whatsapp=ready", "_blank", "noopener,noreferrer");
-        if (publicPage) {
-          toast.info("WhatsApp Business s'ouvre sur kobyde.com. Continuez la connexion dans ce nouvel onglet.");
-        } else {
-          window.location.href = "https://kobyde.com/mes-connexions?whatsapp=ready";
-        }
-        return;
-      }
 
-      setBusy(key);
-      try {
-        // Utiliser la config préchargée si possible : FB.login doit être appelé
-        // le plus vite possible après le clic, sinon le navigateur considère
-        // la fenêtre comme non sollicitée et Meta la ferme (réponse sans code).
-        let cfg = waConfigCache;
-        if (!cfg) {
-          const fetched = await waConfigFn({ data: undefined });
-          cfg = fetched?.appId && fetched?.configId ? { appId: fetched.appId, configId: fetched.configId } : null;
-        }
-        if (!cfg) {
-          throw new Error("Configuration WhatsApp incomplète : App ID et Configuration ID doivent être renseignés par l'administrateur (Connecteurs → WhatsApp Business).");
-        }
-        await loadFacebookSdk(cfg.appId);
-        const code = await new Promise<string>((resolve, reject) => {
-          window.FB?.login(
-            (response) => {
-              const r = response as { authResponse?: { code?: string } | null; status?: string } | null;
-              if (r?.authResponse?.code) {
-                resolve(r.authResponse.code);
-              } else {
-                console.error("[WhatsApp] FB.login sans code :", r);
-                reject(
-                  new Error(
-                    r?.status === "unknown"
-                      ? "Meta n'a pas terminé l'autorisation. Vérifiez que les popups et les cookies tiers sont autorisés pour kobyde.com, puis réessayez."
-                      : "Connexion annulée ou non autorisée par Meta. Vérifiez que l'application Meta est active et que la configuration Embedded Signup (config_id) est valide.",
-                  ),
-                );
-              }
-            },
-            {
-              config_id: cfg.configId,
-              response_type: "code",
-              override_default_response_type: true,
-              extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
-            },
-          );
-        });
-        const res = await waCompleteFn({ data: { code } });
-        toast.success(res?.account ? `WhatsApp Business connecté (${res.account}).` : "WhatsApp Business connecté.");
-        void qc.invalidateQueries({ queryKey: ["my-connections"] });
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Connexion WhatsApp impossible.");
-      } finally {
-        setBusy(null);
-      }
-      return;
-    }
 
     setBusy(key);
 

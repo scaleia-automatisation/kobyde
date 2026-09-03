@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getPaymentRequest, startStripeCheckout } from "@/lib/portal.functions";
+import { confirmStripeCheckout, getPaymentRequest, startStripeCheckout } from "@/lib/portal.functions";
 import { usePortalTracking } from "@/lib/use-portal-tracking";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -36,10 +36,16 @@ function PayPage() {
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.search.includes("ok=1")) {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("ok")) return;
+    const sessionId = params.get("session_id");
+    if (sessionId && !sessionId.includes("{")) {
+      void confirmStripeCheckout({ data: { token, sessionId } }).finally(() => void refetch());
+    } else {
       void refetch();
     }
-  }, [refetch]);
+  }, [refetch, token]);
 
   const { track } = usePortalTracking(token, "payment");
 

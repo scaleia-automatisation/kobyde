@@ -259,6 +259,21 @@ export async function createOrgCheckoutSession(input: {
   };
 }
 
+/**
+ * Relit une session Checkout de l'entreprise (compte connecté OU clés propres).
+ * Sert de filet de sécurité au retour du paiement quand aucun webhook Connect
+ * n'est reçu (cas des entreprises qui utilisent leurs propres clés Stripe).
+ */
+export async function retrieveOrgCheckoutSession(orgId: string, sessionId: string) {
+  const acc = await getOrgStripeAccount(orgId);
+  const ownKey = acc ? null : await getOrgStripeSecretKey(orgId);
+  if (!acc && !ownKey) return null;
+  const session = await stripeFetch(`/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+    ...(acc ? { stripeAccount: acc.stripe_account_id } : { secretKey: ownKey! }),
+  });
+  return session as any;
+}
+
 /** Transactions récentes du compte Stripe de l'entreprise (agent comptabilité). */
 export async function listOrgPayments(orgId: string, limit = 20) {
   const acc = await getOrgStripeAccount(orgId);

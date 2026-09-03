@@ -310,7 +310,7 @@ export async function createStripeCheckout(requestId: string, origin: string) {
     orgId: pr.org_id,
     amountTtc: Number(pr.amount_ttc ?? 0),
     label: String(pr.label ?? "Paiement"),
-    successUrl: `${origin}/payer/${pr.token}?ok=1`,
+    successUrl: `${origin}/payer/${pr.token}?ok=1&session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${origin}/payer/${pr.token}`,
     clientReferenceId: pr.id,
     customerEmail: client?.email ?? null,
@@ -325,4 +325,33 @@ export async function createStripeCheckout(requestId: string, origin: string) {
 
   await db.from("payment_requests").update({ payment_url: session.url }).eq("id", pr.id);
   return session.url;
+}
+
+/**
+ * Filet de sécurité au retour de Stripe : si aucun webhook n'a confirmé le
+ * paiement (entreprises utilisant leurs propres clés Stripe), on relit la
+ * session Checkout et on confirme le paiement s'il est réglé.
+ */
+export async function reconcileStripeCheckout(token: string, sessionId: string) {
+  const db = await admin();
+  const { data: pr } = await db
+    .from("payment_requests")
+    .select("id,org_id,status")
+    .eq("token", token)
+    .maybeSingle();
+  if (!pr) return { paid: false };
+  if (pr.status === "payee") return { paid: true };
+
+  const { retrieveOrgCheckoutSession } = await import("./stripe-connect.server");
+  const session = await retrieveOrgCheckoutSession(pr.org_id, sessionId);
+  if (!session) return { paid: false };
+  if (String(session.payment_status ?? "") === "unpaid") return { paid: false };
+  if (session.client_reference_id && session.client_reference_id !== pr.id) return { paid: false };
+
+  await confirmPayment(pr.id, {
+    method: "stripe",
+    stripeIntent: session.payment_intent ?? session.id ?? null,
+    stripeEvent: null,
+  });
+  return { paid: true };
 }

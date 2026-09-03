@@ -34,11 +34,14 @@ export const Route = createFileRoute("/api/public/stripe/connect/webhook")({
           return new Response("Payload invalide", { status: 400 });
         }
 
-        // Un évènement Connect porte toujours le compte connecté émetteur.
+        // Évènement Connect : compte émetteur. Évènement direct (entreprise
+        // avec ses propres clés Stripe) : on résout via les métadonnées.
         const connectedAccountId: string | undefined = event?.account;
-        if (!connectedAccountId) return Response.json({ received: true, ignored: "no account" });
+        const metaOrgId: string | undefined = event?.data?.object?.metadata?.organization_id;
 
-        const orgId = await findOrgByStripeAccount(connectedAccountId);
+        const orgId = connectedAccountId
+          ? await findOrgByStripeAccount(connectedAccountId)
+          : (metaOrgId ?? null);
         if (!orgId) return Response.json({ received: true, ignored: "unknown account" });
 
         const object = event?.data?.object ?? {};

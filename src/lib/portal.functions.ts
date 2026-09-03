@@ -136,6 +136,22 @@ export const startStripeCheckout = createServerFn({ method: "POST" })
     return { url, alreadyPaid: false };
   });
 
+/** Réconciliation au retour de Stripe (sans webhook Connect). */
+export const confirmStripeCheckout = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({ token: z.string().min(16).max(80), sessionId: z.string().min(5).max(200) })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { reconcileStripeCheckout } = await import("./portal.server");
+    try {
+      return await reconcileStripeCheckout(data.token, data.sessionId);
+    } catch {
+      return { paid: false };
+    }
+  });
+
 /** BLOC 17 — suivi comportement client (RGPD : anonyme, sans cookie tiers). */
 export const trackPortalEvent = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>

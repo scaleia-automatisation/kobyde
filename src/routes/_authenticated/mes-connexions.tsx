@@ -233,9 +233,13 @@ function MesConnexionsPage() {
    */
   const connect = async (key: string) => {
     if (key === "whatsapp") {
-      await connectWhatsapp();
+      // Ouverture SYNCHRONE, avant tout appel réseau : l'activation utilisateur
+      // du clic est encore valide, le navigateur ne bloque pas la fenêtre.
+      const popup = window.open("about:blank", "kobyde-whatsapp", "popup=yes,width=700,height=820");
+      await connectWhatsapp(popup);
       return;
     }
+
 
     setBusy(key);
 

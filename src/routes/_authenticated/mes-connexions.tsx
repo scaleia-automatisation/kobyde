@@ -133,6 +133,28 @@ function MesConnexionsPage() {
     }
   };
 
+  // Retour depuis la page d'autorisation (ou restauration de la page en cache
+  // navigateur via le bouton « retour ») : on défige le bouton « Redirection… »
+  // et on recharge l'état des connexions pour afficher « Connecté ».
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        setBusy(null);
+        void qc.invalidateQueries({ queryKey: ["my-connections"] });
+      }
+    };
+    const onFocus = () => {
+      setBusy(null);
+      void qc.invalidateQueries({ queryKey: ["my-connections"] });
+    };
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [qc]);
+
   useEffect(() => {
     if (search.connexion === "ok") {
       toast.success("Connexion réussie : votre compte est autorisé.");

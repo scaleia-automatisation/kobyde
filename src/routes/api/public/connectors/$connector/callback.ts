@@ -6,7 +6,10 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
     handlers: {
       GET: async ({ request, params }) => {
         const url = new URL(request.url);
-        const origin = url.origin;
+        // Toujours revenir sur le domaine canonique : l'utilisateur doit
+        // atterrir sur https://kobyde.com/mes-connexions, jamais sur une
+        // origine d'aperçu ou un domaine secondaire (www, preview…).
+        const origin = url.hostname === "localhost" ? url.origin : "https://kobyde.com";
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
         const error = url.searchParams.get("error_description") ?? url.searchParams.get("error");
@@ -18,6 +21,7 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
               location: `${origin}/mes-connexions?connexion=${status}&connecteur=${encodeURIComponent(
                 params.connector,
               )}${message ? `&message=${encodeURIComponent(message)}` : ""}`,
+              "cache-control": "no-store",
             },
           });
 
@@ -28,9 +32,17 @@ export const Route = createFileRoute("/api/public/connectors/$connector/callback
           const { completeOAuth } = await import("@/lib/connectors.server");
           const result = await completeOAuth(params.connector, code, state, origin);
           const target = new URL(result.redirectTo);
+          // Force le domaine canonique sur la page de retour.
+          if (url.hostname !== "localhost") {
+            target.protocol = "https:";
+            target.host = "kobyde.com";
+          }
           target.searchParams.set("connexion", "ok");
           target.searchParams.set("connecteur", params.connector);
-          return new Response(null, { status: 302, headers: { location: target.toString() } });
+          return new Response(null, {
+            status: 302,
+            headers: { location: target.toString(), "cache-control": "no-store" },
+          });
         } catch (e) {
           return back("error", e instanceof Error ? e.message : "Connexion impossible.");
         }

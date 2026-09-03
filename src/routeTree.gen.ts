@@ -73,6 +73,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as ApiPublicConnectorsConnectorCallbackRouteImport } from './routes/api/public/connectors/$connector/callback'
+import { Route as ApiPublicConnectorsMetaWebhookRouteImport } from './routes/api/public/connectors/meta/webhook'
 import { Route as ApiPublicConnectorsWhatsappWebhookRouteImport } from './routes/api/public/connectors/whatsapp/webhook'
 import { Route as ApiPublicStripeConnectCallbackRouteImport } from './routes/api/public/stripe/connect/callback'
 import { Route as ApiPublicStripeConnectWebhookRouteImport } from './routes/api/public/stripe/connect/webhook'
@@ -405,6 +406,12 @@ const ApiPublicConnectorsConnectorCallbackRoute =
     path: '/api/public/connectors/$connector/callback',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicConnectorsMetaWebhookRoute =
+  ApiPublicConnectorsMetaWebhookRouteImport.update({
+    id: '/api/public/connectors/meta/webhook',
+    path: '/api/public/connectors/meta/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicConnectorsWhatsappWebhookRoute =
   ApiPublicConnectorsWhatsappWebhookRouteImport.update({
     id: '/api/public/connectors/whatsapp/webhook',
@@ -488,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/connectors/$connector/callback': typeof ApiPublicConnectorsConnectorCallbackRoute
+  '/api/public/connectors/meta/webhook': typeof ApiPublicConnectorsMetaWebhookRoute
   '/api/public/connectors/whatsapp/webhook': typeof ApiPublicConnectorsWhatsappWebhookRoute
   '/api/public/stripe/connect/callback': typeof ApiPublicStripeConnectCallbackRoute
   '/api/public/stripe/connect/webhook': typeof ApiPublicStripeConnectWebhookRoute
@@ -556,6 +564,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/connectors/$connector/callback': typeof ApiPublicConnectorsConnectorCallbackRoute
+  '/api/public/connectors/meta/webhook': typeof ApiPublicConnectorsMetaWebhookRoute
   '/api/public/connectors/whatsapp/webhook': typeof ApiPublicConnectorsWhatsappWebhookRoute
   '/api/public/stripe/connect/callback': typeof ApiPublicStripeConnectCallbackRoute
   '/api/public/stripe/connect/webhook': typeof ApiPublicStripeConnectWebhookRoute
@@ -626,6 +635,7 @@ export interface FileRoutesById {
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/api/public/connectors/$connector/callback': typeof ApiPublicConnectorsConnectorCallbackRoute
+  '/api/public/connectors/meta/webhook': typeof ApiPublicConnectorsMetaWebhookRoute
   '/api/public/connectors/whatsapp/webhook': typeof ApiPublicConnectorsWhatsappWebhookRoute
   '/api/public/stripe/connect/callback': typeof ApiPublicStripeConnectCallbackRoute
   '/api/public/stripe/connect/webhook': typeof ApiPublicStripeConnectWebhookRoute
@@ -696,6 +706,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
     | '/api/public/connectors/$connector/callback'
+    | '/api/public/connectors/meta/webhook'
     | '/api/public/connectors/whatsapp/webhook'
     | '/api/public/stripe/connect/callback'
     | '/api/public/stripe/connect/webhook'
@@ -764,6 +775,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
     | '/api/public/connectors/$connector/callback'
+    | '/api/public/connectors/meta/webhook'
     | '/api/public/connectors/whatsapp/webhook'
     | '/api/public/stripe/connect/callback'
     | '/api/public/stripe/connect/webhook'
@@ -833,6 +845,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe/webhook'
     | '/api/public/webhooks/stripe'
     | '/api/public/connectors/$connector/callback'
+    | '/api/public/connectors/meta/webhook'
     | '/api/public/connectors/whatsapp/webhook'
     | '/api/public/stripe/connect/callback'
     | '/api/public/stripe/connect/webhook'
@@ -862,6 +875,7 @@ export interface RootRouteChildren {
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
   ApiPublicConnectorsConnectorCallbackRoute: typeof ApiPublicConnectorsConnectorCallbackRoute
+  ApiPublicConnectorsMetaWebhookRoute: typeof ApiPublicConnectorsMetaWebhookRoute
   ApiPublicConnectorsWhatsappWebhookRoute: typeof ApiPublicConnectorsWhatsappWebhookRoute
   ApiPublicStripeConnectCallbackRoute: typeof ApiPublicStripeConnectCallbackRoute
   ApiPublicStripeConnectWebhookRoute: typeof ApiPublicStripeConnectWebhookRoute
@@ -1317,6 +1331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicConnectorsConnectorCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/connectors/meta/webhook': {
+      id: '/api/public/connectors/meta/webhook'
+      path: '/api/public/connectors/meta/webhook'
+      fullPath: '/api/public/connectors/meta/webhook'
+      preLoaderRoute: typeof ApiPublicConnectorsMetaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/connectors/whatsapp/webhook': {
       id: '/api/public/connectors/whatsapp/webhook'
       path: '/api/public/connectors/whatsapp/webhook'
@@ -1465,6 +1486,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
   ApiPublicConnectorsConnectorCallbackRoute:
     ApiPublicConnectorsConnectorCallbackRoute,
+  ApiPublicConnectorsMetaWebhookRoute: ApiPublicConnectorsMetaWebhookRoute,
   ApiPublicConnectorsWhatsappWebhookRoute:
     ApiPublicConnectorsWhatsappWebhookRoute,
   ApiPublicStripeConnectCallbackRoute: ApiPublicStripeConnectCallbackRoute,

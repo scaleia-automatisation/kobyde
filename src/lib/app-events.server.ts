@@ -30,6 +30,8 @@ const CHANNEL_LABEL: Record<string, string> = {
   email: "Email",
   sms: "SMS",
   whatsapp: "WhatsApp",
+  facebook: "Facebook",
+  instagram: "Instagram",
   portail: "Portail client",
   autre: "Événement",
 };

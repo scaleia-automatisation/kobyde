@@ -68,7 +68,7 @@ const loadFacebookSdk = (appId: string): Promise<void> => {
   return fbSdkPromise;
 };
 
-type Search = { connexion?: string | undefined; message?: string | undefined };
+type Search = { connexion?: string | undefined; message?: string | undefined; whatsapp?: string | undefined };
 
 const TITLE = "Mes connexions — Kobyde";
 const DESCRIPTION =
@@ -79,6 +79,7 @@ export const Route = createFileRoute("/_authenticated/mes-connexions")({
   validateSearch: (search: Record<string, unknown>): Search => ({
     connexion: typeof search["connexion"] === "string" ? (search["connexion"] as string) : undefined,
     message: typeof search["message"] === "string" ? (search["message"] as string) : undefined,
+    whatsapp: typeof search["whatsapp"] === "string" ? (search["whatsapp"] as string) : undefined,
   }),
   head: () => ({
     meta: [
@@ -138,7 +139,10 @@ function MesConnexionsPage() {
       void qc.invalidateQueries({ queryKey: ["my-connections"] });
     }
     if (search.connexion === "error") toast.error(search.message ?? "Connexion impossible.");
-  }, [search.connexion, search.message, qc]);
+    if (search.whatsapp === "ready") {
+      toast.info("Cliquez à nouveau sur « Se connecter à WhatsApp Business » pour ouvrir la fenêtre Meta.");
+    }
+  }, [search.connexion, search.message, search.whatsapp, qc]);
 
   // Précharge la config WhatsApp (App ID + config_id) et le SDK Facebook dès
   // l'affichage de la page, pour que FB.login parte immédiatement au clic.
@@ -178,6 +182,21 @@ function MesConnexionsPage() {
     // WhatsApp Business : Embedded Signup Meta via le SDK Facebook (FB.login),
     // sans redirection vers une URL d'autorisation construite côté backend.
     if (key === "whatsapp") {
+      // Meta Embedded Signup doit être lancé depuis le domaine public déclaré
+      // dans l'application Meta. L'aperçu Lovable est affiché dans une iframe
+      // sur un autre domaine : FB.login y renvoie `status: unknown` même quand
+      // la configuration est correcte. On transfère donc d'abord l'utilisateur
+      // vers kobyde.com, dans un nouvel onglet ouvert par le clic lui-même.
+      if (window.location.hostname !== "kobyde.com" && window.location.hostname !== "www.kobyde.com") {
+        const publicPage = window.open("https://kobyde.com/mes-connexions?whatsapp=ready", "_blank", "noopener,noreferrer");
+        if (publicPage) {
+          toast.info("WhatsApp Business s'ouvre sur kobyde.com. Continuez la connexion dans ce nouvel onglet.");
+        } else {
+          window.location.href = "https://kobyde.com/mes-connexions?whatsapp=ready";
+        }
+        return;
+      }
+
       setBusy(key);
       try {
         // Utiliser la config préchargée si possible : FB.login doit être appelé
@@ -203,7 +222,7 @@ function MesConnexionsPage() {
                 reject(
                   new Error(
                     r?.status === "unknown"
-                      ? "La fenêtre Meta a été fermée ou bloquée avant la fin de la connexion. Réessayez en autorisant les popups pour kobyde.com."
+                      ? "Meta n'a pas terminé l'autorisation. Vérifiez que les popups et les cookies tiers sont autorisés pour kobyde.com, puis réessayez."
                       : "Connexion annulée ou non autorisée par Meta. Vérifiez que l'application Meta est active et que la configuration Embedded Signup (config_id) est valide.",
                   ),
                 );

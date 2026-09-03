@@ -36,10 +36,16 @@ function PayPage() {
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.search.includes("ok=1")) {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("ok")) return;
+    const sessionId = params.get("session_id");
+    if (sessionId && !sessionId.includes("{")) {
+      void confirmStripeCheckout({ data: { token, sessionId } }).finally(() => void refetch());
+    } else {
       void refetch();
     }
-  }, [refetch]);
+  }, [refetch, token]);
 
   const { track } = usePortalTracking(token, "payment");
 

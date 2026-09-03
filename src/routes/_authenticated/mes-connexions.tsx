@@ -134,7 +134,10 @@ function MesConnexionsPage() {
    * on le dirige vers la route relais qui redirige hors iframe.
    */
   const connect = async (key: string) => {
-
+    if (key === "whatsapp") {
+      await connectWhatsapp();
+      return;
+    }
 
     setBusy(key);
 

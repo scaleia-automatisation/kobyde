@@ -360,7 +360,17 @@ export async function saveOrgStripeKeys(input: {
     throw new Error("Clé publiable invalide : elle doit commencer par pk_live_ ou pk_test_.");
   }
 
-  const account = await stripeFetch("/v1/account", { secretKey });
+  // Une clé limitée (rk_…) n'a pas toujours le droit de lecture sur /v1/account :
+  // on tente la vérification, mais on accepte la clé si le droit manque.
+  let account: any = null;
+  try {
+    account = await stripeFetch("/v1/account", { secretKey });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    const isPermission =
+      /permission|not.*support|restricted/i.test(msg) || secretKey.startsWith("rk_");
+    if (!isPermission) throw e;
+  }
 
   const { encryptToken } = await import("./token-crypto.server");
   const db = await admin();

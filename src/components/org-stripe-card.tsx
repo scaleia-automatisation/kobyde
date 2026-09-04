@@ -94,8 +94,10 @@ export function OrgStripeCard() {
       </div>
 
       <p className="max-w-3xl text-sm text-muted-foreground">
-        Renseignez la clé secrète et la clé publiable de votre compte Stripe pour permettre à vos agents d'encaisser
-        vos clients, créer des demandes de paiement et suivre les transactions. Vos clés sont chiffrées et jamais
+        Renseignez une clé limitée (rk_…) ou une clé secrète (sk_…) ainsi que la clé publiable de votre compte
+        Stripe pour permettre à vos agents d'encaisser vos clients, créer des demandes de paiement et suivre les
+        transactions. La clé limitée est recommandée : accordez-lui les droits en écriture sur Checkout Sessions,
+        Payment Intents et Customers, et en lecture sur Charges et Balance. Vos clés sont chiffrées et jamais
         visibles depuis le navigateur.
       </p>
 

@@ -347,13 +347,17 @@ export async function saveOrgStripeKeys(input: {
   secretKey: string;
   publishableKey: string;
 }) {
-  const secretKey = input.secretKey.trim();
-  const publishableKey = input.publishableKey.trim();
-  if (!/^(sk|rk)_(test|live)_/.test(secretKey)) {
-    throw new Error("Clé secrète invalide : elle doit commencer par sk_test_, sk_live_ ou rk_.");
+  // Nettoie la clé : retire espaces, retours à la ligne et caractères invisibles
+  // qui se glissent souvent lors d'un copier-coller depuis le tableau de bord Stripe.
+  const secretKey = input.secretKey.replace(/[\s­​‌‍﻿]/g, "");
+  const publishableKey = input.publishableKey.replace(/[\s­​‌‍﻿]/g, "");
+  if (!/^(sk|rk)_(test|live)_[A-Za-z0-9]{8,}$/.test(secretKey)) {
+    throw new Error(
+      "Clé invalide : collez une clé limitée (rk_live_… / rk_test_…) ou secrète (sk_live_… / sk_test_…) complète, sans espace.",
+    );
   }
-  if (!/^pk_(test|live)_/.test(publishableKey)) {
-    throw new Error("Clé publiable invalide : elle doit commencer par pk_test_ ou pk_live_.");
+  if (!/^pk_(test|live)_[A-Za-z0-9]{8,}$/.test(publishableKey)) {
+    throw new Error("Clé publiable invalide : elle doit commencer par pk_live_ ou pk_test_.");
   }
 
   const account = await stripeFetch("/v1/account", { secretKey });

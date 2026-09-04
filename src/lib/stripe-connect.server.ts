@@ -409,13 +409,27 @@ export async function deleteOrgStripeKeys(orgId: string) {
 export async function testOrgStripeKeys(orgId: string): Promise<{ ok: boolean; message: string }> {
   const secretKey = await getOrgStripeSecretKey(orgId);
   if (!secretKey) return { ok: false, message: "Aucune clé Stripe enregistrée : cliquez sur « Configurer »." };
+  const mode = secretKey.includes("_live_") ? "mode réel" : "mode test";
   try {
     const account = await stripeFetch("/v1/account", { secretKey });
     const name =
       account?.business_profile?.name ?? account?.settings?.dashboard?.display_name ?? account?.id ?? "compte Stripe";
-    const mode = secretKey.includes("_live_") ? "mode réel" : "mode test";
     return { ok: true, message: `Appel API Stripe réussi — ${name} (${mode}).` };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Appel API Stripe impossible." };
+    const msg = e instanceof Error ? e.message : "";
+    // Clé limitée sans droit « Account » : on vérifie via la balance (lecture)
+    // ou les payment_intents, droits normalement accordés à la clé.
+    if (secretKey.startsWith("rk_")) {
+      try {
+        await stripeFetch("/v1/payment_intents?limit=1", { secretKey });
+        return {
+          ok: true,
+          message: `Appel API Stripe réussi avec votre clé limitée (${mode}).`,
+        };
+      } catch (e2) {
+        return { ok: false, message: e2 instanceof Error ? e2.message : "Appel API Stripe impossible." };
+      }
+    }
+    return { ok: false, message: msg || "Appel API Stripe impossible." };
   }
 }

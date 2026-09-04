@@ -347,16 +347,30 @@ export async function saveOrgStripeKeys(input: {
   secretKey: string;
   publishableKey: string;
 }) {
-  const secretKey = input.secretKey.trim();
-  const publishableKey = input.publishableKey.trim();
-  if (!/^(sk|rk)_(test|live)_/.test(secretKey)) {
-    throw new Error("Clé secrète invalide : elle doit commencer par sk_test_, sk_live_ ou rk_.");
+  // Nettoie la clé : retire espaces, retours à la ligne et caractères invisibles
+  // qui se glissent souvent lors d'un copier-coller depuis le tableau de bord Stripe.
+  const secretKey = input.secretKey.replace(/[\s­​‌‍﻿]/g, "");
+  const publishableKey = input.publishableKey.replace(/[\s­​‌‍﻿]/g, "");
+  if (!/^(sk|rk)_(test|live)_[A-Za-z0-9]{8,}$/.test(secretKey)) {
+    throw new Error(
+      "Clé invalide : collez une clé limitée (rk_live_… / rk_test_…) ou secrète (sk_live_… / sk_test_…) complète, sans espace.",
+    );
   }
-  if (!/^pk_(test|live)_/.test(publishableKey)) {
-    throw new Error("Clé publiable invalide : elle doit commencer par pk_test_ ou pk_live_.");
+  if (!/^pk_(test|live)_[A-Za-z0-9]{8,}$/.test(publishableKey)) {
+    throw new Error("Clé publiable invalide : elle doit commencer par pk_live_ ou pk_test_.");
   }
 
-  const account = await stripeFetch("/v1/account", { secretKey });
+  // Une clé limitée (rk_…) n'a pas toujours le droit de lecture sur /v1/account :
+  // on tente la vérification, mais on accepte la clé si le droit manque.
+  let account: any = null;
+  try {
+    account = await stripeFetch("/v1/account", { secretKey });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    const isPermission =
+      /permission|not.*support|restricted/i.test(msg) || secretKey.startsWith("rk_");
+    if (!isPermission) throw e;
+  }
 
   const { encryptToken } = await import("./token-crypto.server");
   const db = await admin();
@@ -395,13 +409,27 @@ export async function deleteOrgStripeKeys(orgId: string) {
 export async function testOrgStripeKeys(orgId: string): Promise<{ ok: boolean; message: string }> {
   const secretKey = await getOrgStripeSecretKey(orgId);
   if (!secretKey) return { ok: false, message: "Aucune clé Stripe enregistrée : cliquez sur « Configurer »." };
+  const mode = secretKey.includes("_live_") ? "mode réel" : "mode test";
   try {
     const account = await stripeFetch("/v1/account", { secretKey });
     const name =
       account?.business_profile?.name ?? account?.settings?.dashboard?.display_name ?? account?.id ?? "compte Stripe";
-    const mode = secretKey.includes("_live_") ? "mode réel" : "mode test";
     return { ok: true, message: `Appel API Stripe réussi — ${name} (${mode}).` };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Appel API Stripe impossible." };
+    const msg = e instanceof Error ? e.message : "";
+    // Clé limitée sans droit « Account » : on vérifie via la balance (lecture)
+    // ou les payment_intents, droits normalement accordés à la clé.
+    if (secretKey.startsWith("rk_")) {
+      try {
+        await stripeFetch("/v1/payment_intents?limit=1", { secretKey });
+        return {
+          ok: true,
+          message: `Appel API Stripe réussi avec votre clé limitée (${mode}).`,
+        };
+      } catch (e2) {
+        return { ok: false, message: e2 instanceof Error ? e2.message : "Appel API Stripe impossible." };
+      }
+    }
+    return { ok: false, message: msg || "Appel API Stripe impossible." };
   }
 }

@@ -115,7 +115,7 @@ export const saveOrgStripeKeysFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
-      .object({ secretKey: z.string().min(10).max(300), publishableKey: z.string().min(10).max(300) })
+      .object({ secretKey: z.string().min(10).max(600), publishableKey: z.string().min(10).max(600) })
       .parse(data),
   )
   .handler(async ({ data, context }) => {

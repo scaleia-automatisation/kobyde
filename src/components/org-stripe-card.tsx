@@ -120,11 +120,11 @@ export function OrgStripeCard() {
       {open && (
         <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
           <div className="space-y-1">
-            <Label className="text-xs">Clé secrète (sk_live_… ou sk_test_…)</Label>
+            <Label className="text-xs">Clé secrète ou limitée (sk_… ou rk_…)</Label>
             <Input
               type="password"
               autoComplete="off"
-              placeholder="sk_live_..."
+              placeholder="rk_live_... ou sk_live_..."
               value={secretKey}
               onChange={(e) => setSecretKey(e.target.value)}
             />

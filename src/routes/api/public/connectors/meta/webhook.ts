@@ -50,26 +50,39 @@ async function metaSecrets() {
   };
 }
 
-/** Retrouve l'organisation propriétaire de la Page / du compte Instagram émetteur. */
+/**
+ * Retrouve l'organisation propriétaire de la Page / du compte Instagram émetteur.
+ * Jamais de repli sur « la première connexion » : un événement non rattachable
+ * est ignoré plutôt que livré à la mauvaise entreprise.
+ */
 async function findOrg(db: any, accountId: string | null) {
   const providers = ["meta", "facebook", "instagram"];
-  if (accountId) {
-    const { data } = await db
-      .from("oauth_connections")
-      .select("org_id")
-      .in("provider", providers)
-      .eq("is_active", true)
-      .eq("provider_account_id", accountId)
-      .limit(1);
-    if (data?.[0]?.org_id) return data[0].org_id as string;
-  }
   const { data } = await db
     .from("oauth_connections")
-    .select("org_id")
+    .select("org_id,provider_account_id,provider_user_id,metadata")
     .in("provider", providers)
-    .eq("is_active", true)
-    .limit(1);
-  return (data?.[0]?.org_id as string) ?? null;
+    .eq("is_active", true);
+  const rows = (data ?? []) as any[];
+  if (!rows.length) return null;
+
+  if (accountId) {
+    const id = String(accountId);
+    const match = rows.find((r) => {
+      const meta = r.metadata ?? {};
+      const ids = [
+        r.provider_account_id,
+        r.provider_user_id,
+        ...(Array.isArray(meta.page_ids) ? meta.page_ids : []),
+        ...(Array.isArray(meta.instagram_ids) ? meta.instagram_ids : []),
+        ...(Array.isArray(meta.pages) ? meta.pages.map((p: any) => p?.id) : []),
+      ];
+      return ids.some((v) => v != null && String(v) === id);
+    });
+    if (match?.org_id) return match.org_id as string;
+  }
+
+  const orgs = Array.from(new Set(rows.map((r) => r.org_id).filter(Boolean)));
+  return orgs.length === 1 ? (orgs[0] as string) : null;
 }
 
 export const Route = createFileRoute("/api/public/connectors/meta/webhook")({

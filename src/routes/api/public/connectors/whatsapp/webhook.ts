@@ -44,24 +44,38 @@ async function whatsappSecrets() {
   };
 }
 
-/** Retrouve l'organisation propriétaire du compte WhatsApp émetteur. */
+/**
+ * Retrouve l'organisation propriétaire du compte WhatsApp émetteur.
+ * On n'utilise jamais « la première connexion trouvée » : un événement non
+ * rattachable est ignoré plutôt que livré à la mauvaise entreprise.
+ */
 async function findOrg(db: any, wabaId: string | null) {
-  const q = db
-    .from("oauth_connections")
-    .select("org_id,provider_account_id")
-    .eq("provider", "whatsapp")
-    .eq("is_active", true);
-  if (wabaId) {
-    const { data } = await q.eq("provider_account_id", wabaId).limit(1);
-    if (data?.[0]?.org_id) return data[0].org_id as string;
-  }
   const { data } = await db
     .from("oauth_connections")
-    .select("org_id")
+    .select("org_id,provider_account_id,provider_user_id,metadata")
     .eq("provider", "whatsapp")
-    .eq("is_active", true)
-    .limit(1);
-  return (data?.[0]?.org_id as string) ?? null;
+    .eq("is_active", true);
+  const rows = (data ?? []) as any[];
+  if (!rows.length) return null;
+
+  if (wabaId) {
+    const id = String(wabaId);
+    const match = rows.find((r) => {
+      const ids = [
+        r.provider_account_id,
+        r.provider_user_id,
+        ...(Array.isArray(r.metadata?.waba_ids) ? r.metadata.waba_ids : []),
+        ...(Array.isArray(r.metadata?.phone_number_ids) ? r.metadata.phone_number_ids : []),
+      ];
+      return ids.some((v) => v != null && String(v) === id);
+    });
+    if (match?.org_id) return match.org_id as string;
+  }
+
+  // Aucun identifiant correspondant : on n'accepte le repli que s'il n'existe
+  // qu'une seule entreprise connectée (aucune ambiguïté possible).
+  const orgs = Array.from(new Set(rows.map((r) => r.org_id).filter(Boolean)));
+  return orgs.length === 1 ? (orgs[0] as string) : null;
 }
 
 export const Route = createFileRoute("/api/public/connectors/whatsapp/webhook")({

@@ -360,16 +360,24 @@ export async function saveOrgStripeKeys(input: {
     throw new Error("Clé publiable invalide : elle doit commencer par pk_live_ ou pk_test_.");
   }
 
-  // Une clé limitée (rk_…) n'a pas toujours le droit de lecture sur /v1/account :
-  // on tente la vérification, mais on accepte la clé si le droit manque.
+  // Une clé limitée (rk_…) n'a pas toujours le droit de lecture sur /v1/account.
+  // Stripe répond 401 quand la clé elle-même est invalide/révoquée (on refuse),
+  // et 403 quand la clé est valide mais sans ce droit (on accepte).
   let account: any = null;
-  try {
-    account = await stripeFetch("/v1/account", { secretKey });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "";
-    const isPermission =
-      /permission|not.*support|restricted/i.test(msg) || secretKey.startsWith("rk_");
-    if (!isPermission) throw e;
+  {
+    const res = await fetch(`${STRIPE_API}/v1/account`, {
+      headers: { authorization: `Bearer ${secretKey}` },
+    });
+    const json = (await res.json().catch(() => ({}))) as any;
+    if (res.ok) {
+      account = json;
+    } else if (res.status === 401) {
+      throw new Error(
+        "Clé Stripe refusée par Stripe : vérifiez qu'elle est correcte, active et issue du bon compte.",
+      );
+    } else if (res.status !== 403) {
+      throw new Error(json?.error?.message ?? `Stripe (${res.status})`);
+    }
   }
 
   const { encryptToken } = await import("./token-crypto.server");

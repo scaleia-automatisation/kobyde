@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "@/lib/db";
 import { lovable } from "@/integrations/lovable/index";
+import { PasswordInput } from "@/components/password-input";
 
 const TITLE = "Connexion — Kobyde";
 const DESC = "Connectez-vous à Kobyde et retrouvez vos 10 agents IA d'entreprise.";
@@ -32,6 +33,8 @@ function AuthPage() {
   const [isSignup, setIsSignup] = useState(mode === "signup");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
   const { session } = useSession();
 
@@ -80,6 +83,14 @@ function AuthPage() {
     const password = String(fd.get("password"));
     setLoading(true);
     try {
+      if (forgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        setResetSent(true);
+        return;
+      }
       if (isSignup) {
         const { error } = await supabase.auth.signUp({
           email,
@@ -115,13 +126,13 @@ function AuthPage() {
           <span className="font-display text-xl">Kobyde</span>
         </Link>
         <div className="surface p-7">
-          <h1 className="text-2xl">{isSignup ? "Créer mon équipe IA" : "Bon retour parmi nous"}</h1>
+          <h1 className="text-2xl">{forgotPassword ? "Mot de passe oublié" : isSignup ? "Créer mon équipe IA" : "Bon retour parmi nous"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {isSignup
+            {forgotPassword ? "Recevez un lien pour choisir un nouveau mot de passe." : isSignup
               ? "2 minutes suffisent. Vos 10 agents seront prêts juste après."
               : "Connectez-vous pour retrouver votre tableau de bord."}
           </p>
-          <Button
+          {!forgotPassword && <><Button
             type="button"
             variant="outline"
             className="mt-6 w-full gap-2"
@@ -141,8 +152,10 @@ function AuthPage() {
             ou par email
             <span className="h-px flex-1 bg-border" />
           </div>
+          </>}
+          {resetSent ? <p role="status" className="my-5 text-sm">Si un compte existe avec cette adresse, vous recevrez un lien de réinitialisation. Vérifiez aussi vos courriers indésirables.</p> :
           <form onSubmit={onSubmit} className="space-y-4">
-            {isSignup && (
+            {isSignup && !forgotPassword && (
               <>
                 <div className="space-y-1.5">
                   <Label htmlFor="full_name">Votre prénom et nom</Label>
@@ -158,20 +171,21 @@ function AuthPage() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" placeholder="vous@entreprise.fr" required />
             </div>
-            <div className="space-y-1.5">
+            {!forgotPassword && <div className="space-y-1.5">
               <Label htmlFor="password">Mot de passe</Label>
-              <Input id="password" name="password" type="password" minLength={6} required />
-            </div>
+              <PasswordInput id="password" name="password" autoComplete={isSignup ? "new-password" : "current-password"} minLength={6} required />
+            </div>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Un instant…" : isSignup ? "Créer mon compte" : "Se connecter"}
+              {loading ? "Un instant…" : forgotPassword ? "Envoyer le lien de réinitialisation" : isSignup ? "Créer mon compte" : "Se connecter"}
             </Button>
-          </form>
-          <button
+          </form>}
+          {!isSignup && !forgotPassword && <Button type="button" variant="link" className="mt-2 w-full" onClick={() => { setForgotPassword(true); setResetSent(false); }}>Mot de passe oublié ?</Button>}
+          <Button type="button" variant="link"
             className="mt-5 w-full text-center text-sm text-muted-foreground underline-offset-4 hover:underline"
-            onClick={() => setIsSignup((v) => !v)}
+            onClick={() => { if (forgotPassword) { setForgotPassword(false); setResetSent(false); } else setIsSignup((v) => !v); }}
           >
-            {isSignup ? "J'ai déjà un compte — me connecter" : "Je n'ai pas encore de compte — m'inscrire"}
-          </button>
+            {forgotPassword ? "Retour à la connexion" : isSignup ? "J'ai déjà un compte — me connecter" : "Je n'ai pas encore de compte — m'inscrire"}
+          </Button>
         </div>
       </div>
     </div>

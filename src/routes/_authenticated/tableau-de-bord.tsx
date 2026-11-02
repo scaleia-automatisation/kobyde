@@ -16,7 +16,7 @@ import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { euros, useMyRole, useProfile, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { SectionCard } from "@/components/ui/states";
+import { DashboardSection } from "@/components/dashboard-section";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/tableau-de-bord")({
@@ -65,14 +65,14 @@ function PrimaryStat({
   return (
     <Link
       to={to}
-      className="surface interactive block p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="dashboard-metric interactive relative block min-w-0 overflow-hidden p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="size-4" aria-hidden />
-        <p className="text-label">{label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><Icon className="size-5" aria-hidden /></span>
       </div>
-      <p className="mt-3 font-display text-[2.5rem] leading-none tracking-tight">{value}</p>
-      <p className="mt-2 text-caption">{hint}</p>
+      <p className="mt-5 break-words font-display text-3xl font-semibold leading-none">{value}</p>
+      <p className="mt-3 text-xs text-muted-foreground">{hint}</p>
     </Link>
   );
 }
@@ -89,10 +89,10 @@ function MiniStat({
   return (
     <Link
       to={to}
-      className="flex flex-col rounded-xl px-4 py-3 transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex min-w-0 flex-col border-b border-border px-4 py-5 transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <span className="truncate text-body text-muted-foreground">{label}</span>
-      <span className="mt-auto pt-4 font-display text-2xl leading-none tracking-tight">{value}</span>
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="mt-auto pt-4 font-display text-2xl font-semibold leading-none">{value}</span>
     </Link>
   );
 }
@@ -240,16 +240,12 @@ function Dashboard() {
         </Button>
       }
     >
-      <div className="mb-4 flex flex-wrap gap-2">
-        <span className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+      <div className="dashboard-workspace mx-auto max-w-7xl">
+      <div className="mb-6 flex items-center justify-between gap-3 border-b border-border pb-4">
+        <span className="font-display text-lg font-semibold">
           Vue d'ensemble
         </span>
-        <Link
-          to="/taches"
-          className="rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary"
-        >
-          Tâches
-        </Link>
+        <Button variant="outline" size="sm" asChild><Link to="/taches">Mes tâches <ArrowRight className="size-4" /></Link></Button>
       </div>
 
       <div className="grid gap-4 stagger-children md:grid-cols-3">
@@ -280,7 +276,7 @@ function Dashboard() {
         />
       </div>
 
-      <div className="surface mt-4 grid gap-1 p-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="my-7 grid grid-cols-2 gap-x-4 sm:grid-cols-3 xl:grid-cols-5">
         <MiniStat label="Prospects" value={String(PR.length)} to="/prospects" />
         <MiniStat label="Clients" value={String(C.length)} to="/clients" />
         <MiniStat label="Projets" value={String(PJ.length)} to="/projets" />
@@ -288,11 +284,11 @@ function Dashboard() {
         <MiniStat label="Agents IA" value="10" to="/equipe" />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[3fr_2fr]">
-        <SectionCard
+      <div className="mt-8 grid gap-8 xl:grid-cols-[3fr_2fr]">
+        <DashboardSection
           className=""
           title="La prochaine action utile"
-          description="Ce que votre équipe IA vous conseille de faire maintenant."
+          description="Vos priorités du moment"
         >
           {recommendations.length === 0 ? (
             <div className="flex items-center gap-3 rounded-xl bg-secondary/50 p-4">
@@ -307,8 +303,8 @@ function Dashboard() {
                 <li
                   key={r.title}
                   className={cn(
-                    "interactive flex flex-wrap items-center gap-3 rounded-xl border border-border p-4",
-                    i === 0 && "border-accent/40 bg-accent/5",
+                    "flex flex-wrap items-center gap-3 border-b border-border py-4",
+                    i === 0 && "border-l-2 border-l-primary bg-primary/5 px-4",
                   )}
                 >
                   <div className="min-w-0 flex-1">
@@ -329,12 +325,12 @@ function Dashboard() {
               ))}
             </ul>
           )}
-        </SectionCard>
+        </DashboardSection>
 
-        <SectionCard
+        <DashboardSection
           className=""
           title="Activité récente"
-          description="Ce qui s'est passé dans votre entreprise."
+          description="Les derniers événements"
         >
           {activity.length === 0 ? (
             <div className="py-6 text-center">
@@ -355,15 +351,15 @@ function Dashboard() {
                   <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground">
                     <a.icon className="size-4" aria-hidden />
                   </span>
-                  <p className="min-w-0 flex-1 truncate text-body">{a.label}</p>
+                  <p className="min-w-0 flex-1 break-words text-sm">{a.label}</p>
                   <span className="shrink-0 text-caption">{dayjs(a.at)}</span>
                 </li>
               ))}
             </ul>
           )}
-        </SectionCard>
+        </DashboardSection>
       </div>
-
+      </div>
     </AppShell>
   );
 }

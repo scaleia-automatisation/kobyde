@@ -1,0 +1,3 @@
+- [x] Moderniser le tableau de bord super admin sans modifier ses fonctions.
+- [x] Moderniser le tableau de bord entreprise/admin avec la palette existante.
+- [x] Vérifier les affichages et la navigation avec une session réelle.

@@ -11,3 +11,4 @@
 
 - Password recovery uses the public `/reset-password` route and requires a recovery signal plus a server-validated Auth user before changing a password; ordinary signed-in sessions must not enable the recovery form.
 - Use the shared PasswordInput control for password visibility so sign-in and recovery fields have consistent accessible toggles.
+- Dashboard presentation uses DashboardSection for unframed sections and scoped dashboard CSS, preserving the global palette and existing data and permission logic.

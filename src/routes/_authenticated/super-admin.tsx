@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ShieldCheck, Users, Building2, BadgeEuro, Sparkles, RefreshCw, ArrowUpRight, type LucideIcon } from "lucide-react";
 import { DashboardSection } from "@/components/dashboard-section";
+import { DashboardChart } from "@/components/dashboard-chart";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +65,7 @@ const dt = (s?: string | null) =>
 function Stat({ label, value, hint, icon: Icon, tone = "primary" }: { label: string; value: string | number; hint?: string; icon?: LucideIcon; tone?: "primary" | "success" | "pink" | "violet" }) {
   const tones = { primary: "bg-primary/10 text-primary", success: "bg-success/10 text-success", pink: "bg-aurora-5/10 text-aurora-5", violet: "bg-aurora-1/10 text-aurora-1" };
   return (
-    <Card className="dashboard-metric min-w-0 gap-0 p-5">
+    <Card data-tone={Icon ? tone : undefined} className="dashboard-metric min-w-0 gap-0 p-5">
       <div className="flex items-start justify-between gap-2"><p className="text-sm text-muted-foreground">{label}</p>{Icon && <span className={`grid size-9 shrink-0 place-items-center rounded-lg ${tones[tone]}`}><Icon className="size-4" /></span>}</div>
       <p className="mt-5 break-words font-display text-3xl font-semibold">{value}</p>
       {hint && <p className="mt-2 text-xs text-muted-foreground">{hint}</p>}
@@ -192,13 +193,17 @@ function SuperAdminPage() {
                 <div><p className="mb-1 text-xs font-medium text-primary">PLATEFORME</p><h2 className="font-display text-2xl font-semibold">L'essentiel, en un regard</h2></div>
                 <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className="size-1.5 rounded-full bg-success" /> Données actualisées chaque minute</span>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <Stat label="Revenu mensuel récurrent" value={eur(o.revenue.mrr)} hint="Abonnements · MRR" icon={BadgeEuro} tone="success" />
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_260px]">
+              <div className="min-w-0 space-y-7">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Stat label="Revenu mensuel récurrent" value={eur(o.revenue.mrr)} hint="Abonnements · MRR" icon={BadgeEuro} tone="violet" />
                 <Stat label="Utilisateurs inscrits" value={o.users.registered} hint={`${o.users.active30} actifs sur 30 jours`} icon={Users} />
                 <Stat label="Entreprises" value={o.orgs.total} hint={`${o.orgs.active} actives`} icon={Building2} tone="pink" />
-                <Stat label="Crédits IA consommés" value={o.ai.creditsConsumed} hint={`${eur(o.ai.estimatedCostEur)} de coût estimé`} icon={Sparkles} tone="violet" />
               </div>
-              <div className="grid gap-8 border-y border-border py-7 xl:grid-cols-2">
+              <DashboardSection title="Activité des agents" description="Tâches enregistrées par agent">
+                <DashboardChart label="Tâches des agents" data={o.agents.slice(0,6).map((agent) => ({name:agent.name,value:agent.tasks}))} />
+              </DashboardSection>
+              <div className="grid gap-8 border-y border-border py-7 lg:grid-cols-2">
                 <DashboardSection title="Abonnements et revenus">
                   <dl className="space-y-4">
                     {[['Revenu annuel récurrent', eur(o.revenue.arr)], ['Chiffre d’affaires encaissé', eur(o.revenue.revenue)], ['Abonnements actifs', o.users.subscriptions], ['Paiements en attente', o.revenue.pendingPayments]].map(([label, value]) => <div key={label} className="flex justify-between gap-3 border-b border-border/60 pb-3 text-sm"><dt className="text-muted-foreground">{label}</dt><dd className="font-semibold">{value}</dd></div>)}
@@ -209,6 +214,19 @@ function SuperAdminPage() {
                     {[{tab:'utilisateurs', label:'Gérer les utilisateurs',icon:Users},{tab:'connecteurs',label:'Connecteurs',icon:Building2},{tab:'agents',label:'Activité des agents',icon:Sparkles},{tab:'couts',label:'Suivre les coûts',icon:BadgeEuro}].map((item) => <Button key={item.tab} variant="outline" className="h-auto justify-start gap-3 rounded-lg px-4 py-4 text-left" onClick={() => setTab(item.tab)}><item.icon className="size-4 shrink-0 text-primary" /><span className="min-w-0 flex-1 whitespace-normal">{item.label}</span><ArrowUpRight className="size-4 shrink-0 text-muted-foreground" /></Button>)}
                   </div>
                 </DashboardSection>
+              </div>
+              <DashboardSection title="Derniers comptes inscrits" description="Utilisateurs de la plateforme">
+                <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th className="p-3">Utilisateur</th><th className="p-3">Entreprise</th><th className="p-3">Formule</th></tr></thead><tbody>{(accounts.data ?? []).slice(0,5).map((account) => <tr key={account.id} className="border-b border-border/60"><td className="p-3 font-medium">{account.fullName}</td><td className="p-3">{account.orgName}</td><td className="p-3"><Badge variant="secondary">{account.plan}</Badge></td></tr>)}</tbody></table></div>
+              </DashboardSection>
+              </div>
+              <aside className="min-w-0 space-y-7">
+                <div className="dashboard-feature p-5"><ShieldCheck className="mb-5 size-7" /><h2 className="font-display text-xl font-semibold">Kobyde, en direct</h2><p className="mt-2 text-sm">{o.orgs.active} entreprises actives</p><Button variant="secondary" className="mt-5 w-full" onClick={() => setTab('utilisateurs')}>Gérer les utilisateurs <ArrowUpRight className="size-4" /></Button></div>
+                <Stat label="Crédits IA consommés" value={o.ai.creditsConsumed} hint={`${eur(o.ai.estimatedCostEur)} de coût estimé`} icon={Sparkles} tone="success" />
+                <DashboardSection title="Agents les plus actifs">
+                  <ul className="space-y-4">{o.agents.slice(0,4).map((agent) => <li key={agent.key} className="flex items-center gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-aurora-1/15 font-semibold text-foreground">{agent.name.slice(0,1)}</span><div className="min-w-0 flex-1"><p className="text-sm font-medium">{agent.name}</p><p className="text-xs text-muted-foreground">{agent.tasks} tâches</p></div></li>)}</ul>
+                  <Button variant="outline" className="mt-5 w-full bg-card" onClick={() => setTab('agents')}>Voir les agents <ArrowUpRight className="size-4" /></Button>
+                </DashboardSection>
+              </aside>
               </div>
               <details className="group border-b border-border pb-6">
                 <summary className="cursor-pointer font-display text-lg font-semibold">Tous les indicateurs</summary>

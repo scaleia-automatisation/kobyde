@@ -18,6 +18,7 @@ import { euros, useMyRole, useProfile, useRows } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { DashboardSection } from "@/components/dashboard-section";
 import { cn } from "@/lib/utils";
+import { DashboardChart } from "@/components/dashboard-chart";
 
 export const Route = createFileRoute("/_authenticated/tableau-de-bord")({
   head: () => ({
@@ -55,16 +56,19 @@ function PrimaryStat({
   hint,
   icon: Icon,
   to,
+  tone,
 }: {
   label: string;
   value: string;
   hint: string;
   icon: LucideIcon;
   to: string;
+  tone: "violet" | "primary" | "pink";
 }) {
   return (
     <Link
       to={to}
+      data-tone={tone}
       className="dashboard-metric interactive relative block min-w-0 overflow-hidden p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <div className="flex items-center justify-between gap-2">
@@ -248,6 +252,8 @@ function Dashboard() {
         <Button variant="outline" size="sm" asChild><Link to="/taches">Mes tâches <ArrowRight className="size-4" /></Link></Button>
       </div>
 
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_260px]">
+      <div className="min-w-0">
       <div className="grid gap-4 stagger-children md:grid-cols-3">
         <PrimaryStat
           label="Chiffre d'affaires"
@@ -255,6 +261,7 @@ function Dashboard() {
           hint="Paiements encaissés à ce jour"
           icon={TrendingUp}
           to="/paiements"
+          tone="violet"
         />
         <PrimaryStat
           label="Devis en attente"
@@ -262,6 +269,7 @@ function Dashboard() {
           hint={`sur ${Q.length} devis au total`}
           icon={FileText}
           to="/devis"
+          tone="primary"
         />
         <PrimaryStat
           label="À encaisser"
@@ -273,7 +281,19 @@ function Dashboard() {
           }
           icon={BadgeEuro}
           to="/paiements"
+          tone="pink"
         />
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <DashboardSection title="Votre activité commerciale" description="Répartition actuelle">
+          <DashboardChart label="Activité commerciale" data={[{name:'Prospects',value:PR.length},{name:'Clients',value:C.length},{name:'Devis',value:Q.length},{name:'Projets',value:PJ.length}]} />
+        </DashboardSection>
+        <DashboardSection title="À suivre" description="Accès à votre activité">
+          <div className="space-y-3">
+            {[{label:'Devis acceptés',value:devisAcceptes.length,to:'/devis'},{label:'Paiements en retard',value:paiementsRetard.length,to:'/paiements'},{label:'Tâches à faire',value:tachesOuvertes.length,to:'/taches'}].map((item) => <Button key={item.label} asChild variant="outline" className="h-auto w-full justify-between rounded-lg bg-card px-4 py-4"><Link to={item.to}><span>{item.label}</span><span className="ml-auto mr-2 font-semibold">{item.value}</span><ArrowRight className="size-4" /></Link></Button>)}
+          </div>
+        </DashboardSection>
       </div>
 
       <div className="my-7 grid grid-cols-2 gap-x-4 sm:grid-cols-3 xl:grid-cols-5">
@@ -284,7 +304,7 @@ function Dashboard() {
         <MiniStat label="Agents IA" value="10" to="/equipe" />
       </div>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[3fr_2fr]">
+      <div className="mt-8">
         <DashboardSection
           className=""
           title="La prochaine action utile"
@@ -326,7 +346,15 @@ function Dashboard() {
             </ul>
           )}
         </DashboardSection>
-
+      </div>
+      </div>
+      <aside className="min-w-0 space-y-7">
+        <div className="dashboard-feature p-5">
+          <Sparkles className="mb-5 size-7" />
+          <h2 className="font-display text-xl font-semibold">Votre équipe IA</h2>
+          <p className="mt-2 text-sm">Éric et vos 9 agents spécialisés</p>
+          <Button asChild variant="secondary" className="mt-5 w-full"><Link to="/eric" search={{agent:undefined}}>Parler à Éric <ArrowRight className="size-4" /></Link></Button>
+        </div>
         <DashboardSection
           className=""
           title="Activité récente"
@@ -358,6 +386,11 @@ function Dashboard() {
             </ul>
           )}
         </DashboardSection>
+        <DashboardSection title="Votre entreprise">
+          <Button asChild variant="outline" className="w-full justify-between bg-card"><Link to="/entreprise">Fiche entreprise <ArrowRight className="size-4" /></Link></Button>
+          <Button asChild variant="outline" className="mt-3 w-full justify-between bg-card"><Link to="/equipe-physique">Mon équipe physique <Users className="size-4" /></Link></Button>
+        </DashboardSection>
+      </aside>
       </div>
       </div>
     </AppShell>

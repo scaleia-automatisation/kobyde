@@ -42,14 +42,17 @@ function AuthPage() {
     if (!session) return;
     let cancelled = false;
     (async () => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (cancelled || authError || !authData.user) return;
       const { data } = await supabase
         .from("profiles")
         .select("organizations:current_org_id(onboarding_completed)")
-        .eq("user_id", session.user.id)
+        .eq("user_id", authData.user.id)
         .maybeSingle();
       if (cancelled) return;
       const done = (data?.organizations as { onboarding_completed?: boolean } | null)?.onboarding_completed;
-      navigate({ to: done ? "/eric" : "/bienvenue", replace: true });
+      window.sessionStorage.removeItem("kobyde:auth-redirect");
+      navigate({ to: done ? "/tableau-de-bord" : "/bienvenue", replace: true });
     })();
     return () => {
       cancelled = true;
@@ -62,14 +65,17 @@ function AuthPage() {
     try {
       window.sessionStorage.setItem("kobyde:auth-redirect", "1");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/auth`,
+        extraParams: { prompt: "select_account" },
       });
       if (result.error) {
+        window.sessionStorage.removeItem("kobyde:auth-redirect");
         toast.error("Connexion Google impossible pour le moment.");
         return;
       }
       if (result.redirected) return;
     } catch {
+      window.sessionStorage.removeItem("kobyde:auth-redirect");
       toast.error("Connexion Google impossible pour le moment.");
     } finally {
       setGoogleLoading(false);

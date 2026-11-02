@@ -162,8 +162,8 @@ function SuperAdminPage() {
       title="Pilotage Kobyde"
       subtitle="Super admin · Vue globale de la plateforme"
       action={
-        <Button variant="outline" disabled={overview.isFetching} onClick={() => void overview.refetch()}>
-          <RefreshCw className={`size-4 ${overview.isFetching ? "animate-spin" : ""}`} /> Actualiser
+        <Button variant="outline" aria-label="Actualiser" title="Actualiser" disabled={overview.isFetching} onClick={() => void overview.refetch()}>
+          <RefreshCw className={`size-4 ${overview.isFetching ? "animate-spin" : ""}`} /> <span className="hidden sm:inline">Actualiser</span>
         </Button>
       }
     >

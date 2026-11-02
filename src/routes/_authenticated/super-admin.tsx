@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Users, Building2, BadgeEuro, Sparkles, RefreshCw, ArrowUpRight, type LucideIcon } from "lucide-react";
+import { DashboardSection } from "@/components/dashboard-section";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,12 +61,13 @@ const eur = (n: number) =>
 const dt = (s?: string | null) =>
   s ? new Date(s).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—";
 
-function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+function Stat({ label, value, hint, icon: Icon, tone = "primary" }: { label: string; value: string | number; hint?: string; icon?: LucideIcon; tone?: "primary" | "success" | "pink" | "violet" }) {
+  const tones = { primary: "bg-primary/10 text-primary", success: "bg-success/10 text-success", pink: "bg-aurora-5/10 text-aurora-5", violet: "bg-aurora-1/10 text-aurora-1" };
   return (
-    <Card className="p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 font-display text-2xl">{value}</p>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    <Card className="dashboard-metric min-w-0 gap-0 p-5">
+      <div className="flex items-start justify-between gap-2"><p className="text-sm text-muted-foreground">{label}</p>{Icon && <span className={`grid size-9 shrink-0 place-items-center rounded-lg ${tones[tone]}`}><Icon className="size-4" /></span>}</div>
+      <p className="mt-5 break-words font-display text-3xl font-semibold">{value}</p>
+      {hint && <p className="mt-2 text-xs text-muted-foreground">{hint}</p>}
     </Card>
   );
 }
@@ -157,33 +159,60 @@ function SuperAdminPage() {
 
   return (
     <AppShell
-      title="Super Admin"
-      subtitle="Pilotage temps réel de la plateforme Kobyde"
+      title="Pilotage Kobyde"
+      subtitle="Super admin · Vue globale de la plateforme"
       action={
-        <Button variant="outline" onClick={() => void overview.refetch()}>
-          Actualiser
+        <Button variant="outline" disabled={overview.isFetching} onClick={() => void overview.refetch()}>
+          <RefreshCw className={`size-4 ${overview.isFetching ? "animate-spin" : ""}`} /> Actualiser
         </Button>
       }
     >
-      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+      <div className="dashboard-workspace mx-auto max-w-7xl">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-7">
         <TabsList>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="dashboard">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="agents">Agents</TabsTrigger>
-          <TabsTrigger value="funnel">Funnel SaaS</TabsTrigger>
-          <TabsTrigger value="comportement">Comportement</TabsTrigger>
+          <TabsTrigger value="funnel">Conversion</TabsTrigger>
+          <TabsTrigger value="comportement">Parcours clients</TabsTrigger>
           <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
           <TabsTrigger value="connecteurs">Connecteurs</TabsTrigger>
           <TabsTrigger value="stripe-saas">Stripe SaaS</TabsTrigger>
           <TabsTrigger value="couts">Coûts API</TabsTrigger>
           <TabsTrigger value="tarifs">Tarifs</TabsTrigger>
           <TabsTrigger value="budgets">Budgets</TabsTrigger>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
+          <TabsTrigger value="logs">Journal</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-8">
           {overview.isLoading && <Card className="p-6 text-sm text-muted-foreground">Chargement…</Card>}
+          {overview.isError && <p role="alert" className="text-sm text-destructive">Impossible de charger les données. Réessayez avec le bouton Actualiser.</p>}
           {o && (
             <>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div><p className="mb-1 text-xs font-medium text-primary">PLATEFORME</p><h2 className="font-display text-2xl font-semibold">L'essentiel, en un regard</h2></div>
+                <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className="size-1.5 rounded-full bg-success" /> Données actualisées chaque minute</span>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Stat label="Revenu mensuel récurrent" value={eur(o.revenue.mrr)} hint="Abonnements · MRR" icon={BadgeEuro} tone="success" />
+                <Stat label="Utilisateurs inscrits" value={o.users.registered} hint={`${o.users.active30} actifs sur 30 jours`} icon={Users} />
+                <Stat label="Entreprises" value={o.orgs.total} hint={`${o.orgs.active} actives`} icon={Building2} tone="pink" />
+                <Stat label="Crédits IA consommés" value={o.ai.creditsConsumed} hint={`${eur(o.ai.estimatedCostEur)} de coût estimé`} icon={Sparkles} tone="violet" />
+              </div>
+              <div className="grid gap-8 border-y border-border py-7 xl:grid-cols-2">
+                <DashboardSection title="Abonnements et revenus">
+                  <dl className="space-y-4">
+                    {[['Revenu annuel récurrent', eur(o.revenue.arr)], ['Chiffre d’affaires encaissé', eur(o.revenue.revenue)], ['Abonnements actifs', o.users.subscriptions], ['Paiements en attente', o.revenue.pendingPayments]].map(([label, value]) => <div key={label} className="flex justify-between gap-3 border-b border-border/60 pb-3 text-sm"><dt className="text-muted-foreground">{label}</dt><dd className="font-semibold">{value}</dd></div>)}
+                  </dl>
+                </DashboardSection>
+                <DashboardSection title="Accès rapides">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[{tab:'utilisateurs', label:'Gérer les utilisateurs',icon:Users},{tab:'connecteurs',label:'Connecteurs',icon:Building2},{tab:'agents',label:'Activité des agents',icon:Sparkles},{tab:'couts',label:'Suivre les coûts',icon:BadgeEuro}].map((item) => <Button key={item.tab} variant="outline" className="h-auto justify-start gap-3 rounded-lg px-4 py-4 text-left" onClick={() => setTab(item.tab)}><item.icon className="size-4 shrink-0 text-primary" /><span className="min-w-0 flex-1 whitespace-normal">{item.label}</span><ArrowUpRight className="size-4 shrink-0 text-muted-foreground" /></Button>)}
+                  </div>
+                </DashboardSection>
+              </div>
+              <details className="group border-b border-border pb-6">
+                <summary className="cursor-pointer font-display text-lg font-semibold">Tous les indicateurs</summary>
+                <div className="mt-6 space-y-8">
               <Section title="Utilisateurs">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <Stat label="Inscrits" value={o.users.registered} />
@@ -241,6 +270,8 @@ function SuperAdminPage() {
                   </Card>
                 )}
               </Section>
+                </div>
+              </details>
             </>
           )}
         </TabsContent>
@@ -462,6 +493,7 @@ function SuperAdminPage() {
           <LogsPanel />
         </TabsContent>
       </Tabs>
+      </div>
     </AppShell>
   );
 }

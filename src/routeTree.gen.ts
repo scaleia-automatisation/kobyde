@@ -18,6 +18,7 @@ import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as DataDeletionRequestRouteImport } from './routes/data-deletion-request'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAideRouteImport } from './routes/_authenticated/aide'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -120,6 +121,11 @@ const DataDeletionRequestRoute = DataDeletionRequestRouteImport.update({
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
   id: '/mentions-legales',
   path: '/mentions-legales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -440,6 +446,7 @@ export interface FileRoutesByFullPath {
   '/data-deletion': typeof DataDeletionRoute
   '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -509,6 +516,7 @@ export interface FileRoutesByTo {
   '/data-deletion': typeof DataDeletionRoute
   '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/aide': typeof AuthenticatedAideRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
@@ -580,6 +588,7 @@ export interface FileRoutesById {
   '/data-deletion': typeof DataDeletionRoute
   '/data-deletion-request': typeof DataDeletionRequestRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/aide': typeof AuthenticatedAideRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
@@ -651,6 +660,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/data-deletion-request'
     | '/mentions-legales'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/aide'
     | '/analytics'
@@ -720,6 +730,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/data-deletion-request'
     | '/mentions-legales'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/aide'
     | '/analytics'
@@ -790,6 +801,7 @@ export interface FileRouteTypes {
     | '/data-deletion'
     | '/data-deletion-request'
     | '/mentions-legales'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/_authenticated/aide'
     | '/_authenticated/analytics'
@@ -861,6 +873,7 @@ export interface RootRouteChildren {
   DataDeletionRoute: typeof DataDeletionRoute
   DataDeletionRequestRoute: typeof DataDeletionRequestRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   BlogSlugRoute: typeof BlogSlugRoute
   EntretienTokenRoute: typeof EntretienTokenRoute
@@ -944,6 +957,13 @@ declare module '@tanstack/react-router' {
       path: '/mentions-legales'
       fullPath: '/mentions-legales'
       preLoaderRoute: typeof MentionsLegalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1471,6 +1491,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataDeletionRoute: DataDeletionRoute,
   DataDeletionRequestRoute: DataDeletionRequestRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   BlogSlugRoute: BlogSlugRoute,
   EntretienTokenRoute: EntretienTokenRoute,
